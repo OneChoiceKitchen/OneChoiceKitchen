@@ -1,0 +1,10 @@
+﻿# Prisma .gitignore
+generated/
+node_modules/.prisma/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+dev.db
+dev.db-journal

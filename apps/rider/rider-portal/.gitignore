@@ -1,0 +1,19 @@
+﻿# React / Vite app .gitignore
+node_modules/
+dist/
+build/
+.vite/
+vite.config.ts.timestamp-*
+.next/
+out/
+coverage/
+.cache/
+storybook-static/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+*.log
+*.err.log
+.DS_Store
+Thumbs.db

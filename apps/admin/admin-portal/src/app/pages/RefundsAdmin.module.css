@@ -1,0 +1,297 @@
+.pageContainer {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #0f172a;
+  background-color: #f8fafc;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.pageTitle {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.025em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filtersGroup {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.filterBtn {
+  padding: 0.4rem 1.25rem;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.filterBtn.active {
+  background: #0f172a;
+  color: white;
+  font-weight: 700;
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.2);
+}
+
+.filterBtn.inactive {
+  background: white;
+  color: #475569;
+  font-weight: 500;
+  border: 1px solid #cbd5e1;
+}
+
+.filterBtn.inactive:hover {
+  background: #f1f5f9;
+}
+
+.cardsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.refundCard {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  box-sizing: border-box;
+  transition: box-shadow 0.2s;
+}
+
+.refundCard:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.cardInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.amountText {
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 1.25rem;
+}
+
+.statusBadge {
+  padding: 0.2rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-block;
+  letter-spacing: 0.025em;
+}
+
+.statusBadge.pending { background: #fef9c3; color: #854d0e; }
+.statusBadge.approved { background: #e0f2fe; color: #0284c7; }
+.statusBadge.rejected { background: #fef2f2; color: #991b1b; }
+.statusBadge.processed { background: #dcfce7; color: #166534; }
+
+.metaText {
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.metaHighlight {
+  font-weight: 600;
+  color: #334155;
+}
+
+.reasonText {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+  background: #f8fafc;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #f1f5f9;
+}
+
+.txnText {
+  font-size: 0.8rem;
+  color: #16a34a;
+  font-weight: 600;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.actionGroup {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.actionBtn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.actionBtn.approve { background: #f0fdf4; color: #16a34a; }
+.actionBtn.approve:hover { background: #dcfce7; }
+
+.actionBtn.reject { background: #fef2f2; color: #DC2626; }
+.actionBtn.reject:hover { background: #fee2e2; }
+
+.actionBtn.process { background: #eff6ff; color: #2563eb; }
+.actionBtn.process:hover { background: #dbeafe; }
+
+.emptyState {
+  text-align: center;
+  padding: 4rem;
+  color: #64748b;
+  background: white;
+  border-radius: 12px;
+  border: 1px dashed #cbd5e1;
+}
+
+/* Modals */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  backdrop-filter: blur(2px);
+}
+
+.modalContent {
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+}
+
+.modalTitle {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.formLabel {
+  display: block;
+  font-size: 0.875rem;
+  color: #475569;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.formInput, .formTextarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  outline: none;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.formInput:focus, .formTextarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background: white;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.cancelBtn {
+  background: #f1f5f9;
+  color: #475569;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.cancelBtn:hover { background: #e2e8f0; }
+
+.confirmBtn {
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.confirmBtn.danger { background: #DC2626; }
+.confirmBtn.danger:hover { background: #dc2626; }
+
+.confirmBtn.primary { background: #2563eb; }
+.confirmBtn.primary:hover { background: #1d4ed8; }
+
+
+@media (max-width: 640px) {
+  .pageContainer {
+    padding: 1rem;
+  }
+  
+  .refundCard {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .actionGroup {
+    width: 100%;
+  }
+  
+  .actionBtn {
+    flex: 1;
+    text-align: center;
+  }
+}

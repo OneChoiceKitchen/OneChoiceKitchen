@@ -1,0 +1,36 @@
+﻿# OneChoiceKitchen — Cursor Rules
+
+## Project
+Enterprise-grade food delivery platform. Nx monorepo with pnpm.
+
+## Stack
+- Frontend: Next.js 14 App Router (React Server Components)
+- Backend: NestJS with Prisma ORM
+- Database: PostgreSQL 15
+- Cache/Queue: Redis + BullMQ
+- Build: Nx workspace
+
+## Workspace Layout
+- apps/api/         → NestJS backend (port 3000)
+- apps/web/         → Customer web app (port 4208)
+- apps/admin/       → Admin portal (port 4205)
+- apps/partner/     → Partner portal (port 4206)
+- apps/rider/       → Rider portal (port 4207)
+- libs/             → Shared code
+- prisma/           → Schema + migrations + seeds
+
+## Skills (read before any task)
+All AI knowledge base lives in .agents/skills/
+Load in order:
+1. .agents/skills/project-context/SKILL.md
+2. .agents/skills/onechoice-business-rules/SKILL.md
+3. Task-specific skill
+
+## Rules
+- Package manager: pnpm ONLY (never npm/yarn)
+- Tasks via: pnpm nx [task] [project]
+- All new code needs tests (no skip)
+- All API endpoints need JwtAuthGuard
+- Monetary values: Decimal @db.Decimal(10,2) NEVER Float
+- No any TypeScript type without justification
+- No hardcoded secrets

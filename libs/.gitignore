@@ -1,0 +1,8 @@
+﻿# Shared libs .gitignore
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+.DS_Store
+Thumbs.db

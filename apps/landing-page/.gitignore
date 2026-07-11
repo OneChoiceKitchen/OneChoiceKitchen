@@ -1,0 +1,16 @@
+﻿# Landing Page .gitignore
+node_modules/
+dist/
+build/
+.next/
+out/
+coverage/
+.cache/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+*.log
+*.err.log
+.DS_Store
+Thumbs.db

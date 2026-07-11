@@ -1,0 +1,55 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compileOnSave": false,
+  "files": [],
+  "references": [
+    {
+      "path": "./apps"
+    },
+    {
+      "path": "./apps/partner/partner-portal-e2e"
+    },
+    {
+      "path": "./apps/admin/admin-portal-e2e"
+    },
+    {
+      "path": "./apps/partner/partner-portal"
+    },
+    {
+      "path": "./apps/rider/rider-portal-e2e"
+    },
+    {
+      "path": "./apps/admin/admin-portal"
+    },
+    {
+      "path": "./apps/rider/rider-portal"
+    },
+    {
+      "path": "./libs/ui-design-system"
+    },
+    {
+      "path": "./apps/web"
+    },
+    {
+      "path": "./apps/customer-mobile"
+    },
+    {
+      "path": "./apps/rider-mobile"
+    },
+    {
+      "path": "./apps/customer/mobile-app-e2e"
+    },
+    {
+      "path": "./apps/customer/mobile-app"
+    },
+    {
+      "path": "./apps/web-e2e"
+    },
+    {
+      "path": "./apps/api-e2e"
+    },
+    {
+      "path": "./apps/api"
+    }
+  ]
+}

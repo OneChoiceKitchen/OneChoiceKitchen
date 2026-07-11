@@ -1,0 +1,23 @@
+{
+  "name": "mobile-app",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/customer/mobile-app",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "serve": {
+      "executor": "@nx/next:server",
+      "options": {
+        "buildTarget": "mobile-app:build",
+        "dev": true,
+        "port": 4211
+      }
+    },
+    "build": {
+      "executor": "@nx/next:build",
+      "options": {
+        "outputPath": "dist/apps/customer/mobile-app"
+      }
+    }
+  }
+}

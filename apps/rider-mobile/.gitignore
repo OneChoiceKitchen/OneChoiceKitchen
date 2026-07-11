@@ -1,0 +1,21 @@
+﻿# React Native / Expo .gitignore
+node_modules/
+.expo/
+.expo-shared/
+ios/Pods/
+ios/build/
+android/app/build/
+android/.gradle/
+android/local.properties
+dist/
+*.jsbundle
+coverage/
+.cache/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+*.log
+*.err.log
+.DS_Store
+Thumbs.db

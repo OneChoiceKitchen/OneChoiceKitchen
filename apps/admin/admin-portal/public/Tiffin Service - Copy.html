@@ -1,0 +1,440 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>One Choice Kitchen - Important Notice & Menu</title>
+    <style>
+        /* --- FONTS --- */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&display=swap');
+
+        /* --- VARIABLES --- */
+        :root {
+            --brand-blue: #2563EB;
+            --brand-red: #ED1C24;
+            --brand-yellow: #F7941D;
+            --bg-gray: #f8fafc;
+            --card-bg: #ffffff;
+            --veg-green: #008000;
+            --text-dark: #1f2937;
+        }
+
+        /* --- GLOBAL RESET --- */
+        * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+        body { 
+            background-color: #555; 
+            margin: 0; 
+            padding: 20px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-dark);
+        }
+
+        /* --- A4 PAGE CONTAINER --- */
+        .page-container {
+            width: 210mm;
+            height: 297mm; 
+            background: white;
+            margin: 0 auto 30px auto;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; 
+            page-break-after: always;
+        }
+
+        /* --- HEADER --- */
+        .header-section {
+            padding: 5px 25px;
+            border-bottom: 2px solid #e5e7eb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: white;
+            height: 85px; 
+            flex-shrink: 0;
+        }
+        .header-block { display: flex; align-items: center; gap: 15px; }
+        .header-logo-img { width: 60px; height: 60px; object-fit: contain; } 
+        .header-text-col { text-align: center; }
+        .header-brand-name {
+            font-family: 'Oswald', sans-serif; font-size: 32px; line-height: 1; margin: 0; font-weight: 700; text-transform: uppercase; white-space: nowrap;
+        }
+        .header-brand-slogan {
+            font-size: 10px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: var(--brand-blue); margin-top: 2px;
+        }
+
+        /* --- CONTENT BODY --- */
+        .content-body { 
+            padding: 10px 20px; 
+            flex: 1; 
+            background-color: var(--bg-gray);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .two-col-layout { display: flex; gap: 15px; align-items: stretch; }
+        .col { flex: 1; display: flex; flex-direction: column; }
+
+        /* --- CARD DESIGN --- */
+        .menu-card {
+            background: white;
+            border-radius: 10px;
+            padding: 10px 15px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid #e5e7eb;
+            position: relative;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; 
+        }
+        .menu-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 5px;
+            background: linear-gradient(90deg, var(--brand-blue), var(--brand-red));
+            border-radius: 10px 10px 0 0;
+        }
+
+        .cat-title {
+            font-family: 'Oswald', sans-serif; font-size: 18px; color: var(--brand-red);
+            text-transform: uppercase; font-weight: 700; margin-bottom: 8px;
+            display: flex; align-items: center; gap: 8px; border-bottom: 2px dashed #ddd; padding-bottom: 4px;
+            justify-content: center;
+        }
+        
+        /* --- NOTICE SPECIFIC STYLES --- */
+        .notice-text { font-size: 10.5px; line-height: 1.4; color: #333; margin-bottom: 8px; text-align: justify; }
+        .notice-heading { color: var(--brand-blue); font-weight: 700; font-size: 12px; margin-top: 8px; margin-bottom: 4px; font-family: 'Oswald', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;}
+        .notice-list { margin: 0 0 8px 0; padding-left: 20px; font-size: 10.5px; line-height: 1.35; color: #333; }
+        .notice-list li { margin-bottom: 4px; padding-left: 2px;}
+        
+        .notice-highlight { 
+            background: #fff5f5; border: 1.5px dashed var(--brand-red); 
+            padding: 6px 10px; border-radius: 8px; margin: 8px 0; 
+        }
+        .notice-highlight-title { font-weight: 700; color: var(--brand-blue); margin-bottom: 4px; font-size: 11.5px; font-family: 'Oswald', sans-serif;}
+        .price-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px; font-weight: 600; border-bottom: 1px dotted #ccc; padding-bottom: 2px;}
+        .price-val { color: var(--brand-red); font-weight: 700; }
+        
+        .bold-red { color: var(--brand-red); font-weight: 700; }
+        .bold-blue { color: var(--brand-blue); font-weight: 700; }
+        .warning-text { font-size: 9.5px; color: var(--brand-red); font-weight: 600; margin-top: 5px; line-height: 1.3; display: block;}
+
+        .important-box {
+            background: #f0f8ff; border-left: 4px solid var(--brand-blue); padding: 6px 10px; border-radius: 4px; font-size: 10px; line-height: 1.3; color: #222; margin-top: auto;
+        }
+
+        /* --- PAYMENT BANNER --- */
+        .payment-banner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            background: white;
+            border: 2px dashed var(--brand-blue);
+            border-radius: 8px;
+            padding: 8px 15px;
+            margin-top: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .qr-code-img { width: 70px; height: 70px; border: 1px solid #ccc; padding: 2px; border-radius: 4px; }
+        .payment-info { display: flex; flex-direction: column; justify-content: center; }
+        .pay-title { font-family: 'Oswald', sans-serif; font-size: 16px; color: var(--brand-red); font-weight: 700; margin-bottom: 2px; display: flex; align-items: center; gap: 5px; }
+        .pay-warning-text { font-size: 10.5px; color: #333; line-height: 1.4; }
+        .highlight-name { background: var(--brand-yellow); color: #000; padding: 0 4px; font-weight: 700; border-radius: 2px; }
+
+        /* --- FOOTER --- */
+        .footer-strip {
+            background-color: var(--brand-blue); color: white; padding: 0 25px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-top: 5px solid var(--brand-yellow);
+            height: 40px; 
+            flex-shrink: 0;
+            width: 100%;
+        }
+        .footer-left { font-size: 9.5px; font-weight: 500; opacity: 0.95; max-width: 65%; text-align: left; }
+        .footer-right { font-size: 13px; font-weight: 700; color: var(--brand-white); font-family: 'Oswald', sans-serif;}
+
+        /* --- TIFFIN PAGE STYLES --- */
+        .tiffin-header-bar { background-color: var(--brand-red); color: white; text-align: center; font-family: 'Oswald', sans-serif; font-size: 22px; padding: 8px; border-radius: 6px; margin-bottom: 10px; }
+        .timing-bar { background-color: #e5e7eb; color: #333; text-align: center; padding: 6px; font-size: 12px; font-weight: 700; border-radius: 6px; border: 1px solid #ccc; margin-bottom: 10px; }
+        
+        .tiffin-grid { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #ccc; border-radius: 8px; overflow: hidden; font-size: 10px; background: white; }
+        .tiffin-grid th, .tiffin-grid td { border-bottom: 1px solid #ccc; border-right: 1px solid #ccc; padding: 5px 3px; text-align: center; vertical-align: middle; }
+        .tiffin-grid thead th { color: white !important; font-weight: 700; font-size: 11px; }
+        .day-header { background-color: var(--brand-blue) !important; width: 60px; }
+        .veg-header { background-color: var(--veg-green) !important; }
+        .nonveg-header { background-color: var(--brand-red) !important; }
+        .tiffin-grid thead tr.subhead th { background-color: #e3f2fd !important; color: var(--brand-blue) !important; font-size: 9px; font-weight: 800; text-transform: uppercase; }
+        .day-col { background: #fff1f2; color: var(--brand-red); font-weight: 700; font-family: 'Oswald', sans-serif; font-size: 11px; }
+        
+        .juice-offer {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            border: 2px dashed var(--brand-yellow);
+            border-radius: 8px; padding: 8px; margin-top: 10px;
+            text-align: center; font-size: 12px; color: #d84315; font-weight: 700;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            line-height: 1.4;
+        }
+        .juice-icon { font-size: 16px; vertical-align: middle; margin-right: 5px; }
+
+        .pricing-box { display: flex; gap: 15px; margin-top: 10px; }
+        .price-panel { flex: 1; background: white; padding: 10px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .price-title { color: var(--brand-blue); font-weight: 700; font-size: 16px; margin-bottom: 6px; border-bottom: 2px solid var(--brand-yellow); display: inline-block; font-family: 'Oswald', sans-serif; }
+        .tiffin-note { background: #fffbe6; padding: 10px; margin-top: 10px; border-radius: 8px; border: 1px solid #ffe58f; font-size: 10px; color: #333; line-height: 1.4; }
+
+        /* --- PRINT SETTINGS --- */
+        @media print {
+            @page { margin: 0; size: A4; }
+            body { background: none; margin: 0; padding: 0; display: block; }
+            .page-container { width: 100%; height: 297mm; margin: 0; padding: 0; box-shadow: none; border: none; page-break-after: always; }
+            .page-container:last-child { page-break-after: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page-container">
+        <div class="header-section">
+            <div class="header-block">
+                <img src="logowithoutnameandslogan.jpg" alt="Logo" class="header-logo-img">
+                <div class="header-text-col">
+                    <h1 class="header-brand-name"><span style="color: var(--brand-blue);">ONE</span> <span style="color: var(--brand-red);">CHOICE</span> <span style="color: var(--brand-blue);">KITCHEN</span></h1>
+                    <div class="header-brand-slogan">ALL YOUR CRAVINGS. ONE KITCHEN</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-body" style="padding: 15px 30px;">
+            <div class="tiffin-header-bar">🍽️ TIFFIN SYSTEM MENU PLAN</div>
+            <div class="timing-bar">⏰ TIMING: Breakfast: 7 - 10 AM | Lunch: 1 - 4 PM | Dinner: 7 - 10 PM</div>
+
+            <div class="tiffin-grid-wrapper">
+                <table class="tiffin-grid">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" class="day-header">DAY</th>
+                            <th colspan="3" class="veg-header">VEG MENU</th>
+                            <th colspan="3" class="nonveg-header">NON-VEG MENU</th>
+                        </tr>
+                        <tr class="subhead">
+                            <th>☕ BREAKFAST</th><th>🍛 LUNCH</th><th>🌙 DINNER</th><th>☕ BREAKFAST</th><th>🍛 LUNCH</th><th>🌙 DINNER</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="day-col">Mon</td>
+                            <td>2 Alloo Paratha + Seasonal Chanti + Salad</td><td>Rice + Dal + 2 Roti + Seasonal Sabzi + Salad</td><td>Veg Pulao + Tadka Daal + Raita</td>
+                            <td>2 Alloo Paratha + Seasonal Chanti + Salad</td><td>Rice + Dal + 2 Roti + Seasonal Sabzi + Salad</td><td>Veg Pulao + Tadka Daal + Raita</td>
+                        </tr>
+                        <tr>
+                            <td class="day-col">Tue</td>
+                            <td>5 Poori + Seasonal Sabji + Salad</td><td>Rajma + Chawal + 2 Roti + Salad</td><td>4 Roti + Mix Veg + Salad</td>
+                            <td>5 Poori + Seasonal Sabji + Salad</td><td>Rajma + Chawal + 2 Roti + Salad</td><td>4 Roti + Mix Veg + Salad</td>
+                        </tr>
+                        <tr>
+                            <td class="day-col">Wed</td>
+                            <td>2 Paneer Paratha + Seasonal Chanti + Salad</td><td>Kadi + Rice + 2 Roti + Salad</td><td>Rice + Tadka Dal + 2 Roti + Seasonal Sabzi + Salad</td>
+                            <td style="font-weight: bold; color: var(--brand-red);">2 Egg Omelet / Poha</td><td style="font-weight: bold; color: var(--brand-red);">Egg Curry + Rice + 2 Roti + Salad</td><td style="font-weight: bold; color: var(--brand-red);">Mix Veg Fried Rice + Omlette Curry + Salad</td>
+                        </tr>
+                        <tr>
+                            <td class="day-col">Thu</td>
+                            <td>5 Idli + Sambar + Chatni</td><td>Tarka Dal + Rice + 2 Roti + Salad</td><td>Paneer Rice + 2 Paratha</td>
+                            <td>5 Idli + Sambar + Chatni</td><td>Tarka Dal + Rice + 2 Roti + Salad</td><td>Paneer Rice + 2 Paratha</td>
+                        </tr>
+                        <tr>
+                            <td class="day-col">Fri</td>
+                            <td>Normal Paratha + Seasonal Bhuiya </td><td>Mix Veg + Pulao + Dal + Salad</td><td>Mix Veg + Fried Rice</td>
+                            <td>Normal Paratha + Seasonal Bhuiya </td><td style="font-weight: bold; color: var(--brand-red);">Fish Curry + Rice</td><td>Mix Veg + Fried Rice</td>
+                        </tr>
+                        <tr>
+                            <td class="day-col">Sat</td>
+                            <td>Poha / Upma</td><td>Khichdi + Chokha + Papad</td><td>Fried Rice + Manchurian + Salad</td>
+                            <td>Poha / Upma</td><td>Khichdi + Chokha + Papad</td><td>Fried Rice + Manchurian + Salad</td>
+                        </tr>
+                         <tr>
+                            <td class="day-col">Sun</td>
+                            <td>2 Litti / Katchori + Seasonal Sabji + Onion </td><td>Paneer Sabzi + Rice + Dal + Salad</td><td>Dal Tadka + Jeera Rice + Salad</td>
+                            <td>2 Litti / Katchori + Seasonal Sabji + Onion</td><td style="font-weight: bold; color: var(--brand-red);">Chicken Curry + Rice + 2 Roti + Salad</td><td>Dal Tadka + Jeera Rice + Salad</td>
+                        </tr>
+                        <tr><td colspan="7" style="background: #f1f1f1; font-weight: bold; padding: 5px; color: var(--brand-red);">Last Sunday: Holiday - No Service</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="juice-offer">
+                <span class="juice-icon">🍹</span> SPECIAL OFFER: Enjoy one day of FREE fresh juice or shake every week!
+                <br>
+                (विशेष प्रस्ताव: हर सप्ताह एक दिन निःशुल्क ताज़ा जूस या शेक का आनंद लें!)
+                <br>
+            </div>
+
+            <div class="pricing-box">
+                <div class="price-panel">
+                    <div class="price-title">VEG PLAN (शाकाहारी)</div>
+                    <div class="price-row"><span>3 Times Meal (Month)</span> <span class="price-val">₹5000</span></div>
+                    <div class="price-row"><span>2 Times Meal (Month)</span> <span class="price-val">₹3500</span></div>
+                    <div class="price-row"><span>Breakfast Meal Only (Month)</span> <span class="price-val">₹1200</span></div>
+                    <div class="price-row"><span>Lunch Meal Only (Month)</span> <span class="price-val">₹2200</span></div>
+                    <div class="price-row"><span>Dinner Meal Only (Month)</span> <span class="price-val">₹2000</span></div>
+                </div>
+                <div class="price-panel">
+                    <div class="price-title">NON-VEG PLAN (मांसाहारी)</div>
+                    <div class="price-row"><span>3 Times Meal (Month)</span> <span class="price-val">₹6000</span></div>
+                    <div class="price-row"><span>2 Times Meal (Month)</span> <span class="price-val">₹4000</span></div>
+                    <div class="price-row"><span>Breakfast Meal Only (Month)</span> <span class="price-val">₹1600</span></div>
+                    <div class="price-row"><span>Lunch Meal Only (Month)</span> <span class="price-val">₹2500</span></div>
+                    <div class="price-row"><span>Dinner Meal Only (Month)</span> <span class="price-val">₹2200</span></div>
+                </div>
+            </div>
+
+            <div class="tiffin-note">
+                <strong>NOTE (नोट):</strong> Customers are required to bring their own tiffin/lunch box. The management reserves the right to modify or decide the day and type of juice/shake under the special offer without prior notice.(ग्राहकों को अपना टिफिन/लंच बॉक्स स्वयं लाना अनिवार्य है। प्रबंधन बिना पूर्व सूचना के विशेष प्रस्ताव के अंतर्गत दिन एवं जूस/शेक के प्रकार में परिवर्तन या निर्धारण करने का अधिकार सुरक्षित रखता है।).<br>
+                <strong>DELIVERY / डिलीवरी:</strong> Free delivery up to 3 KM. ₹8 per additional KM thereafter.<br>
+                <strong>DISCOUNT (छूट):</strong> 5% OFF for customers who dine at the shop (for advance bookings only).<br>
+                <strong>MENU CHANGE:</strong> The management reserves the right to modify the menu based on availability or requirements (प्रबंधन उपलब्धता या आवश्यकता के आधार पर मेनू को बदलने का अधिकार सुरक्षित रखता है).
+            </div>
+        </div>
+
+        <div class="footer-strip">
+             <div class="footer-left">ONE CHOICE KITCHEN TIFFIN SERVICES</div>
+            <div class="footer-right">📞 6299230165 / 7004838102 / 9934423434</div>
+        </div>
+    </div>
+
+    <div class="page-container">
+        <div class="header-section">
+            <div class="header-block">
+                <img src="logowithoutnameandslogan.jpg" alt="Logo" class="header-logo-img">
+                <div class="header-text-col">
+                    <h1 class="header-brand-name"><span style="color: var(--brand-blue);">ONE</span> <span style="color: var(--brand-red);">CHOICE</span> <span style="color: var(--brand-blue);">KITCHEN</span></h1>
+                    <div class="header-brand-slogan">ALL YOUR CRAVINGS. ONE KITCHEN</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-body">
+            
+            <div class="two-col-layout">
+                <div class="col">
+                    <div class="menu-card">
+                        <div>
+                            <div class="cat-title">📢 IMPORTANT NOTICE</div>
+                            
+                            <div class="notice-text">
+                                <strong>Dear Tiffin Service Customers,</strong><br>
+                                Due to the current severe shortage and increased prices of gas in India, we are facing significant difficulties in preparing food. Keeping this situation in mind, starting tomorrow (until further notice), an <span class="bold-red">additional charge of ₹10</span> will be levied per delivery.
+                            </div>
+
+                            <div class="notice-highlight">
+                                <div class="notice-highlight-title">Details of Additional Charges:</div>
+                                <div class="price-row"><span>1 Time Tiffin</span> <span class="price-val">+ ₹10 / day</span></div>
+                                <div class="price-row"><span>2 Time Tiffin</span> <span class="price-val">+ ₹20 / day</span></div>
+                                <div class="price-row"><span>3 Time Tiffin</span> <span class="price-val">+ ₹30 / day</span></div>
+                                <span class="warning-text">⚠️ Note: All these additional charges are applicable Per Person and will remain in effect until gas supply and prices normalize.</span>
+                            </div>
+
+                            <div class="notice-heading">Rules & Guidelines (Please Note):</div>
+                            
+                            <div class="bold-blue" style="font-size: 11px; margin-bottom: 2px;">1. Payment & Monthly Plan Rules:</div>
+                            <ul class="notice-list">
+                                <li><strong>If a customer does not provide their own tiffin/lunch box</strong>, even for a single day or a single meal, a <strong>packaging charge of ₹15 per person per meal</strong> will be applied. For example, if a customer takes 3 meals a day without a tiffin box, they will have to pay ₹45 (15 x 3) daily.</li>
+                                <li><strong>Since you are availing our monthly plan service</strong>, if a customer is absent for more than 5 consecutive days, their money will only be adjusted in the following month if <strong>Advance Notice</strong> was provided. <strong>Please note that for absences of 5 days or less, there will be absolutely no adjustment of any kind.</strong></li>
+								<li>This additional charge must be paid daily via <strong>QR Scanner</strong> by the end of the same day.</li>
+                                <li><strong>If the payment is not made on time, the tiffin service for the next day may be suspended.</strong></li>
+                            </ul>
+
+                            <div class="bold-blue" style="font-size: 11px; margin-bottom: 2px;">2. Important Instructions for Tiffin Boxes:</div>
+                            <ul class="notice-list">
+                                <li>All customers are requested to clearly write their <strong><span class="bold-red">Name, Mobile Number, and Location</span></strong> on their respective tiffin boxes to avoid any inconvenience in delivery.</li>
+                                <li>If this information is not written on the tiffin and a wrong or empty tiffin is delivered due to identical boxes, <strong>One Choice Kitchen</strong> will not be responsible in such a situation.</li>
+                            </ul>
+
+                            <div class="bold-blue" style="font-size: 11px; margin-bottom: 2px;">3. Trial Meal Policy:</div>
+                            <ul class="notice-list">
+                                <li>You may take a trial for any number of days. During the trial, you will be charged the <strong>regular menu price</strong> for the items prepared that day plus a <strong>min ₹40 Delivery + Packaging charge.</strong>.</li>
+                                <li>If you book a monthly plan after a 1 or 2-day trial, the amount paid during the trial will be <strong><span class="bold-red">adjusted (deducted)</span></strong> from your monthly plan fee. Your monthly plan will then start from your first trial day.</li>
+                            </ul>
+                        </div>
+
+                        <div class="important-box">
+                            <strong class="bold-red">IMPORTANT:</strong> If any customer does not accept these rules, please inform us clearly today itself. We will settle your account up to today, refund the remaining money, and your tiffin service will be terminated so that you can arrange for service from another place at your convenience.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col">
+                    <div class="menu-card">
+                        <div>
+                            <div class="cat-title">📢 आवश्यक सूचना</div>
+                            
+                            <div class="notice-text">
+                                <strong>प्रिय टिफिन सर्विस ग्राहकों,</strong><br>
+                                भारत में वर्तमान में गैस की भारी कमी और गैस के बढ़े हुए दामों के कारण हमें खाना बनाने में अत्यधिक कठिनाई का सामना करना पड़ रहा है। इस स्थिति को ध्यान में रखते हुए, कल से (अगली सूचना तक) प्रत्येक डिलीवरी पर <span class="bold-red">₹10 अतिरिक्त शुल्क</span> लिया जाएगा।
+                            </div>
+
+                            <div class="notice-highlight">
+                                <div class="notice-highlight-title">अतिरिक्त शुल्क का विवरण:</div>
+                                <div class="price-row"><span>1 टाइम टिफिन लेने पर</span> <span class="price-val">+ ₹10 / प्रतिदिन</span></div>
+                                <div class="price-row"><span>2 टाइम टिफिन लेने पर</span> <span class="price-val">+ ₹20 / प्रतिदिन</span></div>
+                                <div class="price-row"><span>3 टाइम टिफिन लेने पर</span> <span class="price-val">+ ₹30 / प्रतिदिन</span></div>
+                                <span class="warning-text">⚠️ नोट: यह सभी अतिरिक्त शुल्क प्रति व्यक्ति (Per Person) लागू होंगे और यह तब तक जारी रहेंगे जब तक गैस की आपूर्ति और कीमतें सामान्य नहीं हो जातीं।</span>
+                            </div>
+
+                            <div class="notice-heading">नियम एवं निर्देश (कृपया ध्यान दें):</div>
+                            
+                            <div class="bold-blue" style="font-size: 11px; margin-bottom: 2px;">1. भुगतान एवं मासिक प्लान संबंधी नियम:</div>
+                            <ul class="notice-list">
+                                <li><strong>यदि कोई ग्राहक अपना टिफिन/लंच बॉक्स नहीं देता है</strong>, चाहे वह महीने में 1 ही दिन या 1 समय का ही क्यों न हो, तो उसे <strong>प्रति व्यक्ति ₹15 पैकेजिंग चार्ज (प्रति समय)</strong> देना होगा। उदाहरण के लिए, 3 समय का खाना बिना टिफिन के लेने पर प्रतिदिन ₹45 (15x3) का भुगतान करना होगा।</li>
+                                <li><strong>चूँकि आप हमारे मासिक प्लान की सेवा ले रहे हैं</strong>, इसलिए यदि कोई ग्राहक लगातार 5 दिन से अधिक अनुपस्थित रहता है, तो उसका पैसा अगले महीने में तभी एडजस्ट किया जाएगा जब उसकी <strong>पूर्व सूचना</strong> दी गई हो। <strong>कृपया ध्यान दें कि 5 दिन या इससे कम की अनुपस्थिति पर किसी भी तरह का कोई एडजस्टमेंट नहीं होगा।</strong></li>
+								<li>इस अतिरिक्त शुल्क का भुगतान प्रतिदिन <strong>QR Scanner</strong> के माध्यम से उसी दिन रात तक करना अनिवार्य है।</li>
+                                <li><strong>यदि समय पर भुगतान नहीं किया जाता है, तो अगले दिन की टिफिन सेवा बाधित की जा सकती है।</strong></li>
+                            </ul>
+
+                            <div class="bold-blue" style="font-size: 11px; margin-bottom: 2px;">2. टिफिन बॉक्स संबंधी महत्वपूर्ण निर्देश:</div>
+                            <ul class="notice-list">
+                                <li>सभी ग्राहकों से अनुरोध है कि अपने-अपने टिफिन पर अपना <span class="bold-red">नाम, मोबाइल नंबर और लोकेशन</span> स्पष्ट रूप से लिख दें, ताकि डिलीवरी में कोई असुविधा न हो।</li>
+                                <li>यदि टिफिन पर यह जानकारी नहीं लिखी गई है और एक जैसे टिफिन होने के कारण गलत या खाली टिफिन डिलीवर हो जाता है, तो ऐसी स्थिति में <strong>One Choice Kitchen</strong> जिम्मेदार नहीं होगा।</li>
+                            </ul>
+
+                            <div class="bold-blue" style="font-size: 11px; margin-bottom: 2px;">3. ट्रायल (Trial) संबंधी नियम:</div>
+                            <ul class="notice-list">
+                                <li>आप जितने दिन चाहें ट्रायल ले सकते हैं। ट्रायल के दौरान उस समय के मेनू के अनुसार <strong>रेगुलर रेट (Normal Price) और न्यूनतम ₹40 डिलीवरी + packaging चार्ज</strong> लगेगा।</li>
+                                <li>यदि आप 1 या 2 दिन के ट्रायल के बाद मासिक प्लान (Monthly Plan) बुक करते हैं, तो ट्रायल के दौरान दिया गया पैसा आपके मासिक शुल्क में से <strong><span class="bold-red">एडजस्ट (माइनस)</span></strong> कर दिया जाएगा। आपका मासिक प्लान ट्रायल के पहले दिन से ही शुरू माना जाएगा।</li>
+                            </ul>
+                        </div>
+
+                        <div class="important-box">
+                            <strong class="bold-red">महत्वपूर्ण:</strong> यदि किसी ग्राहक को यह नियम स्वीकार नहीं हैं, तो कृपया आज ही हमें स्पष्ट रूप से सूचित करें। हम आज तक का आपका पूरा हिसाब करके बचा हुआ पैसा वापस कर देंगे, और आपकी टिफिन सेवा समाप्त कर दी जाएगी ताकि आप अपनी सुविधानुसार किसी अन्य स्थान से सेवा ले सकें।
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="payment-banner">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=Q259949443@ybl" alt="Payment QR" class="qr-code-img">
+                <div class="payment-info">
+                    <div class="pay-title">
+                        <span>📱</span> SCAN TO PAY <span style="color: #333; font-weight: normal; margin: 0 5px;">|</span> भुगतान के लिए स्कैन करें
+                    </div>
+                    <div class="pay-warning-text">
+                        <strong>Important:</strong> Please verify the name <span class="highlight-name">Ms Preety Kumari</span> before making the payment. If the name differs, contact us immediately!<br>
+                        <strong>ज़रूरी सूचना:</strong> कृपया भुगतान करने से पहले <span class="highlight-name">Ms Preety Kumari</span> नाम जाँचे। यदि नाम अलग हो, तो कृपया हमें तुरंत संपर्क करें!
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="footer-strip">
+            <div class="footer-left">ADDRESS: MADHUBAN COLONY, NEAR ABHIYANTA NAGAR, PATNA - 27</div>
+            <div class="footer-right">📞 6299230165 / 7004838102 / 9934423434</div>
+        </div>
+    </div>
+
+</body>
+</html>

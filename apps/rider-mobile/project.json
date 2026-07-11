@@ -1,0 +1,23 @@
+{
+  "name": "rider-mobile",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/rider-mobile",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "serve": {
+      "executor": "@nx/next:server",
+      "options": {
+        "buildTarget": "rider-mobile:build",
+        "dev": true,
+        "port": 4212
+      }
+    },
+    "build": {
+      "executor": "@nx/next:build",
+      "options": {
+        "outputPath": "dist/apps/rider-mobile"
+      }
+    }
+  }
+}

@@ -1,0 +1,98 @@
+﻿.headerContainer {
+  padding: 10px 15px;
+  border-bottom: 2px solid #e5e7eb;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: white;
+  min-height: 85px;
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.brandLink {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  text-decoration: none;
+}
+
+.brandLogo {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+}
+
+.brandTextContainer {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.brandTitle {
+  font-family: 'Oswald', sans-serif;
+  font-size: clamp(20px, 4vw, 32px);
+  line-height: 1;
+  margin: 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.brandSubtitle {
+  font-size: clamp(7px, 1.5vw, 10px);
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #2563EB;
+  margin-top: 2px;
+}
+
+.childrenContainer {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+  justify-content: center;
+}
+
+@media (max-width: 767px) {
+  .childrenContainer {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .headerContainer {
+    flex-wrap: nowrap;
+    padding: 10px 25px;
+    justify-content: space-between;
+  }
+  
+  .childrenContainer {
+    width: auto;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 480px) {
+  .brandLogo {
+    width: 40px;
+    height: 40px;
+  }
+  .brandLink {
+    gap: 8px;
+  }
+  .brandTitle {
+    white-space: nowrap;
+    font-size: 16px;
+  }
+  .brandSubtitle {
+    font-size: 7px;
+    letter-spacing: 1px;
+  }
+}

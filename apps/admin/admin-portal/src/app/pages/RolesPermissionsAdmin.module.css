@@ -1,0 +1,245 @@
+.pageContainer {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #0f172a;
+  background-color: #f8fafc;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.pageTitle {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.025em;
+}
+
+.layoutGrid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+/* Sidebar / Roles List */
+.sidebar {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebarHeader {
+  padding: 1.25rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 1.1rem;
+  background: #f8fafc;
+}
+
+.roleList {
+  display: flex;
+  flex-direction: column;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.roleItem {
+  padding: 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid #f8fafc;
+  transition: all 0.2s;
+  background: white;
+  color: #0f172a;
+  box-sizing: border-box;
+}
+
+.roleItem:hover {
+  background: #f8fafc;
+}
+
+.roleItem.active {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-left: 3px solid #3b82f6;
+  padding-left: calc(1rem - 3px);
+}
+
+.roleName {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+}
+
+.roleCount {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.roleItem.active .roleCount {
+  color: #3b82f6;
+}
+
+.addRoleForm {
+  padding: 1rem;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.roleInput {
+  flex: 1;
+  padding: 0.65rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.85rem;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.roleInput:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+}
+
+.addBtn {
+  padding: 0 1rem;
+  background: #0f172a;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.addBtn:hover {
+  background: #1e293b;
+}
+
+/* Permissions Matrix */
+.matrixPanel {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.matrixHeader {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.matrixTitle {
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 1.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.matrixSubtitle {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.matrixBody {
+  padding: 1.5rem;
+}
+
+.permissionsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.permLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #fafafa;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.permLabel:hover {
+  background: #f1f5f9;
+}
+
+.permLabel.granted {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.permCheckbox {
+  accent-color: #3b82f6;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  margin-top: 2px;
+  cursor: pointer;
+}
+
+.permText {
+  font-size: 0.85rem;
+  color: #475569;
+  font-weight: 500;
+  text-transform: capitalize;
+  line-height: 1.4;
+}
+
+.permLabel.granted .permText {
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.emptyState {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  padding: 4rem;
+  text-align: center;
+  color: #64748b;
+  border: 1px dashed #cbd5e1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .pageContainer {
+    padding: 1rem;
+  }
+  
+  .layoutGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .roleList {
+    max-height: 300px;
+  }
+  
+  .permissionsGrid {
+    grid-template-columns: 1fr;
+  }
+}

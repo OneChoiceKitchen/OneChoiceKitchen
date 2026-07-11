@@ -1,0 +1,12 @@
+{
+  "name": "admin-portal",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/admin/admin-portal/src",
+  "projectType": "application",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project admin-portal --web",
+  "targets": {},
+  "options": {
+    "outputPath": "dist/apps/admin/admin-portal"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "rider-portal",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/rider/rider-portal/src",
+  "projectType": "application",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project rider-portal --web",
+  "targets": {}
+}

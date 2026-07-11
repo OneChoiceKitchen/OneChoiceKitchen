@@ -1,0 +1,398 @@
+/* ============================================================
+   ONE CHOICE KITCHEN — PAGE DEFAULTS v3.0
+   Azure Portal-inspired overrides for all 57+ admin module pages.
+
+   STRATEGY: Override module-level hardcoded hex colors using CSS
+   variable inheritance. CSS Modules produce class names like
+   [filename]_pageContainer__XXXX — we target the semantic role
+   via descendant selectors on common root patterns.
+
+   This file is imported AFTER styles.css in main.tsx.
+   All module-specific CSS Modules still win on their own rules;
+   this only patches the theme-dependent color values.
+   ============================================================ */
+
+/* ── 1. Page Container — background & font ─────────────────── */
+/*
+   Every module wraps its content in a div with class containing
+   "pageContainer" or is the first div child of .modContent.
+   We target both via the cascade.
+*/
+[class*="pageContainer"] {
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+  font-family: var(--font-sans) !important;
+}
+
+/* Content cards within page containers */
+[class*="contentCard"],
+[class*="content-card"],
+[class*="tableCard"],
+[class*="mainCard"] {
+  background: var(--surf) !important;
+  border: 1px solid var(--bdr) !important;
+  border-radius: var(--r-lg) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+/* ── 2. Page Headers ────────────────────────────────────────── */
+[class*="pageHeader"],
+[class*="page-header"],
+[class*="headerRow"],
+[class*="header-row"] {
+  border-bottom: none !important;
+}
+
+/* Page titles */
+[class*="pageTitle"],
+[class*="page-title"] {
+  color: var(--text) !important;
+  font-family: var(--font-sans) !important;
+}
+
+/* Page subtitles */
+[class*="pageSubtitle"],
+[class*="page-subtitle"],
+[class*="subTitle"] {
+  color: var(--text3) !important;
+  font-size: var(--text-sm) !important;
+}
+
+/* ── 3. Tables ──────────────────────────────────────────────── */
+[class*="tableContainer"],
+[class*="table-container"],
+[class*="tableWrapper"],
+[class*="table-wrapper"] {
+  background: var(--surf) !important;
+  border: 1px solid var(--bdr) !important;
+  border-radius: var(--r-lg) !important;
+  overflow: hidden;
+}
+
+/* Table headers */
+[class*="pageContainer"] table th,
+[class*="contentCard"] table th {
+  background: var(--surf2) !important;
+  color: var(--text3) !important;
+  font-size: var(--text-xs) !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: .05em !important;
+  border-bottom: 1px solid var(--bdr) !important;
+  padding: .75rem 1rem !important;
+  white-space: nowrap;
+}
+
+/* Table cells */
+[class*="pageContainer"] table td,
+[class*="contentCard"] table td {
+  color: var(--text) !important;
+  border-bottom: 1px solid var(--bdr) !important;
+  background: var(--surf) !important;
+  padding: .75rem 1rem !important;
+  vertical-align: middle;
+  font-size: var(--text-sm) !important;
+}
+
+/* Table row hover — brand blue tint */
+[class*="pageContainer"] table tr:hover td,
+[class*="contentCard"] table tr:hover td {
+  background: var(--brand-blue-lt) !important;
+}
+
+/* Last row no border */
+[class*="pageContainer"] table tr:last-child td,
+[class*="contentCard"] table tr:last-child td {
+  border-bottom: none !important;
+}
+
+/* ── 4. Search inputs ───────────────────────────────────────── */
+[class*="searchInput"],
+[class*="search-input"] {
+  border: 1.5px solid var(--bdr) !important;
+  border-radius: var(--r-md) !important;
+  background: var(--surf) !important;
+  color: var(--text) !important;
+  font-size: var(--text-sm) !important;
+}
+[class*="searchInput"]:focus,
+[class*="search-input"]:focus {
+  border-color: var(--brand-blue) !important;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.1) !important;
+  outline: none !important;
+}
+
+/* Date inputs */
+[class*="dateInput"],
+[class*="date-input"] {
+  border: 1.5px solid var(--bdr) !important;
+  border-radius: var(--r-md) !important;
+  background: var(--surf) !important;
+  color: var(--text) !important;
+}
+[class*="dateInput"]:focus,
+[class*="date-input"]:focus {
+  border-color: var(--brand-blue) !important;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.1) !important;
+  outline: none !important;
+}
+
+/* Select / filter dropdowns */
+[class*="filterSelect"],
+[class*="filter-select"],
+[class*="statusSelect"],
+[class*="status-select"] {
+  border: 1.5px solid var(--bdr) !important;
+  border-radius: var(--r-md) !important;
+  background: var(--surf) !important;
+  color: var(--text) !important;
+  font-size: var(--text-sm) !important;
+}
+[class*="filterSelect"]:focus,
+[class*="statusSelect"]:focus {
+  border-color: var(--brand-blue) !important;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.1) !important;
+  outline: none !important;
+}
+
+/* ── 5. Action Buttons ─────────────────────────────────────── */
+/* Refresh / secondary buttons */
+[class*="refreshBtn"],
+[class*="refresh-btn"],
+[class*="secondaryBtn"],
+[class*="secondary-btn"],
+[class*="outlineBtn"],
+[class*="outline-btn"] {
+  background: var(--surf) !important;
+  border: 1px solid var(--bdr) !important;
+  color: var(--text2) !important;
+  border-radius: var(--r-md) !important;
+  font-size: var(--text-sm) !important;
+  font-weight: 600 !important;
+  transition: all var(--t-base) !important;
+}
+[class*="refreshBtn"]:hover,
+[class*="secondaryBtn"]:hover {
+  background: var(--surf2) !important;
+  border-color: var(--bdr2) !important;
+  color: var(--text) !important;
+}
+
+/* Primary / action buttons (add / create / save) */
+[class*="addBtn"],
+[class*="add-btn"],
+[class*="createBtn"],
+[class*="create-btn"],
+[class*="primaryBtn"],
+[class*="primary-btn"],
+[class*="saveBtn"],
+[class*="save-btn"],
+[class*="actionBtn"].primary {
+  background: var(--brand-blue) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: var(--r-md) !important;
+  font-weight: 600 !important;
+  transition: all var(--t-base) !important;
+}
+[class*="addBtn"]:hover,
+[class*="createBtn"]:hover,
+[class*="primaryBtn"]:hover,
+[class*="saveBtn"]:hover {
+  background: var(--brand-blue-dk) !important;
+  box-shadow: 0 4px 14px rgba(37,99,235,.3) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Delete / danger buttons */
+[class*="deleteBtn"],
+[class*="delete-btn"],
+[class*="dangerBtn"],
+[class*="danger-btn"] {
+  background: var(--brand-red) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: var(--r-md) !important;
+  font-weight: 600 !important;
+}
+[class*="deleteBtn"]:hover,
+[class*="dangerBtn"]:hover {
+  background: var(--brand-red-dk) !important;
+  box-shadow: 0 4px 14px rgba(220,38,38,.25) !important;
+}
+
+/* Pagination buttons */
+[class*="pageBtn"],
+[class*="page-btn"],
+[class*="paginationBtn"],
+[class*="pagination-btn"] {
+  background: var(--surf) !important;
+  border: 1px solid var(--bdr) !important;
+  color: var(--text2) !important;
+  border-radius: var(--r-sm) !important;
+  transition: all var(--t-base) !important;
+}
+[class*="pageBtn"]:hover:not(:disabled),
+[class*="paginationBtn"]:hover:not(:disabled) {
+  background: var(--brand-blue-lt) !important;
+  border-color: var(--brand-blue) !important;
+  color: var(--brand-blue) !important;
+}
+
+/* ── 6. Status Badges / Pills ───────────────────────────────── */
+[class*="statusBadge"],
+[class*="status-badge"],
+[class*="badge"] {
+  font-weight: 700 !important;
+  font-size: var(--text-xs) !important;
+  border-radius: 999px !important;
+}
+
+/* Error / alert states */
+[class*="errorState"],
+[class*="error-state"],
+[class*="errorMsg"],
+[class*="error-msg"] {
+  background: var(--brand-red-lt) !important;
+  color: var(--brand-red) !important;
+  border: 1px solid var(--brand-red-md) !important;
+  border-radius: var(--r-md) !important;
+}
+
+/* Empty states */
+[class*="emptyState"],
+[class*="empty-state"] {
+  color: var(--text3) !important;
+}
+
+/* ── 7. Section Cards / Stat Cards ─────────────────────────── */
+[class*="statCard"],
+[class*="stat-card"],
+[class*="kpiCard"],
+[class*="kpi-card"],
+[class*="metricCard"],
+[class*="metric-card"] {
+  background: var(--surf) !important;
+  border: 1px solid var(--bdr) !important;
+  border-radius: var(--r-lg) !important;
+  box-shadow: var(--shadow-sm) !important;
+  transition: box-shadow var(--t-base), transform var(--t-base) !important;
+}
+[class*="statCard"]:hover,
+[class*="kpiCard"]:hover,
+[class*="metricCard"]:hover {
+  box-shadow: var(--shadow-md) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* ── 8. Modals ──────────────────────────────────────────────── */
+[class*="modalOverlay"],
+[class*="modal-overlay"],
+[class*="overlay"] {
+  background: rgba(15,23,42,.55) !important;
+  backdrop-filter: blur(6px) !important;
+}
+
+[class*="modalContent"],
+[class*="modal-content"],
+[class*="modalBox"],
+[class*="modal-box"],
+[class*="modalCard"],
+[class*="modal-card"] {
+  background: var(--surf) !important;
+  border: 1px solid var(--bdr) !important;
+  border-radius: var(--r-xl) !important;
+  box-shadow: var(--shadow-xl) !important;
+}
+
+[class*="modalHeader"],
+[class*="modal-header"] {
+  border-bottom: 1px solid var(--bdr) !important;
+  background: var(--surf) !important;
+}
+
+[class*="modalFooter"],
+[class*="modal-footer"] {
+  border-top: 1px solid var(--bdr) !important;
+  background: var(--surf) !important;
+}
+
+/* ── 9. Form Inputs (inside module pages) ───────────────────── */
+[class*="formInput"],
+[class*="form-input"],
+[class*="inputField"],
+[class*="input-field"],
+[class*="textInput"],
+[class*="text-input"],
+[class*="formControl"],
+[class*="form-control"] {
+  border: 1.5px solid var(--bdr) !important;
+  border-radius: var(--r-md) !important;
+  background: var(--surf) !important;
+  color: var(--text) !important;
+  font-size: var(--text-sm) !important;
+}
+[class*="formInput"]:focus,
+[class*="inputField"]:focus,
+[class*="textInput"]:focus,
+[class*="formControl"]:focus {
+  border-color: var(--brand-blue) !important;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.1) !important;
+  outline: none !important;
+}
+
+/* ── 10. Order ID / Link Colors ─────────────────────────────── */
+[class*="orderId"],
+[class*="order-id"],
+[class*="recordId"],
+[class*="record-id"] {
+  color: var(--brand-blue) !important;
+}
+
+/* ── 11. Tabs ───────────────────────────────────────────────── */
+[class*="tabBtn"].active,
+[class*="tab-btn"].active,
+[class*="activeTab"],
+[class*="active-tab"] {
+  background: var(--surf) !important;
+  color: var(--brand-blue) !important;
+  border-color: var(--brand-blue-md) !important;
+}
+
+/* ── 12. Pagination info text ───────────────────────────────── */
+[class*="pageInfo"],
+[class*="page-info"],
+[class*="paginationInfo"] {
+  color: var(--text3) !important;
+  font-size: var(--text-sm) !important;
+}
+[class*="pageIndicator"],
+[class*="page-indicator"] {
+  color: var(--text) !important;
+  font-weight: 600 !important;
+}
+
+/* ── 13. Dark Mode compatibility ─────────────────────────────── */
+[data-theme="dark"] [class*="contentCard"],
+[data-theme="dark"] [class*="tableWrapper"],
+[data-theme="dark"] [class*="modalContent"] {
+  background: var(--surf) !important;
+  border-color: var(--bdr) !important;
+}
+[data-theme="dark"] [class*="pageContainer"] table th {
+  background: var(--surf2) !important;
+  color: var(--text3) !important;
+  border-bottom-color: var(--bdr) !important;
+}
+[data-theme="dark"] [class*="pageContainer"] table td {
+  background: var(--surf) !important;
+  color: var(--text) !important;
+  border-bottom-color: var(--bdr) !important;
+}
+
+/* ── 14. Breadcrumb (global override) ───────────────────────── */
+[class*="breadcrumb"],
+[class*="Breadcrumb"] {
+  background: var(--surf) !important;
+  border-bottom: 1px solid var(--bdr) !important;
+}

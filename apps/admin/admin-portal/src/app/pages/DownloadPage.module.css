@@ -1,0 +1,187 @@
+.page {
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  width: 100%;
+  font-family: 'Inter', -apple-system, sans-serif;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+.header { text-align: center; margin-bottom: 2.5rem; }
+.headerBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  border-radius: 2rem;
+  padding: .35rem 1rem;
+  font-size: .8rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+.title { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 800; color: #0f172a; margin: 0 0 .75rem; }
+.subtitle { font-size: .95rem; color: #64748b; max-width: 560px; margin: 0 auto 1rem; line-height: 1.6; }
+.notice {
+  display: inline-block;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+  border-radius: .5rem;
+  padding: .5rem 1.25rem;
+  font-size: .85rem;
+  font-weight: 500;
+}
+
+/* ── App Tabs ────────────────────────────────────────────────────────────── */
+.appTabs {
+  display: flex;
+  gap: .75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 1rem;
+}
+.appTab {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .6rem 1.25rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: .75rem;
+  background: #fff;
+  cursor: pointer;
+  font-size: .9rem;
+  font-weight: 600;
+  color: #64748b;
+  transition: all .2s;
+}
+.appTab:hover { border-color: #94a3b8; color: #374151; }
+.appTabActive { font-weight: 700; }
+.tabIcon { font-size: 1.25rem; }
+.tabName { white-space: nowrap; }
+.tabBadge {
+  font-size: .65rem;
+  color: #fff;
+  padding: .15rem .5rem;
+  border-radius: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+/* ── Detail Panel ────────────────────────────────────────────────────────── */
+.detail {
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-top: 4px solid #2563eb;
+  border-radius: 1rem;
+  overflow: hidden;
+  margin-bottom: 2.5rem;
+}
+.detailHeader {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1.75rem;
+  align-items: flex-start;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fafafa;
+}
+.detailIcon {
+  width: 64px;
+  height: 64px;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+.detailInfo { flex: 1; }
+.detailAudience { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: .25rem; }
+.detailName { font-size: 1.4rem; font-weight: 800; color: #0f172a; margin: 0 0 .25rem; }
+.detailSubtitle { font-size: .85rem; color: #64748b; margin: 0 0 .75rem; }
+.detailDesc { font-size: .9rem; color: #374151; line-height: 1.6; margin: 0 0 1rem; }
+.metaRow { display: flex; gap: .5rem; flex-wrap: wrap; }
+.metaChip {
+  font-size: .78rem;
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: .5rem;
+  padding: .25rem .75rem;
+  font-weight: 500;
+}
+
+.detailBody { display: grid; grid-template-columns: 1fr auto; gap: 1.5rem; padding: 1.75rem; align-items: start; }
+.detailSection h3, .downloadSection h3 { font-size: .9rem; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; font-weight: 700; margin: 0 0 1rem; }
+.featureList { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: .5rem; }
+.featureItem { font-size: .9rem; color: #374151; display: flex; gap: .5rem; align-items: flex-start; }
+
+.downloadSection { min-width: 220px; }
+.restrictedNotice {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: .5rem;
+  padding: .75rem 1rem;
+  font-size: .8rem;
+  color: #dc2626;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+.downloadButtons { display: flex; flex-direction: column; gap: .75rem; }
+.dlBtn {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  color: #fff;
+  text-decoration: none;
+  padding: .75rem 1.25rem;
+  border-radius: .75rem;
+  transition: all .2s;
+  font-size: .9rem;
+}
+.dlBtn:hover { opacity: .85; transform: translateY(-1px); }
+.dlBtnIcon { width: 24px; height: 24px; flex-shrink: 0; }
+
+/* ── All Apps Quick Grid ─────────────────────────────────────────────────── */
+.allAppsSection { margin-bottom: 2.5rem; }
+.allAppsTitle { font-size: 1.1rem; font-weight: 700; color: #0f172a; margin: 0 0 1.25rem; }
+.allAppsGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+.quickCard {
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-top: 3px solid #2563eb;
+  border-radius: .875rem;
+  padding: 1.25rem;
+  transition: box-shadow .2s;
+}
+.quickCard:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+.quickIcon { font-size: 1.75rem; width: 44px; height: 44px; border-radius: .75rem; display: flex; align-items: center; justify-content: center; margin-bottom: .75rem; }
+.quickName { font-size: .95rem; font-weight: 700; color: #0f172a; margin-bottom: .25rem; }
+.quickVersion { font-size: .75rem; color: #94a3b8; margin-bottom: .5rem; }
+.quickRestricted { font-size: .72rem; color: #dc2626; font-weight: 600; margin-bottom: .5rem; }
+.quickLinks { display: flex; flex-direction: column; gap: .35rem; }
+.quickLink { font-size: .8rem; color: #2563eb; text-decoration: none; font-weight: 500; }
+.quickLink:hover { text-decoration: underline; }
+
+/* ── FAQ ─────────────────────────────────────────────────────────────────── */
+.faqSection { margin-bottom: 2rem; }
+.faqTitle { font-size: 1.1rem; font-weight: 700; color: #0f172a; margin: 0 0 1.25rem; }
+.faqList { display: flex; flex-direction: column; gap: .75rem; }
+.faqItem { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: .75rem; overflow: hidden; }
+.faqItem[open] { border-color: #2563eb; }
+.faqQ {
+  padding: 1rem 1.25rem;
+  font-size: .9rem;
+  font-weight: 600;
+  color: #0f172a;
+  cursor: pointer;
+  list-style: none;
+}
+.faqQ::after { content: ' +'; color: #2563eb; }
+.faqItem[open] .faqQ::after { content: ' −'; }
+.faqA { padding: 0 1.25rem 1rem; font-size: .85rem; color: #475569; line-height: 1.6; margin: 0; }
+
+@media (max-width: 640px) {
+  .detailBody { grid-template-columns: 1fr; }
+  .downloadButtons { flex-direction: row; flex-wrap: wrap; }
+}

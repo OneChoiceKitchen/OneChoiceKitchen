@@ -1,0 +1,310 @@
+# OneChoiceKitchen — Production Docker Compose v2.0
+#
+# Usage:
+#   Start all:        docker compose up -d
+#   Stop all:         docker compose down
+#   View logs:        docker compose logs -f [service]
+#   Rebuild service:  docker compose build [service] && docker compose up -d [service]
+#   Scale:            docker compose up -d --scale api=2
+#
+# Service URLs after startup:
+#   Customer Web:     http://localhost:4208
+#   Admin Portal:     http://localhost:4205   (PRIVATE — not publicly accessible)
+#   Partner Portal:   http://localhost:4206
+#   Rider Portal:     http://localhost:4207
+#   Customer Mobile:  http://localhost:4210
+#   Partner App:      http://localhost:4211
+#   Rider App:        http://localhost:4212
+#   NestJS API:       http://localhost:3000
+#   API Docs:         http://localhost:3000/api/docs
+#   MailDev UI:       http://localhost:1080   (dev only)
+#
+# Required environment variables (set in .env.docker or environment):
+#   DATABASE_URL, REDIS_URL, JWT_SECRET, NEXTAUTH_SECRET,
+#   RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, GOOGLE_MAPS_API_KEY, etc.
+
+version: '3.8'
+
+services:
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # INFRASTRUCTURE
+  # ──────────────────────────────────────────────────────────────────────────
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: ock-postgres-prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB:-onechoice_prod}
+      POSTGRES_USER:     ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - pg_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    networks:
+      - ock-internal
+
+  redis:
+    image: redis:7-alpine
+    container_name: ock-redis-prod
+    restart: unless-stopped
+    command: >
+      redis-server
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --appendonly yes
+      --requirepass ${REDIS_PASSWORD:-}
+    volumes:
+      - redis_prod_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      - ock-internal
+
+  maildev:
+    image: maildev/maildev
+    container_name: ock-maildev-prod
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "1080:1080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:1080 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - ock-internal
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # BACKEND API
+  # ──────────────────────────────────────────────────────────────────────────
+
+  api:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.api
+    container_name: ock-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.docker
+    environment:
+      NODE_ENV:     production
+      PORT:         3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - ock-internal
+      - ock-external
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # FRONTENDS
+  # ──────────────────────────────────────────────────────────────────────────
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: ock-web
+    restart: unless-stopped
+    ports:
+      - "4208:3000"
+    env_file:
+      - .env.docker
+    environment:
+      NODE_ENV:         production
+      NEXT_PUBLIC_API_URL: http://api:3000
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - ock-internal
+      - ock-external
+
+  admin-portal:
+    build:
+      context: .
+      dockerfile: infra/docker/portal.Dockerfile
+      args:
+        NX_PROJECT: admin-portal
+        DIST_PATH:  dist/apps/admin/admin-portal
+    container_name: ock-admin-portal
+    restart: unless-stopped
+    ports:
+      - "4205:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:80 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - ock-internal
+      # NOTE: Admin portal is NOT exposed on ock-external — internal access only
+
+  partner-portal:
+    build:
+      context: .
+      dockerfile: infra/docker/portal.Dockerfile
+      args:
+        NX_PROJECT: partner-portal
+        DIST_PATH:  dist/apps/partner/partner-portal
+    container_name: ock-partner-portal
+    restart: unless-stopped
+    ports:
+      - "4206:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:80 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - ock-internal
+      - ock-external
+
+  rider-portal:
+    build:
+      context: .
+      dockerfile: infra/docker/portal.Dockerfile
+      args:
+        NX_PROJECT: rider-portal
+        DIST_PATH:  dist/apps/rider/rider-portal
+    container_name: ock-rider-portal
+    restart: unless-stopped
+    ports:
+      - "4207:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:80 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - ock-internal
+      - ock-external
+
+  customer-mobile:
+    build:
+      context: .
+      dockerfile: infra/docker/portal.Dockerfile
+      args:
+        NX_PROJECT: customer-mobile
+        DIST_PATH:  dist/apps/customer-mobile
+    container_name: ock-customer-mobile
+    restart: unless-stopped
+    ports:
+      - "4210:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:80 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - ock-internal
+      - ock-external
+
+  mobile-app:
+    build:
+      context: .
+      dockerfile: infra/docker/portal.Dockerfile
+      args:
+        NX_PROJECT: mobile-app
+        DIST_PATH:  dist/apps/mobile-app
+    container_name: ock-mobile-app
+    restart: unless-stopped
+    ports:
+      - "4211:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:80 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - ock-internal
+      - ock-external
+
+  rider-mobile:
+    build:
+      context: .
+      dockerfile: infra/docker/portal.Dockerfile
+      args:
+        NX_PROJECT: rider-mobile
+        DIST_PATH:  dist/apps/rider-mobile
+    container_name: ock-rider-mobile
+    restart: unless-stopped
+    ports:
+      - "4212:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:80 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - ock-internal
+      - ock-external
+
+# ── Networks ──────────────────────────────────────────────────────────────────
+networks:
+  ock-internal:
+    driver: bridge
+    # Internal only — databases, Redis, Admin portal
+  ock-external:
+    driver: bridge
+    # External-facing — web, portals, API
+
+# ── Named Volumes (data persists across container restarts) ───────────────────
+volumes:
+  pg_prod_data:
+    driver: local
+  redis_prod_data:
+    driver: local

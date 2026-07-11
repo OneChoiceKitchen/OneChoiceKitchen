@@ -1,0 +1,23 @@
+{
+  "siteName": "One Choice Kitchen",
+  "tagline": "All Your Cravings, One Kitchen",
+  "title": "One Choice Kitchen | Premium Tiffin Services",
+  "description": "Delicious, healthy, and hygienic home-style meals delivered straight to your door.",
+  "keywords": "tiffin, food delivery, healthy meals, home-style food, lunch box",
+  "canonicalUrl": "https://onechoicekitchen.com",
+  "robots": "index, follow",
+  "schemaMarkup": "{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"FoodEstablishment\",\n  \"name\": \"One Choice Kitchen\"\n}",
+  "ogTitle": "One Choice Kitchen | Premium Tiffin Services",
+  "ogDescription": "Delicious, healthy, and hygienic home-style meals delivered straight to your door.",
+  "twitterTitle": "One Choice Kitchen",
+  "twitterDescription": "Delicious, healthy, and hygienic home-style meals.",
+  "faviconUrl": "/branding/favicon.ico",
+  "transparentFaviconUrl": "/branding/transparent-logo.png",
+  "logoUrl": "/branding/transparent-logo.png",
+  "contactEmail": "contact@onechoicekitchen.com",
+  "contactPhone": "+91-9876543210",
+  "facebookUrl": "https://facebook.com/onechoicekitchen",
+  "twitterUrl": "https://twitter.com/onechoicekitchen",
+  "instagramUrl": "https://instagram.com/onechoicekitchen",
+  "linkedinUrl": "https://linkedin.com/company/onechoicekitchen"
+}

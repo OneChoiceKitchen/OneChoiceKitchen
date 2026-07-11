@@ -1,0 +1,326 @@
+.pageContainer {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #0f172a;
+  background-color: transparent;
+  box-sizing: border-box;
+}
+
+.pageHeader {
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.titleGroup h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.025em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pageSubtitle {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.tabControls {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.tabBtn {
+  padding: 0.6rem 1.25rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.tabBtn.active {
+  background: white;
+  color: #0ea5e9;
+  border-color: #bae6fd;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.tabBtn.inactive {
+  background: transparent;
+  color: #64748b;
+  border-color: transparent;
+}
+
+.tabBtn.inactive:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.primaryActionBtn {
+  background: #0ea5e9;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.25rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.primaryActionBtn:hover {
+  background: #0284c7;
+}
+
+.searchBox {
+  padding: 0.6rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  outline: none;
+  width: 280px;
+  max-width: 100%;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.searchBox:focus {
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+}
+
+.loadingState, .errorState, .emptyState {
+  text-align: center;
+  padding: 3rem;
+  border-radius: 12px;
+  background: white;
+  box-sizing: border-box;
+}
+
+.loadingState { color: #64748b; }
+.errorState { color: #DC2626; background: #fef2f2; border: 1px solid #fca5a5; }
+.emptyState { color: #94a3b8; border: 1px dashed #cbd5e1; }
+
+/* Tables & Lists */
+.tableContainer {
+  background: white;
+  border-radius: 12px;
+  overflow: auto;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  width: 100%;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+.table th {
+  background-color: #f8fafc;
+  padding: 1rem 1.25rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #475569;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.table td {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  vertical-align: middle;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table tr:hover td {
+  background-color: #f8fafc;
+}
+
+.primaryCell {
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 0.95rem;
+}
+
+.secondaryCell {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.roleContext {
+  display: block;
+  font-size: 0.75rem;
+  color: #0ea5e9;
+  font-weight: 500;
+  margin-top: 0.25rem;
+}
+
+.statusBadge {
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.statusBadge.active { background: #dcfce7; color: #16a34a; }
+.statusBadge.inactive { background: #fee2e2; color: #DC2626; }
+.statusBadge.pending { background: #fef3c7; color: #d97706; }
+.statusBadge.approved { background: #dcfce7; color: #16a34a; }
+
+.actionGroup {
+  display: flex;
+  gap: 0.25rem;
+  justify-content: flex-end;
+}
+
+.iconBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconBtn.edit { color: #3b82f6; }
+.iconBtn.edit:hover { background: #eff6ff; }
+
+.iconBtn.delete { color: #DC2626; }
+.iconBtn.delete:hover { background: #fef2f2; }
+
+.approveBtn {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+.approveBtn:hover {
+  background: #059669;
+}
+
+@media (max-width: 768px) {
+  .pageContainer {
+    padding: 0.5rem;
+  }
+  
+  .tabControls {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .tabBtn, .primaryActionBtn {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+  
+  .searchBox {
+    width: 100%;
+  }
+
+  .tableContainer {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    margin: 0;
+    width: 100%;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+  
+  .table, .table tbody, .table tr, .table td {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table tr {
+    margin-bottom: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  }
+
+  .table td {
+    border: none;
+    padding: 0.75rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    border-bottom: 1px solid #f1f5f9;
+    min-width: 0;
+    word-break: break-word;
+    white-space: normal;
+    text-align: left;
+  }
+
+  .table td:last-child {
+    border-bottom: none;
+  }
+
+  .table td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: #64748b;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .table {
+    min-width: 0;
+  }
+  
+  .actionGroup {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

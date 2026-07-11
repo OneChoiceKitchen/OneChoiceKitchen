@@ -1,0 +1,25 @@
+# ── NestJS API Service .gitignore ────────────────────────────
+node_modules/
+dist/
+build/
+.cache/
+coverage/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+*.err.log
+
+# TypeScript
+*.tsbuildinfo
+
+# Prisma (only in api service)
+node_modules/.prisma/
+
+# OS
+.DS_Store
+Thumbs.db

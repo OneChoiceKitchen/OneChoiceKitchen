@@ -1,0 +1,113 @@
+# OneChoiceKitchen — Local Development Infrastructure v2.0
+# Manages: PostgreSQL 15, Redis 7, Maildev (email catcher), pgAdmin 4 (DB GUI)
+#
+# Usage:
+#   Start:    docker compose -f docker-compose.dev.yml up -d
+#   Stop:     docker compose -f docker-compose.dev.yml down
+#   Logs:     docker compose -f docker-compose.dev.yml logs -f
+#   Reset:    docker compose -f docker-compose.dev.yml down -v   (DESTROYS all data)
+#   Status:   docker compose -f docker-compose.dev.yml ps
+#
+# Service URLs after startup:
+#   PostgreSQL:    localhost:5432  (user: postgres, pass: postgres, db: onechoice_dev)
+#   Redis:         localhost:6379
+#   MailDev UI:    http://localhost:1080   (view test emails)
+#   MailDev SMTP:  localhost:1025          (send emails here from API)
+#   pgAdmin:       http://localhost:5050   (DB GUI — login: admin@onechoicekitchen.com / admin123)
+#
+# This file is 100% SEPARATE from setup.ps1 (Nx app orchestrator).
+# Apps (NestJS API, Next.js portals) are managed by: .\setup.ps1 start / stop / status
+# Or use: .\setup.ps1 start -WithDocker  (auto-starts Docker infra then launches apps)
+
+version: "3.8"
+
+services:
+
+  # ── PostgreSQL 15 ──────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: ock-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       onechoice_dev
+      POSTGRES_USER:     postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d onechoice_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ── Redis 7 ───────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: ock-redis
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  # ── Maildev (email catcher for dev/testing) ────────────────────────────────
+  maildev:
+    image: maildev/maildev
+    container_name: ock-maildev
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP — NestJS sends emails here
+      - "1080:1080"   # Web UI — view emails at http://localhost:1080
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:1080 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  # ── pgAdmin 4 (PostgreSQL GUI — Database Browser) ─────────────────────────
+  # Access at: http://localhost:5050
+  # Login: admin@onechoicekitchen.com / admin123
+  # Server is pre-configured to connect to ock-postgres automatically
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: ock-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL:    admin@onechoicekitchen.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./infra/docker/pgadmin-servers.json:/pgadmin4/servers.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-O", "-", "http://localhost:80/misc/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+# ── Named Volumes (data persists across container restarts) ───────────────────
+volumes:
+  pg_dev_data:
+    driver: local
+  redis_dev_data:
+    driver: local
+  pgadmin_data:
+    driver: local

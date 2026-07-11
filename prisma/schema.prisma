@@ -1,0 +1,1779 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id                 String                     @id @default(uuid())
+  email              String                     @unique
+  password           String?
+  name               String
+  mobile             String?                    @unique
+  googleId           String?                    @unique
+  facebookId         String?                    @unique
+  mfaEnabled         Boolean                    @default(false)
+  mfaSecret          String?
+  mfaType            String?
+  emailVerified      Boolean                    @default(false)
+  mobileVerified     Boolean                    @default(false)
+  whatsappVerified   Boolean                    @default(false)
+  profilePhoto       String?
+  deactivatedAt      DateTime?
+  notificationPrefs  String                     @default("{\"email\":true,\"sms\":true,\"whatsapp\":true,\"push\":true}")
+  isLocked           Boolean                    @default(false)
+  lockoutUntil       DateTime?
+  otpCode            String?
+  otpExpiry          DateTime?
+  roleId             String?
+  role               Role?                      @relation(fields: [roleId], references: [id])
+  restaurantId       String?
+  restaurant         Restaurant?                @relation(fields: [restaurantId], references: [id])
+  isActive           Boolean                    @default(true)
+  loyaltyPoints      Int                        @default(0)
+  referralCode       String                     @unique @default(uuid())
+  createdAt          DateTime                   @default(now())
+  updatedAt          DateTime                   @updatedAt
+  addresses          Address[]
+  subscriptions      CustomerSubscription[]
+  pointHistory       PointHistory[]
+  referredBy         Referral?                  @relation("ReferredBy")
+  referralsMade      Referral[]                 @relation("ReferralsMade")
+  reviews            Review[]
+  rewardRedemptions  RewardRedemption[]
+  supportTickets     SupportTicket[]
+  auditLogs          AuditLog[]
+  requestedApprovals ApprovalRequest[]          @relation("RequestedApprovals")
+  approvedApprovals  ApprovalRequest[]          @relation("ApprovedApprovals")
+  orders             Order[]
+  sessions           Session[]
+  loginHistory       LoginHistory[]
+  failedLogins       FailedLoginAttempt[]
+  walletTransactions WalletTransaction[]
+  favorites          Favorite[]
+  reservations       TableReservation[]
+  waitlist           Waitlist[]
+  employeeMealSubs   EmployeeMealSubscription[]
+  refunds            Refund[]
+  assignedTasks      Task[]                     @relation("TaskAssignee")
+  reportedTasks      Task[]                     @relation("TaskReporter")
+  taskComments       TaskComment[]
+  taskAttachments    TaskAttachment[]
+  taskHistories      TaskHistory[]
+  hallBookings       HallBooking[]
+  chatParticipants   ChatParticipant[]
+  starredMessages    ChatStarredMessage[]
+  aiChatSessions     AiChatSession[]
+  sentMessages       ChatMessage[]
+}
+
+model Restaurant {
+  id                   String                 @id @default(uuid())
+  name                 String
+  ownerName            String?
+  email                String?
+  secondaryEmail       String?
+  mobile               String?
+  secondaryMobile      String?
+  businessDetails      String?
+  cuisine              String?
+  address              String?
+  city                 String?
+  lat                  Float?
+  lng                  Float?
+  rating               Float                  @default(0)
+  reviewCount          Int                    @default(0)
+  isFranchise          Boolean                @default(false)
+  parentRestaurantId   String?
+  isActive             Boolean                @default(true)
+  isDeleted            Boolean                @default(false)
+  deletedAt            DateTime?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  users                User[]
+  orders               Order[]
+  branches             RestaurantBranch[]
+  franchiseParents     FranchiseRelation[]    @relation("FranchiseParent")
+  franchiseBranches    FranchiseRelation[]    @relation("FranchiseBranch")
+  reservations         TableReservation[]
+  waitlist             Waitlist[]
+  compliance           RestaurantCompliance[]
+  tables               RestaurantTable[]
+  menus                MenuItem[]
+  tiffinMenus          TiffinMenu[]
+  tiffinPlans          TiffinPlan[]
+  tiffinFlyers         TiffinFlyer[]
+  tiffinGlobalSettings TiffinGlobalSetting[]
+  tiffinHolidays       TiffinHoliday[]
+  tiffinTerms          TiffinTerm[]
+  offers               TiffinOffer[]
+  halls                Hall[]
+  foodPackages         FoodPackage[]
+  addonPackages        AddonPackage[]
+}
+
+model Role {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  description String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  users       User[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  description String?
+  createdAt   DateTime         @default(now())
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  details   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+}
+
+model ApprovalRequest {
+  id            String   @id @default(uuid())
+  entityType    String
+  entityId      String?
+  requestedData String
+  status        String   @default("PENDING")
+  requestedById String
+  approvedById  String?
+  comments      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  requestedBy User  @relation("RequestedApprovals", fields: [requestedById], references: [id])
+  approvedBy  User? @relation("ApprovedApprovals", fields: [approvedById], references: [id])
+}
+
+model PartnerRegistration {
+  id              String   @id @default(uuid())
+  restaurantName  String
+  ownerName       String
+  email           String   @unique
+  mobile          String
+  businessDetails String?
+  status          String   @default("PENDING")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model RiderRegistration {
+  id                String    @id @default(uuid())
+  fullName          String
+  email             String?
+  mobile            String    @unique
+  vehicleType       String    @default("Bike")
+  vehicleVin        String?
+  licensePlate      String?
+  licenseNumber     String?
+  licenseExpiry     DateTime?
+  insuranceUrl      String?
+  aadharUrl         String?
+  photoUrl          String?
+  bankAccountNumber String?
+  bankIfsc          String?
+  bankAccountName   String?
+  whatsappVerified  Boolean   @default(false)
+  emailVerified     Boolean   @default(false)
+  status            String    @default("PENDING") // PENDING, APPROVED, REJECTED, SUSPENDED
+  rejectionReason   String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model Address {
+  id        String   @id @default(uuid())
+  userId    String
+  street    String
+  city      String
+  state     String
+  zipCode   String
+  latitude  Float?
+  longitude Float?
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model TiffinMenu {
+  id           String            @id @default(uuid())
+  restaurantId String?
+  name         String
+  description  String?
+  mealType     String
+  dietType     String
+  dayOfWeek    String?
+  image        String?
+  youtubeUrl   String?
+  price        Float             @default(0)
+  isAvailable  Boolean           @default(true)
+  isDeleted    Boolean           @default(false)
+  date         DateTime?
+  calories     Int?
+  branchId     String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  restaurant   Restaurant?       @relation(fields: [restaurantId], references: [id])
+  branch       RestaurantBranch? @relation(fields: [branchId], references: [id])
+}
+
+model SubscriptionPlan {
+  id            String                 @id @default(uuid())
+  name          String
+  description   String?
+  durationDays  Int
+  pricePerMeal  Float
+  basePrice     Float
+  dietType      String
+  mealType      String
+  isActive      Boolean                @default(true)
+  subscriptions CustomerSubscription[]
+}
+
+model CustomerSubscription {
+  id           String             @id @default(uuid())
+  restaurantId String?
+  userId       String
+  planId       String
+  startDate    DateTime
+  endDate      DateTime
+  status       String             @default("ACTIVE")
+  deliveryLat  Float
+  deliveryLng  Float
+  deliveryFee  Float              @default(0)
+  packagingFee Float              @default(0)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  invoices     BillingInvoice[]
+  plan         SubscriptionPlan   @relation(fields: [planId], references: [id])
+  user         User               @relation(fields: [userId], references: [id])
+  schedules    DeliverySchedule[]
+}
+
+model DeliverySchedule {
+  id             String               @id @default(uuid())
+  subscriptionId String
+  date           DateTime
+  mealType       String
+  status         String               @default("PENDING")
+  riderId        String?
+  notes          String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  customizations String?
+  subscription   CustomerSubscription @relation(fields: [subscriptionId], references: [id])
+}
+
+model BillingInvoice {
+  id             String               @id @default(uuid())
+  subscriptionId String
+  amount         Float
+  tax            Float                @default(0)
+  totalAmount    Float
+  status         String               @default("PENDING")
+  paymentMethod  String?
+  receiptUrl     String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  subscription   CustomerSubscription @relation(fields: [subscriptionId], references: [id])
+}
+
+model TenantSetting {
+  id                      String   @id @default(uuid())
+  restaurantName          String
+  logoUrl                 String?
+  themeColor              String   @default("#3b82f6")
+  currency                String   @default("INR")
+  operatingHours          String   @default("09:00 - 22:00")
+  deliveryRadius          Float    @default(5.0)
+  activeModules           String   @default("dashboard,crm,dispatch,menu,orders,payments,inventory,workforce,printing")
+  isEmployeeModuleEnabled Boolean  @default(true)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+}
+
+model PaymentConfig {
+  id            String   @id @default(uuid())
+  gatewayName   String   @unique
+  isEnabled     Boolean  @default(false)
+  isSandbox     Boolean  @default(true)
+  apiKey        String?
+  apiSecret     String?
+  merchantId    String?
+  publicKey     String?
+  webhookSecret String?
+  activeMethods String   @default("upi,cards,netbanking")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model StorageConfig {
+  id           String   @id @default(uuid())
+  providerName String   @unique // e.g., "LOCAL", "AWS_S3", "GCS", "AZURE_BLOB"
+  isActive     Boolean  @default(false)
+  accessKey    String?
+  secretKey    String?
+  bucketName   String?
+  region       String?
+  endpointUrl  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model AuthConfig {
+  id           String   @id @default(uuid())
+  providerName String   @unique // e.g., "GOOGLE", "FACEBOOK", "APPLE"
+  isEnabled    Boolean  @default(false)
+  clientId     String?
+  clientSecret String?
+  callbackUrl  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model AiConfig {
+  id           String   @id @default(uuid())
+  providerName String   @unique // e.g., "GEMINI", "OPENAI"
+  isActive     Boolean  @default(false)
+  apiKey       String?
+  modelName    String?  @default("gemini-1.5-flash-latest")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model TaxRule {
+  id        String   @id @default(uuid())
+  name      String
+  rate      Float
+  region    String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model Coupon {
+  id         String   @id @default(uuid())
+  code       String   @unique
+  discount   Float
+  type       String   @default("PERCENT")
+  expiryDate DateTime
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+}
+
+model InventoryItem {
+  id         String    @id @default(uuid())
+  name       String
+  sku        String    @unique
+  quantity   Int
+  threshold  Int       @default(10)
+  warehouse  String    @default("Main Kitchen")
+  supplierId String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  supplier   Supplier? @relation(fields: [supplierId], references: [id])
+}
+
+model Supplier {
+  id        String          @id @default(uuid())
+  name      String
+  contact   String
+  email     String?
+  createdAt DateTime        @default(now())
+  items     InventoryItem[]
+}
+
+model Employee {
+  id           String    @id @default(uuid())
+  userId       String?   @unique // Link to User for ESS login
+  restaurantId String?
+  name         String
+  email        String    @unique
+  mobile       String?
+  role         String    @default("STAFF") // RIDER, MANAGER, CHEF, etc.
+  designation  String? // Custom designation
+  status       String    @default("ACTIVE") // ACTIVE, SUSPENDED, TERMINATED
+  baseSalary   Float     @default(0.0)
+  joiningDate  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  shifts      Shift[]
+  attendances Attendance[]
+  leaveReqs   LeaveRequest[]
+  leaveBals   LeaveBalance[]
+  payrolls    Payroll[]
+  documents   EmployeeDocument[]
+}
+
+model Shift {
+  id         String   @id @default(uuid())
+  employeeId String
+  name       String   @default("General") // Morning, Evening, Custom
+  dayOfWeek  String
+  startTime  String
+  endTime    String
+  breakMins  Int      @default(60)
+  createdAt  DateTime @default(now())
+  employee   Employee @relation(fields: [employeeId], references: [id])
+}
+
+model EmailConfig {
+  id           String   @id @default(uuid())
+  providerName String   @unique
+  isActive     Boolean  @default(false)
+  priority     Int      @default(1)
+  dailyLimit   Int      @default(1000)
+  config       Json
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model SmsConfig {
+  id           String   @id @default(uuid())
+  providerName String   @unique
+  isActive     Boolean  @default(false)
+  priority     Int      @default(1)
+  dailyLimit   Int      @default(500)
+  config       Json
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Blog {
+  id                   String    @id @default(uuid())
+  title                String
+  slug                 String    @unique
+  category             String
+  author               String
+  excerpt              String?
+  readTime             Int       @default(5)
+  seoTitle             String?
+  seoDescription       String?
+  scheduledPublishDate DateTime?
+  publishDate          DateTime  @default(now())
+  content              String
+  views                Int       @default(0)
+  likes                Int       @default(0)
+  featuredImage        String?
+  isActive             Boolean   @default(true)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  comments             Comment[]
+}
+
+model Comment {
+  id          String    @id @default(uuid())
+  blogId      String
+  authorName  String
+  authorEmail String?
+  content     String
+  status      String    @default("PENDING")
+  parentId    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  parent      Comment?  @relation("CommentToComment", fields: [parentId], references: [id])
+  replies     Comment[] @relation("CommentToComment")
+  blog        Blog      @relation(fields: [blogId], references: [id], onDelete: Cascade)
+}
+
+model Reward {
+  id             String             @id @default(uuid())
+  name           String
+  description    String
+  pointsRequired Int
+  rewardType     String             @default("DISCOUNT")
+  code           String?
+  imageUrl       String?
+  isActive       Boolean            @default(true)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  redemptions    RewardRedemption[]
+}
+
+model RewardRedemption {
+  id        String   @id @default(uuid())
+  userId    String
+  rewardId  String
+  points    Int
+  createdAt DateTime @default(now())
+  reward    Reward   @relation(fields: [rewardId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model PointHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String
+  points    Int
+  type      String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Referral {
+  id             String   @id @default(uuid())
+  referrerId     String
+  referredEmail  String
+  referredUserId String?  @unique
+  status         String   @default("PENDING")
+  rewardPoints   Int      @default(500)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  referredUser   User?    @relation("ReferredBy", fields: [referredUserId], references: [id])
+  referrer       User     @relation("ReferralsMade", fields: [referrerId], references: [id])
+}
+
+model Review {
+  id           String   @id @default(uuid())
+  userId       String?
+  customerName String
+  rating       Int
+  comment      String
+  photoUrl     String?
+  status       String   @default("PENDING")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User?    @relation(fields: [userId], references: [id])
+}
+
+model FAQ {
+  id        String   @id @default(uuid())
+  question  String
+  answer    String
+  category  String   @default("General")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SupportTicket {
+  id            String          @id @default(uuid())
+  userId        String?
+  email         String
+  subject       String
+  message       String
+  category      String          @default("GENERAL") // GENERAL, ORDER, DELIVERY, ACCOUNT, REFUND, PAYMENT
+  priority      String          @default("MEDIUM") // URGENT, HIGH, MEDIUM, LOW
+  status        String          @default("OPEN") // OPEN, IN_PROGRESS, ESCALATED, RESOLVED, CLOSED
+  assignedTo    String? // userId of support agent
+  portalSource  String          @default("CUSTOMER") // CUSTOMER, PARTNER, RIDER, ADMIN
+  slaDeadline   DateTime?
+  slaBreached   Boolean         @default(false)
+  rating        Int? // 1-5 after resolution
+  ratingComment String?
+  attachments   String? // JSON array of file URLs
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  user          User?           @relation(fields: [userId], references: [id])
+  messages      TicketMessage[]
+}
+
+model DeliverySetting {
+  id                      String   @id @default(uuid())
+  restaurantAddress       String   @default("One Choice Kitchen, Patna")
+  restaurantLat           Float    @default(25.5941)
+  restaurantLng           Float    @default(85.1376)
+  enableDistanceCharges   Boolean  @default(true)
+  freeDeliveryDistance    Float    @default(3.0)
+  perKmCharge             Float    @default(8.0)
+  minimumDeliveryCharge   Float    @default(0.0)
+  maximumDeliveryCharge   Float?
+  enableDistanceMargin    Boolean  @default(false)
+  distanceMarginValue     Float    @default(0.0)
+  applyMarginBeforeCharge Boolean  @default(true)
+  googleMapsApiKey        String?
+  allowPayOnDelivery      Boolean  @default(true)
+  minimumOrderValue       Float    @default(0.0)
+  updatedAt               DateTime @updatedAt
+}
+
+model MenuItem {
+  id           String    @id @default(uuid())
+  restaurantId String?
+  branchId     String?
+  name         String
+  description  String?
+  price        Float
+  image        String?
+  diet         String    @default("VEG")
+  category     String    @default("Main")
+  isAvailable  Boolean   @default(true)
+  prepTime     Int       @default(20)
+  isPopular    Boolean   @default(false)
+  rating       Float     @default(4.5)
+  reviewCount  Int       @default(0)
+  sortOrder    Int       @default(0)
+  isDeleted    Boolean   @default(false)
+  deletedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // SEO Fields
+  seoTitle       String?
+  seoDescription String?
+  seoKeywords    String?
+
+  // SMO Fields
+  ogTitle            String?
+  ogDescription      String?
+  ogImageUrl         String?
+  twitterTitle       String?
+  twitterDescription String?
+  youtubeUrl         String?
+
+  attributes       ProductAttribute[]
+  orderItems       OrderItem[]
+  restaurant       Restaurant?        @relation(fields: [restaurantId], references: [id])
+  branch           RestaurantBranch?  @relation(fields: [branchId], references: [id])
+  foodPackageItems FoodPackageItem[]
+}
+
+model PortalSlider {
+  id          String   @id @default(uuid())
+  portal      String
+  title       String
+  description String
+  buttonText  String
+  link        String
+  bgColor     String
+  fontColor   String
+  btnColor    String
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  orderIndex  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ProductAttribute {
+  id         String                   @id @default(uuid())
+  menuItemId String
+  name       String
+  type       String                   @default("SINGLE")
+  isRequired Boolean                  @default(false)
+  sortOrder  Int                      @default(0)
+  createdAt  DateTime                 @default(now())
+  updatedAt  DateTime                 @updatedAt
+  menuItem   MenuItem                 @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  options    ProductAttributeOption[]
+}
+
+model ProductAttributeOption {
+  id              String           @id @default(uuid())
+  attributeId     String
+  name            String
+  additionalPrice Float            @default(0)
+  isDefault       Boolean          @default(false)
+  isAvailable     Boolean          @default(true)
+  sortOrder       Int              @default(0)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  attribute       ProductAttribute @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+}
+
+model SeoMetadata {
+  id                 String   @id @default(uuid())
+  pageName           String   @unique
+  title              String
+  description        String?
+  keywords           String?
+  canonicalUrl       String?
+  robots             String   @default("index, follow")
+  ogTitle            String?
+  ogDescription      String?
+  ogImageUrl         String?
+  ogUrl              String?
+  twitterTitle       String?
+  twitterDescription String?
+  twitterImageUrl    String?
+  schemaMarkup       String?
+  updatedAt          DateTime @updatedAt
+}
+
+model StaticPage {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  title     String
+  content   String
+  section   String   @default("Company")
+  isActive  Boolean  @default(true)
+  portals   String   @default("web") // comma separated string e.g. "web,partner,rider"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SystemSettings {
+  id                    String   @id @default(uuid())
+  siteName              String   @default("One Choice Kitchen")
+  tagline               String   @default("Online Home-Style Food, Tiffin & Meal Services")
+  logoUrl               String?
+  faviconUrl            String?
+  contactEmail          String?
+  contactPhone          String?
+  facebookUrl           String?
+  twitterUrl            String?
+  instagramUrl          String?
+  updatedAt             DateTime @updatedAt
+  linkedinUrl           String?
+  transparentFaviconUrl String?
+}
+
+model TiffinFlyer {
+  id           String            @id @default(uuid())
+  type         String            @unique
+  title        String
+  imageUrl     String?
+  isActive     Boolean           @default(true)
+  restaurantId String?
+  branchId     String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  restaurant   Restaurant?       @relation(fields: [restaurantId], references: [id])
+  branch       RestaurantBranch? @relation(fields: [branchId], references: [id])
+}
+
+model TiffinGlobalSetting {
+  id                     String            @id @default(uuid())
+  deliveryIncludedKm     Int               @default(3)
+  extraKmCharge          Float             @default(8)
+  shopPickupDiscountPct  Float             @default(5)
+  notesText              String?
+  qrCodeUrl              String?
+  breakfastTime          String            @default("7 - 10 AM")
+  breakfastYoutubeUrl    String?
+  lunchTime              String            @default("12 - 3 PM")
+  lunchYoutubeUrl        String?
+  dinnerTime             String            @default("7 - 10 PM")
+  dinnerYoutubeUrl       String?
+  trialDeliveryFee       Float             @default(40)
+  trialPackagingFee      Float             @default(15)
+  minPauseDays           Int               @default(5)
+  upiId                  String?
+  paymentInstructions    String?
+  advancePaymentRequired Boolean           @default(true)
+  businessName           String            @default("ONE CHOICE KITCHEN")
+  businessAddress        String            @default("MADHUBAN COLONY, NEAR ABHIYANTA NAGAR, PATNA - 27")
+  contactNumbers         String            @default("6299230165 / 7004838102")
+  restaurantId           String?
+  branchId               String?
+  restaurant             Restaurant?       @relation(fields: [restaurantId], references: [id])
+  branch                 RestaurantBranch? @relation(fields: [branchId], references: [id])
+}
+
+model TiffinHoliday {
+  id            String            @id @default(uuid())
+  title         String
+  date          DateTime?
+  isRecurring   Boolean           @default(false)
+  recurringRule String?
+  isActive      Boolean           @default(true)
+  isDeleted     Boolean           @default(false)
+  restaurantId  String?
+  branchId      String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  restaurant    Restaurant?       @relation(fields: [restaurantId], references: [id])
+  branch        RestaurantBranch? @relation(fields: [branchId], references: [id])
+}
+
+model TiffinOffer {
+  id              String  @id @default(uuid())
+  title           String
+  description     String?
+  discountPct     Float   @default(0)
+  minBookings     Int     @default(0)
+  imageUrl        String?
+  appliesToTiffin Boolean @default(true)
+  appliesToMenu   Boolean @default(false)
+  appliesToHome   Boolean @default(false)
+  isHero          Boolean @default(false)
+  isActive        Boolean @default(true)
+
+  restaurantId String?
+  restaurant   Restaurant?       @relation(fields: [restaurantId], references: [id])
+  branchId     String?
+  branch       RestaurantBranch? @relation(fields: [branchId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TiffinPlan {
+  id           String            @id @default(uuid())
+  name         String
+  dietType     String
+  mealsPerDay  Int
+  totalMeals   Int
+  monthlyPrice Float
+  pricePerMeal Float
+  isBestValue  Boolean           @default(false)
+  isActive     Boolean           @default(true)
+  isDeleted    Boolean           @default(false)
+  restaurantId String?
+  branchId     String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  restaurant   Restaurant?       @relation(fields: [restaurantId], references: [id])
+  branch       RestaurantBranch? @relation(fields: [branchId], references: [id])
+}
+
+model TiffinTerm {
+  id           String            @id @default(uuid())
+  title        String
+  contentEn    String
+  contentHi    String
+  order        Int               @default(0)
+  isActive     Boolean           @default(true)
+  isDeleted    Boolean           @default(false)
+  restaurantId String?
+  branchId     String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  restaurant   Restaurant?       @relation(fields: [restaurantId], references: [id])
+  branch       RestaurantBranch? @relation(fields: [branchId], references: [id])
+}
+
+model Order {
+  id                  String            @id @default(uuid())
+  userId              String
+  restaurantId        String
+  riderId             String?
+  branchId            String?
+  status              String            @default("PENDING")
+  orderType           String            @default("DELIVERY") // DELIVERY, TAKEAWAY, DINE_IN
+  tableReservationId  String?
+  tableId             String?
+  totalAmount         Float
+  deliveryFee         Float             @default(0)
+  tax                 Float             @default(0)
+  paymentMethod       String            @default("ONLINE")
+  paymentStatus       String            @default("PENDING")
+  deliveryAddress     String
+  deliveryLat         Float?
+  deliveryLng         Float?
+  specialInstructions String?
+  codAmount           Float? // Cash on Delivery amount collected
+  codCollected        Boolean           @default(false)
+  itemsVerified       Boolean           @default(false) // Rider verified items at pickup
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  user                User              @relation(fields: [userId], references: [id])
+  restaurant          Restaurant        @relation(fields: [restaurantId], references: [id])
+  tableReservation    TableReservation? @relation(fields: [tableReservationId], references: [id])
+  table               RestaurantTable?  @relation(fields: [tableId], references: [id])
+  items               OrderItem[]
+  refunds             Refund[]
+}
+
+model OrderItem {
+  id             String   @id @default(uuid())
+  orderId        String
+  menuItemId     String
+  quantity       Int
+  price          Float
+  customizations String?
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem       MenuItem @relation(fields: [menuItemId], references: [id])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  token        String   @unique
+  refreshToken String?  @unique
+  ipAddress    String?
+  userAgent    String?
+  deviceInfo   String?
+  isValid      Boolean  @default(true)
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LoginHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  ipAddress String?
+  userAgent String?
+  status    String // 'SUCCESS' | 'FAILED'
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model FailedLoginAttempt {
+  id        String   @id @default(uuid())
+  userId    String
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model TicketMessage {
+  id          String   @id @default(uuid())
+  ticketId    String
+  senderId    String
+  message     String
+  attachments String?
+  isInternal  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+}
+
+model NotificationTemplate {
+  id        String   @id @default(uuid())
+  eventName String   @unique // E.g., 'ORDER_PLACED'
+  channel   String // 'EMAIL', 'SMS', 'WHATSAPP'
+  subject   String?
+  body      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Campaign {
+  id             String    @id @default(uuid())
+  name           String
+  channel        String // EMAIL, SMS, WHATSAPP, PUSH
+  targetAudience String // ALL_USERS, CUSTOMERS, RIDERS, etc.
+  status         String    @default("DRAFT") // DRAFT, SCHEDULED, SENT
+  scheduledFor   DateTime?
+  sentAt         DateTime?
+  subject        String?
+  body           String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model WalletTransaction {
+  id          String   @id @default(uuid())
+  userId      String
+  amount      Float
+  type        String // CREDIT, DEBIT
+  description String
+  status      String   @default("COMPLETED")
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Attendance {
+  id           String    @id @default(uuid())
+  employeeId   String
+  date         DateTime
+  checkInTime  DateTime?
+  checkOutTime DateTime?
+  status       String    @default("PRESENT") // PRESENT, ABSENT, HALF_DAY, HOLIDAY, WEEKLY_OFF, LATE
+  photoUrl     String?
+  latitude     Float?
+  longitude    Float?
+  address      String?
+  deviceInfo   String?
+  workingMins  Int       @default(0)
+  overtimeMins Int       @default(0)
+  isVerified   Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+}
+
+model LeaveRequest {
+  id           String   @id @default(uuid())
+  employeeId   String
+  leaveType    String // CASUAL, SICK, EARNED, UNPAID
+  startDate    DateTime
+  endDate      DateTime
+  status       String   @default("PENDING") // PENDING, APPROVED, REJECTED, CANCELLED
+  comments     String?
+  approvedById String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+}
+
+model LeaveBalance {
+  id             String   @id @default(uuid())
+  employeeId     String
+  leaveType      String // CASUAL, SICK, EARNED
+  totalAllocated Float
+  used           Float    @default(0)
+  carriedForward Float    @default(0)
+  year           Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+}
+
+model Payroll {
+  id             String    @id @default(uuid())
+  employeeId     String
+  month          Int
+  year           Int
+  basicSalary    Float
+  allowances     Float     @default(0) // HRA, Conveyance, Bonus, Overtime
+  deductions     Float     @default(0) // PF, ESI, TDS, Penalties
+  netSalary      Float
+  status         String    @default("PENDING") // PENDING, PROCESSED, PAID
+  transactionRef String?
+  paymentDate    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+}
+
+model EmployeeDocument {
+  id                 String    @id @default(uuid())
+  employeeId         String
+  documentType       String // AADHAAR, PAN, DRIVING_LICENSE, RESUME
+  fileUrl            String
+  expiryDate         DateTime?
+  verificationStatus String    @default("PENDING") // PENDING, VERIFIED, REJECTED
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+}
+
+model GeofenceConfig {
+  id           String   @id @default(uuid())
+  restaurantId String?  @unique
+  latitude     Float
+  longitude    Float
+  radiusMeters Float    @default(100.0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ── WhatsApp Configuration (separate from SMS) ──────────────────────────────
+model WhatsappConfig {
+  id            String   @id @default(uuid())
+  providerName  String   @unique // TWILIO, MSG91, META_CLOUD
+  isActive      Boolean  @default(false)
+  priority      Int      @default(1)
+  dailyLimit    Int      @default(500)
+  phoneNumberId String? // Meta Cloud API phone number ID
+  accessToken   String? // Bearer token
+  accountSid    String? // Twilio Account SID
+  authToken     String? // Twilio Auth Token
+  fromNumber    String? // WhatsApp sender number
+  apiKey        String? // MSG91 auth key
+  senderId      String? // MSG91 sender ID
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ── Multi-Branch Support ────────────────────────────────────────────────────
+model RestaurantBranch {
+  id                   String  @id @default(uuid())
+  restaurantId         String
+  name                 String
+  address              String
+  city                 String
+  phone                String?
+  secondaryPhone       String?
+  email                String?
+  secondaryEmail       String?
+  lat                  Float?
+  lng                  Float?
+  mondayHours          String? @default("09:00 - 22:00")
+  tuesdayHours         String? @default("09:00 - 22:00")
+  wednesdayHours       String? @default("09:00 - 22:00")
+  thursdayHours        String? @default("09:00 - 22:00")
+  fridayHours          String? @default("09:00 - 22:00")
+  saturdayHours        String? @default("09:00 - 22:00")
+  sundayHours          String? @default("09:00 - 22:00")
+  isActive             Boolean @default(true)
+  isQrMenuEnabled      Boolean @default(false)
+  isReservationEnabled Boolean @default(false)
+  isDeliveryEnabled    Boolean @default(true)
+  isTakeawayEnabled    Boolean @default(true)
+  qrCodeUrl            String?
+
+  // New Compliance & Branding Fields
+  brandLogoUrl String?
+  faviconUrl   String?
+  fssaiNumber  String?
+  fssaiDocUrl  String?
+  gstNumber    String?
+  gstDocUrl    String?
+  panNumber    String?
+  panDocUrl    String?
+
+  // SEO Fields
+  seoTitle       String?
+  seoDescription String?
+  seoKeywords    String?
+
+  // SMO (Social Media Optimization) Fields
+  ogTitle            String?
+  ogDescription      String?
+  ogImageUrl         String?
+  twitterTitle       String?
+  twitterDescription String?
+  facebookUrl        String?
+  twitterUrl         String?
+  instagramUrl       String?
+  youtubeUrl         String?
+
+  collectionTags String?
+  isDeleted      Boolean   @default(false)
+  deletedAt      DateTime?
+
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  restaurant           Restaurant            @relation(fields: [restaurantId], references: [id])
+  reservations         TableReservation[]
+  waitlistEntries      Waitlist[]
+  tables               RestaurantTable[]
+  menus                MenuItem[]
+  tiffinMenus          TiffinMenu[]
+  tiffinPlans          TiffinPlan[]
+  tiffinFlyers         TiffinFlyer[]
+  tiffinGlobalSettings TiffinGlobalSetting[]
+  tiffinHolidays       TiffinHoliday[]
+  tiffinTerms          TiffinTerm[]
+  offers               TiffinOffer[]
+}
+
+// ── Franchise Relations ──────────────────────────────────────────────────────
+model FranchiseRelation {
+  id                 String     @id @default(uuid())
+  parentRestaurantId String
+  branchRestaurantId String
+  royaltyPercent     Float      @default(0)
+  contractDetails    String?
+  startDate          DateTime   @default(now())
+  status             String     @default("ACTIVE") // ACTIVE, SUSPENDED, TERMINATED
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+  parentRestaurant   Restaurant @relation("FranchiseParent", fields: [parentRestaurantId], references: [id], onDelete: Cascade)
+  branchRestaurant   Restaurant @relation("FranchiseBranch", fields: [branchRestaurantId], references: [id], onDelete: Cascade)
+}
+
+// ── Favorites ────────────────────────────────────────────────────────────────
+model Favorite {
+  id           String   @id @default(uuid())
+  userId       String
+  restaurantId String?
+  menuItemId   String?
+  type         String   @default("RESTAURANT") // RESTAURANT, DISH
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ── Table Reservations ───────────────────────────────────────────────────────
+model TableReservation {
+  id               String            @id @default(uuid())
+  userId           String
+  restaurantId     String
+  branchId         String?
+  date             DateTime
+  timeSlot         String
+  partySize        Int
+  status           String            @default("PENDING") // PENDING, CONFIRMED, SEATED, CANCELLED, COMPLETED
+  confirmationCode String            @unique @default(uuid())
+  specialRequests  String?
+  tableNumber      String?
+  tableId          String?
+  depositAmount    Float?
+  depositStatus    String            @default("PENDING") // PENDING, PAID, REFUNDED
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  user             User              @relation(fields: [userId], references: [id])
+  restaurant       Restaurant        @relation(fields: [restaurantId], references: [id])
+  branch           RestaurantBranch? @relation(fields: [branchId], references: [id])
+  table            RestaurantTable?  @relation(fields: [tableId], references: [id])
+  orders           Order[]
+}
+
+model RestaurantTable {
+  id           String             @id @default(uuid())
+  restaurantId String
+  branchId     String?
+  tableNumber  String
+  capacity     Int                @default(4)
+  isAvailable  Boolean            @default(true)
+  qrCodeUrl    String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  restaurant   Restaurant         @relation(fields: [restaurantId], references: [id])
+  branch       RestaurantBranch?  @relation(fields: [branchId], references: [id])
+  reservations TableReservation[]
+  orders       Order[]
+}
+
+// ── Waitlist ─────────────────────────────────────────────────────────────────
+model Waitlist {
+  id                String            @id @default(uuid())
+  userId            String
+  restaurantId      String
+  branchId          String?
+  partySize         Int
+  status            String            @default("WAITING") // WAITING, NOTIFIED, SEATED, CANCELLED
+  notifiedAt        DateTime?
+  notes             String?
+  estimatedWaitTime Int? // in minutes
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  user              User              @relation(fields: [userId], references: [id])
+  restaurant        Restaurant        @relation(fields: [restaurantId], references: [id])
+  branch            RestaurantBranch? @relation(fields: [branchId], references: [id])
+}
+
+// ── Corporate Meal Plans ─────────────────────────────────────────────────────
+model CorporateMealPlan {
+  id              String                     @id @default(uuid())
+  companyName     String
+  contactName     String
+  contactEmail    String
+  contactPhone    String?
+  planType        String                     @default("MONTHLY") // DAILY, WEEKLY, MONTHLY
+  employeeCount   Int                        @default(1)
+  monthlyBudget   Float                      @default(0)
+  discountPercent Float                      @default(0)
+  startDate       DateTime                   @default(now())
+  endDate         DateTime?
+  status          String                     @default("ACTIVE") // ACTIVE, SUSPENDED, CANCELLED
+  notes           String?
+  createdAt       DateTime                   @default(now())
+  updatedAt       DateTime                   @updatedAt
+  subscriptions   EmployeeMealSubscription[]
+}
+
+model EmployeeMealSubscription {
+  id              String            @id @default(uuid())
+  corporatePlanId String
+  userId          String
+  startDate       DateTime
+  endDate         DateTime?
+  billingCycle    String            @default("MONTHLY")
+  status          String            @default("ACTIVE")
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  corporatePlan   CorporateMealPlan @relation(fields: [corporatePlanId], references: [id])
+  user            User              @relation(fields: [userId], references: [id])
+}
+
+// ── Restaurant Compliance Documents ─────────────────────────────────────────
+model RestaurantCompliance {
+  id             String     @id @default(uuid())
+  restaurantId   String
+  documentType   String // FSSAI, HEALTH_CERT, FIRE_NOC, TRADE_LICENSE, GST
+  documentNumber String?
+  fileUrl        String
+  issuedDate     DateTime?
+  expiryDate     DateTime?
+  status         String     @default("PENDING") // PENDING, APPROVED, REJECTED, EXPIRED
+  reviewNotes    String?
+  reviewedById   String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  restaurant     Restaurant @relation(fields: [restaurantId], references: [id])
+}
+
+// ── Payouts & Settlements ────────────────────────────────────────────────────
+model PayoutRecord {
+  id             String    @id @default(uuid())
+  recipientId    String // userId of RIDER or PARTNER
+  recipientType  String // RIDER, PARTNER
+  periodStart    DateTime
+  periodEnd      DateTime
+  grossAmount    Float
+  deductions     Float     @default(0)
+  netAmount      Float
+  status         String    @default("PENDING") // PENDING, APPROVED, PROCESSED, FAILED
+  paymentMethod  String    @default("BANK_TRANSFER")
+  transactionRef String?
+  processedAt    DateTime?
+  processedById  String?
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+// ── Refunds ──────────────────────────────────────────────────────────────────
+model Refund {
+  id             String    @id @default(uuid())
+  orderId        String
+  userId         String
+  amount         Float
+  reason         String
+  status         String    @default("PENDING") // PENDING, APPROVED, REJECTED, PROCESSED
+  processedAt    DateTime?
+  processedById  String?
+  transactionRef String?
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  order          Order     @relation(fields: [orderId], references: [id])
+  user           User      @relation(fields: [userId], references: [id])
+}
+
+// ── Surge Pricing ────────────────────────────────────────────────────────────
+model SurgePricing {
+  id         String   @id @default(uuid())
+  name       String
+  startTime  String // HH:MM format
+  endTime    String
+  multiplier Float    @default(1.5)
+  zone       String? // city/area name
+  isActive   Boolean  @default(true)
+  daysOfWeek String   @default("1,2,3,4,5,6,7") // comma-separated
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// ── SLA Configuration ────────────────────────────────────────────────────────
+model SLAConfig {
+  id                  String   @id @default(uuid())
+  priority            String   @unique // URGENT, HIGH, MEDIUM, LOW
+  responseTimeHours   Float    @default(1)
+  resolutionTimeHours Float    @default(24)
+  escalationHours     Float    @default(8)
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+// ── Maps Configuration ───────────────────────────────────────────────────────
+model MapsConfig {
+  id            String   @id @default(uuid())
+  providerName  String   @unique // GOOGLE_MAPS, OPENSTREETMAP
+  isActive      Boolean  @default(false)
+  apiKey        String?
+  mapId         String? // Google Maps Map ID
+  routingApiUrl String? // OSRM endpoint for OpenStreetMap
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ── Task Management System ───────────────────────────────────────────────────
+model TaskProject {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tasks       Task[]
+}
+
+model TaskModule {
+  id        String   @id @default(uuid())
+  name      String
+  projectId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tasks     Task[]
+}
+
+model Task {
+  id             String       @id @default(uuid())
+  taskId         String       @unique // e.g., TSK-1001
+  title          String
+  description    String? // Rich text
+  projectId      String?
+  project        TaskProject? @relation(fields: [projectId], references: [id])
+  moduleId       String?
+  module         TaskModule?  @relation(fields: [moduleId], references: [id])
+  taskType       String // Feature, Bug, Enhancement, etc.
+  priority       String // Critical, High, Medium, Low
+  status         String // Backlog, To Do, In Progress, Code Review, Testing, UAT, Completed, Blocked, On Hold
+  assigneeId     String?
+  assignee       User?        @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  reporterId     String?
+  reporter       User?        @relation("TaskReporter", fields: [reporterId], references: [id])
+  startDate      DateTime?
+  dueDate        DateTime?
+  estimatedHours Float?
+  actualHours    Float?
+  labels         String? // Comma separated or JSON
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  comments    TaskComment[]
+  attachments TaskAttachment[]
+  history     TaskHistory[]
+  subtasks    TaskSubtask[]
+}
+
+model TaskComment {
+  id        String   @id @default(uuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TaskAttachment {
+  id         String   @id @default(uuid())
+  taskId     String
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  fileUrl    String
+  fileName   String
+  uploadedBy String
+  user       User     @relation(fields: [uploadedBy], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+model TaskHistory {
+  id        String   @id @default(uuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String // e.g., "Status changed from To Do to In Progress"
+  createdAt DateTime @default(now())
+}
+
+model TaskSubtask {
+  id          String   @id @default(uuid())
+  taskId      String
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  title       String
+  isCompleted Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model EventCategory {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  halls       Hall[]
+}
+
+model Hall {
+  id             String         @id @default(uuid())
+  restaurantId   String
+  restaurant     Restaurant     @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  categoryId     String?
+  category       EventCategory? @relation(fields: [categoryId], references: [id])
+  name           String
+  description    String?
+  minCapacity    Int            @default(0)
+  maxCapacity    Int            @default(100)
+  basePrice      Float          @default(0)
+  amenities      String?
+  galleryUrls    String?
+  locationString String?
+  lat            Float?
+  lng            Float?
+  isActive       Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  bookings HallBooking[]
+}
+
+model FoodPackage {
+  id            String     @id @default(uuid())
+  restaurantId  String
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  name          String
+  description   String?
+  type          String
+  mealType      String
+  pricePerPlate Float      @default(0)
+  minGuests     Int        @default(10)
+  isActive      Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  items    FoodPackageItem[]
+  bookings HallBooking[]
+}
+
+model FoodPackageItem {
+  id            String      @id @default(uuid())
+  foodPackageId String
+  foodPackage   FoodPackage @relation(fields: [foodPackageId], references: [id], onDelete: Cascade)
+  menuItemId    String
+  menuItem      MenuItem    @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model AddonPackage {
+  id           String     @id @default(uuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  name         String
+  description  String?
+  type         String
+  price        Float      @default(0)
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  bookings HallBookingAddon[]
+}
+
+model HallBooking {
+  id              String       @id @default(uuid())
+  customerId      String
+  customer        User         @relation(fields: [customerId], references: [id])
+  hallId          String
+  hall            Hall         @relation(fields: [hallId], references: [id])
+  foodPackageId   String?
+  foodPackage     FoodPackage? @relation(fields: [foodPackageId], references: [id])
+  eventDate       DateTime
+  startTime       String
+  endTime         String
+  guestCount      Int          @default(0)
+  status          String       @default("PENDING")
+  totalAmount     Float        @default(0)
+  advanceAmount   Float        @default(0)
+  balanceAmount   Float        @default(0)
+  specialRequests String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  addons HallBookingAddon[]
+}
+
+model HallBookingAddon {
+  id             String       @id @default(uuid())
+  bookingId      String
+  booking        HallBooking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  addonPackageId String
+  addonPackage   AddonPackage @relation(fields: [addonPackageId], references: [id], onDelete: Cascade)
+  price          Float
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+// ─── CHAT MODULE ─────────────────────────────────────────────────────────────
+
+model ChatConversation {
+  id           String            @id @default(uuid())
+  type         String            // DIRECT | GROUP | SUPPORT_SESSION
+  name         String?           // Group name (for GROUP type)
+  description  String?
+  avatarUrl    String?
+  priority     String            @default("NORMAL") // NORMAL | HIGH | URGENT | CRITICAL
+  isLocked     Boolean           @default(false)
+  isArchived   Boolean           @default(false)
+  createdById  String
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  participants ChatParticipant[]
+  messages     ChatMessage[]
+}
+
+model ChatParticipant {
+  id             String           @id @default(uuid())
+  conversationId String
+  userId         String
+  role           String           @default("MEMBER") // MEMBER | ADMIN
+  joinedAt       DateTime         @default(now())
+  lastReadAt     DateTime?
+  isMuted        Boolean          @default(false)
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User             @relation(fields: [userId], references: [id])
+
+  @@unique([conversationId, userId])
+}
+
+model ChatMessage {
+  id             String           @id @default(uuid())
+  conversationId String
+  senderId       String
+  content        String
+  type           String           @default("TEXT") // TEXT | IMAGE | FILE | VOICE | SYSTEM
+  fileUrl        String?
+  fileName       String?
+  fileSize       Int?
+  fileMime       String?
+  replyToId      String?
+  isEdited       Boolean          @default(false)
+  isDeleted      Boolean          @default(false)
+  isPinned       Boolean          @default(false)
+  reactions      String           @default("{}") // JSON: { "👍": ["userId1"] }
+  deliveredAt    DateTime?
+  readAt         DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User             @relation(fields: [senderId], references: [id])
+  replyTo        ChatMessage?     @relation("ReplyTo", fields: [replyToId], references: [id])
+  replies        ChatMessage[]    @relation("ReplyTo")
+  starredBy      ChatStarredMessage[]
+}
+
+model ChatStarredMessage {
+  id        String      @id @default(uuid())
+  userId    String
+  messageId String
+  createdAt DateTime    @default(now())
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, messageId])
+}
+
+model AiChatSession {
+  id           String         @id @default(uuid())
+  userId       String?        // null for anonymous sessions
+  sessionToken String         @unique @default(uuid())
+  status       String         @default("ACTIVE") // ACTIVE | ESCALATED | CLOSED | ARCHIVED
+  channel      String         @default("WEB")    // WEB | MOBILE | WHATSAPP
+  language     String         @default("en")
+  metadata     String?        // JSON: browser, device, location
+  ticketId     String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  messages     AiChatMessage[]
+  supportReq   HumanSupportRequest?
+  user         User?          @relation(fields: [userId], references: [id])
+}
+
+model AiChatMessage {
+  id          String        @id @default(uuid())
+  sessionId   String
+  role        String        // USER | ASSISTANT | SYSTEM
+  content     String
+  intent      String?       // detected intent
+  confidence  Float?        // AI confidence score 0-1
+  metadata    String?       // JSON: quick replies, attachments
+  createdAt   DateTime      @default(now())
+  session     AiChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model HumanSupportRequest {
+  id             String        @id @default(uuid())
+  aiSessionId    String        @unique
+  customerId     String?
+  assignedToId   String?
+  status         String        @default("PENDING") // PENDING | ACCEPTED | REJECTED | ASSIGNED | CLOSED
+  reason         String?
+  customerNote   String?
+  adminNote      String?
+  conversationId String?       // internal chat conversation created after approval
+  resolvedAt     DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  aiSession      AiChatSession @relation(fields: [aiSessionId], references: [id])
+}
+
+// Admin-configurable AI provider settings
+model AiProviderConfig {
+  id          String   @id @default(uuid())
+  provider    String   @unique // OPENAI | GEMINI | ANTHROPIC | AZURE_OPENAI | CUSTOM
+  displayName String
+  apiKey      String?           // encrypted in production
+  apiEndpoint String?           // custom endpoint
+  model       String?           // e.g. gpt-4o, gemini-1.5-pro
+  isActive    Boolean  @default(false)
+  isPrimary   Boolean  @default(false)
+  settings    String   @default("{}") // JSON: temperature, maxTokens, systemPrompt, etc.
+  usageCount  Int      @default(0)
+  lastUsedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Chatbot FAQ / Knowledge Base entries
+model ChatbotKnowledge {
+  id         String   @id @default(uuid())
+  category   String   // ORDERING | DELIVERY | PAYMENT | REFUND | SUBSCRIPTION | GENERAL
+  question   String
+  answer     String
+  keywords   String   @default("[]") // JSON array of trigger keywords
+  isActive   Boolean  @default(true)
+  priority   Int      @default(0)    // higher = matched first
+  usageCount Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// Canned responses for human agents
+model ChatCannedResponse {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  category  String?
+  shortCode String?  @unique // e.g. /hello /sorry /refund
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ──────────────────────────────────────────────────────────
+// PARTNER RBAC — Granular Feature-Level Permissions
+// ──────────────────────────────────────────────────────────
+
+// Stores which features a partner has been granted access to.
+// module: 'food_ordering' | 'tiffin' | 'dining' | 'hall_party' | 'hrms' | 'marketing' | 'analytics' | 'finance'
+// feature: granular feature ID e.g. 'fo_orders', 'mk_coupons', etc.
+model PartnerFeaturePermission {
+  id          String   @id @default(uuid())
+  partnerId   String
+  module      String   // module group ID
+  feature     String   // granular feature ID
+  isEnabled   Boolean  @default(false)
+  grantedById String?  // Admin user ID who granted
+  grantedAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([partnerId, module, feature])
+  @@index([partnerId])
+}
+
+// Tracks partner-initiated delete requests that need admin approval.
+// Partners cannot directly delete data — they submit a request.
+// Admin approves or rejects via the Partner Permissions admin page.
+model PartnerDeleteRequest {
+  id           String   @id @default(uuid())
+  partnerId    String   // the partner requesting the delete
+  module       String   // which module the entity belongs to
+  entity       String   // model/table name e.g. 'Offer', 'Coupon', 'MenuItem'
+  entityId     String   // the ID of the record to delete
+  reason       String?  // optional reason provided by partner
+  status       String   @default("PENDING") // PENDING | APPROVED | REJECTED
+  reviewedById String?  // admin who approved/rejected
+  reviewedAt   DateTime?
+  requestedAt  DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([partnerId])
+  @@index([status])
+}

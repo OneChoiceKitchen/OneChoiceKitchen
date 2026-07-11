@@ -4,6 +4,49 @@ This document defines the standards every skill in the OneChoiceKitchen AI frame
 
 ---
 
+## 0. TOKEN / CREDIT EFFICIENCY — HIGHEST PRIORITY RULE
+
+> **Applies to ALL AI tools: Antigravity, Cursor, Codex, Claude, GitHub Copilot, and any other.**
+
+Every AI agent MUST minimize tool calls and file reads. The user pays per token — waste is unacceptable.
+
+### Hard Rules
+
+| Rule | Detail |
+|------|--------|
+| **Search before reading** | `grep`/`Select-String` to find exact line → then `view_file` with `StartLine`/`EndLine` |
+| **One read per file** | Never open the same file twice in one task |
+| **Batch edits** | ALL edits to one file → ONE `multi_replace_file_content` call |
+| **No full-file reads** | Always use `StartLine`/`EndLine`. Exception: files < 80 lines |
+| **No browser tests** | Never run a browser subagent unless user explicitly says "test" or "verify visually" |
+| **No plans for simple tasks** | Simple = ≤ 5 file changes. Just do it. No `implementation_plan.md` |
+| **No redundant research** | For reverts: screenshot → grep → 1 edit. Never search git log/diff/transcript for a UI revert |
+| **Trust your edits** | After making an edit, do NOT re-read the file to confirm it |
+| **TypeScript check only when logic changed** | Never run tsc for CSS-only or text-only changes |
+| **No intermediate screenshots** | Don't take screenshots mid-task just to see what changed |
+
+### Max Tool Calls Per Task Type
+
+| Task | Max calls |
+|------|-----------|
+| Revert a UI text/button | 3 |
+| Fix one CSS rule | 2 |
+| Add hint text to a form section | 3 |
+| Fix an API method | 3 |
+| New component page | 8 |
+| Full new module (DB + API + UI) | 15 |
+
+### Anti-Patterns — NEVER Do These
+- ❌ Read 1000-line file when you need 20 lines  
+- ❌ Search git log + diff + transcript to revert 2 lines  
+- ❌ Run browser subagent after every code change  
+- ❌ Create an implementation plan for fixing a button label  
+- ❌ Re-read a file after editing it  
+- ❌ Run `tsc` after a CSS or text-only change  
+
+---
+
+
 ## 1. Skill Creation Standards
 
 ### When to Create a New Skill

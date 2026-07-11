@@ -844,11 +844,9 @@ function WorkspaceHome({ onNav }: { onNav: (id: string) => void }) {
       <section className={styles.wsSec}>
         <div className={styles.wsSecHead}>
           <span className={styles.wsSecTitle}>🕐 Continue Working</span>
-          {hiddenRecentCount > 0 && (
-            <button className={styles.wsSecLink} onClick={() => setShowAllRecent(v => !v)}>
-              {showAllRecent ? `↑ Show Less` : `View All Recent (${displayRecent.length}) →`}
-            </button>
-          )}
+          <button className={styles.wsSecLink} onClick={() => setShowAllRecent(v => !v)}>
+            {showAllRecent ? '↑ Show Less' : `View All Recent →`}
+          </button>
         </div>
         <div className={styles.cwGrid}>
           {visibleRecent.map((id, i) => {

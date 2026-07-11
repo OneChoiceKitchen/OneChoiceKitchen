@@ -373,6 +373,167 @@ value={form[key].toString().split(' - ')[0]}
 
 ---
 
+## Pagination Component (MANDATORY STANDARD — all tables, all portals)
+
+### Design Reference
+Exact layout from approved screenshot:
+```
+«  <  [ 1 of 1 ]  [ 25 rows per page ▾ ]  >  »
+```
+
+| Element | Symbol | Description |
+|---|---|---|
+| First page | `«` | Jump to first page — disabled on page 1 |
+| Previous   | `<` | Previous page — disabled on page 1 |
+| Page info  | `1 of 1` | Current / total pages — read-only label |
+| Rows select| `25 rows per page ▾` | Dropdown: 10, 25, 50, 100 |
+| Next       | `>` | Next page — disabled on last page |
+| Last page  | `»` | Jump to last page — disabled on last page |
+
+### CSS (add to styles.css if not already present)
+```css
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+  font-size: var(--text-sm);
+  color: var(--text2);
+}
+.pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--bdr);
+  border-radius: var(--r-sm);
+  background: var(--surf);
+  color: var(--text);
+  cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast);
+}
+.pagination-btn:hover:not(:disabled) {
+  background: var(--brand-blue-lt);
+  border-color: var(--brand-blue);
+  color: var(--brand-blue);
+}
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.pagination-info {
+  padding: 0 8px;
+  white-space: nowrap;
+  font-size: var(--text-sm);
+  color: var(--text2);
+}
+.pagination-select {
+  height: 28px;
+  border: 1px solid var(--bdr);
+  border-radius: var(--r-sm);
+  padding: 0 24px 0 8px;
+  font-size: var(--text-sm);
+  background: var(--surf);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color var(--t-fast);
+}
+.pagination-select:focus {
+  outline: none;
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+}
+```
+
+### TSX Reusable Component (drop-in for every table)
+```tsx
+interface PaginationProps {
+  page: number;           // 1-based current page
+  totalPages: number;
+  pageSize: number;       // rows per page (10 | 25 | 50 | 100)
+  onPageChange: (p: number) => void;
+  onPageSizeChange: (ps: number) => void;
+}
+
+function Pagination({ page, totalPages, pageSize, onPageChange, onPageSizeChange }: PaginationProps) {
+  return (
+    <div className="pagination">
+      <button
+        className="pagination-btn"
+        disabled={page <= 1}
+        onClick={() => onPageChange(1)}
+        title="First page"
+      >«</button>
+      <button
+        className="pagination-btn"
+        disabled={page <= 1}
+        onClick={() => onPageChange(page - 1)}
+        title="Previous page"
+      >&lt;</button>
+
+      <span className="pagination-info">{page} of {totalPages || 1}</span>
+
+      <select
+        className="pagination-select"
+        value={pageSize}
+        onChange={e => { onPageSizeChange(Number(e.target.value)); onPageChange(1); }}
+        aria-label="Rows per page"
+      >
+        {[10, 25, 50, 100].map(n => (
+          <option key={n} value={n}>{n} rows per page</option>
+        ))}
+      </select>
+
+      <button
+        className="pagination-btn"
+        disabled={page >= (totalPages || 1)}
+        onClick={() => onPageChange(page + 1)}
+        title="Next page"
+      >&gt;</button>
+      <button
+        className="pagination-btn"
+        disabled={page >= (totalPages || 1)}
+        onClick={() => onPageChange(totalPages || 1)}
+        title="Last page"
+      >»</button>
+    </div>
+  );
+}
+```
+
+### Usage pattern (with client-side pagination hook)
+```tsx
+// In your page component:
+const [page, setPage]         = useState(1);
+const [pageSize, setPageSize] = useState(25);
+
+const totalPages = Math.ceil(items.length / pageSize);
+const pageItems  = items.slice((page - 1) * pageSize, page * pageSize);
+
+// In JSX — always below the table-wrapper:
+<div className="table-wrapper">
+  <table className="table">
+    ...rows from pageItems...
+  </table>
+</div>
+<Pagination
+  page={page}
+  totalPages={totalPages}
+  pageSize={pageSize}
+  onPageChange={setPage}
+  onPageSizeChange={ps => { setPageSize(ps); setPage(1); }}
+/>
+```
+
+> [!IMPORTANT]
+> This pagination is **MANDATORY** for ALL data tables across all portals (Admin, Web, Partner, Rider).
+> Default page size: **25 rows**. Available options: 10 / 25 / 50 / 100.
+> Layout must always follow: `« < [N of M] [rows-per-page ▾] > »`
+> Never use a different pagination UI — custom pagination breaks UX consistency.
+
+---
+
 ## Quick Create URL Action Pattern
 
 When a Quick Create header menu item should **open a modal directly** (not just navigate to a tab), use URL query params:

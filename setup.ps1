@@ -1,25 +1,27 @@
 <#
 .SYNOPSIS
-  OneChoiceKitchen — Nx Service Orchestrator v5.0
-  Fully self-healing. Zero manual steps. Docker-free (but Docker-aware).
+  OneChoiceKitchen - Nx Service Orchestrator v5.3 (setup.ps1)
+  Fully self-healing. Interactive menu. Deep-clean support. Docker-free (but Docker-aware).
+  For PRODUCTION deployment, use: .\setup_deployment.ps1
 
 .DESCRIPTION
   Single command to start the entire OneChoiceKitchen development environment.
-  Handles ALL prerequisites automatically before launching any service.
+  Run with NO ARGUMENTS to get an interactive menu. Pass arguments to skip the menu.
 
   WHAT IT AUTO-HANDLES:
-    [1]  Node.js check        → errors with install link if missing
-    [2]  pnpm check           → installs globally if missing
-    [3]  node_modules         → runs pnpm install if missing/stale
-    [4]  .env files           → creates from .env.example if missing
-    [5]  Prisma client        → runs prisma generate automatically
-    [6]  Prisma DB push       → syncs SQLite schema automatically
-    [7]  Port cleanup         → kills stale processes on all service ports
-    [8]  API startup          → waits for health before starting frontends
-    [9]  Frontends            → starts all profile services in parallel windows
-    [10] Browser launch       → opens ALL service URLs (incl. mobile apps)
-    [11] Prisma Studio        → opens DB browser at http://localhost:5555
-    [12] pgAdmin / MailDev    → opens Docker tool URLs if services are running
+    [1]  Interactive menu     → guided action selection with confirmation
+    [2]  Node.js check        → errors with install link if missing
+    [3]  pnpm check           → installs globally if missing
+    [4]  Dependencies         → ALWAYS runs pnpm install (fast if lock unchanged)
+    [5]  .env files           → creates from .env.example if missing
+    [6]  Prisma client        → runs prisma generate automatically
+    [7]  Prisma DB push       → syncs SQLite schema automatically
+    [8]  Port cleanup         → kills stale processes on all service ports
+    [9]  API startup          → waits for health before starting frontends
+    [10] Frontends            → starts all profile services in parallel windows
+    [11] Browser launch       → opens ALL service URLs in correct order
+    [12] Prisma Studio        → opens DB browser at http://localhost:5555
+    [13] Deep clean           → removes node_modules, .nx, dist, .next (optional)
 
   COMPLETELY SEPARATE FROM DOCKER:
     Docker infrastructure (PostgreSQL, Redis, Maildev, pgAdmin) is managed by:
@@ -33,38 +35,47 @@
   'status' -- show live status of all ports
 
 .PARAMETER RunProfile
-  'core'     -- API + Customer Web only (2 services, fastest startup)
+  'core'     -- API + Web Portal only (2 services, fastest startup)
   'standard' -- API + Web + Admin + Partner + Rider portals (DEFAULT, 5 services)
-  'all'      -- Everything including mobile apps (8 services)
-  'mobile'   -- API + Mobile apps only
+  'all'      -- Everything including mobile apps (7 services)
+  'mobile'   -- API + Mobile + Rider Mobile
+
+.PARAMETER DeepClean
+  Switch: when used with stop, prompts to delete node_modules, .nx, dist, .next
 
 .PARAMETER NoBrowser
   Switch: skip auto-opening browser tabs
 
+.PARAMETER NoDBBrowser
+  Switch: skip auto-opening Prisma Studio (database browser)
+
 .PARAMETER OpenDB
-  Switch: open Prisma Studio at http://localhost:5555
+  Switch: explicitly open Prisma Studio (only needed if -NoDBBrowser was used)
 
 .PARAMETER WithDocker
   Switch: auto-start Docker infra (PostgreSQL + Redis + Maildev + pgAdmin) before starting apps
 
 .EXAMPLE
-  .\setup.ps1                                    # standard profile, all browsers open
-  .\setup.ps1 start -RunProfile core             # minimal: API + Web
-  .\setup.ps1 start -RunProfile all              # everything including mobile
-  .\setup.ps1 start -NoBrowser                   # start without opening browsers
-  .\setup.ps1 start -OpenDB                      # start + open Prisma Studio
-  .\setup.ps1 start -WithDocker                  # auto-start Docker infra first
-  .\setup.ps1 stop                               # stop all
-  .\setup.ps1 status                             # check what is running
+  .\setup.ps1                                         # interactive menu
+  .\setup.ps1 start                                   # standard profile
+  .\setup.ps1 start -RunProfile core                  # minimal: API + Web
+  .\setup.ps1 start -RunProfile all                   # everything including mobile
+  .\setup.ps1 start -NoBrowser                        # start without opening browsers
+  .\setup.ps1 start -NoDBBrowser                      # start without Prisma Studio
+  .\setup.ps1 start -WithDocker                       # auto-start Docker infra first
+  .\setup.ps1 stop                                    # stop services only
+  .\setup.ps1 stop -DeepClean                         # stop + remove node_modules etc.
+  .\setup.ps1 status                                  # check what is running
 #>
 
 param(
-    [ValidateSet('start','stop','status')]
-    [string]$Action = 'start',
+    # NOTE: No [ValidateSet] here - empty string default is not in enum,
+    # which causes PowerShell to crash before the interactive menu can show.
+    # Validation happens manually in the dispatch section at the bottom.
+    [string]$Action     = '',
+    [string]$RunProfile = '',
 
-    [ValidateSet('core','standard','all','mobile')]
-    [string]$RunProfile = 'standard',
-
+    [switch]$DeepClean,
     [switch]$NoBrowser,
     [switch]$NoDBBrowser,
     [switch]$WithDocker,
@@ -73,7 +84,16 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Continue'
-$ProgressPreference    = 'SilentlyContinue'   # speeds up Invoke-WebRequest
+$ProgressPreference    = 'SilentlyContinue'
+
+# Keep window open on any unhandled error (prevents immediate close on crash)
+trap {
+    Write-Host ""
+    Write-Host "  UNHANDLED ERROR: $_" -ForegroundColor Red
+    Write-Host "  Press Enter to close this window..." -ForegroundColor Yellow
+    $null = Read-Host
+    exit 1
+}
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 $Root    = $PSScriptRoot
@@ -93,21 +113,18 @@ function Show-Banner {
     Clear-Host
     Write-Host ""
     Write-Host "  +============================================================+" -ForegroundColor Cyan
-    Write-Host "  |   ONE CHOICE KITCHEN  -  Dev Orchestrator v5.0            |" -ForegroundColor White
-    Write-Host "  |   Profile: $($RunProfile.ToUpper().PadRight(50))|" -ForegroundColor Yellow
+    Write-Host "  |   ONE CHOICE KITCHEN  -  Dev Orchestrator v5.3            |" -ForegroundColor White
     Write-Host "  +============================================================+" -ForegroundColor Cyan
     Write-Host ""
 }
 
 # ── Port utilities ─────────────────────────────────────────────────────────────
+# Uses Get-NetTCPConnection so it detects BOTH IPv4 (127.0.0.1) AND IPv6 (::1)
+# listeners. The old TcpClient approach only checked 127.0.0.1 which missed
+# Next.js dev servers that bind to ::1 on Windows.
 function Test-Port([int]$p) {
-    try {
-        $t = New-Object Net.Sockets.TcpClient
-        $r = $t.BeginConnect('127.0.0.1', $p, $null, $null)
-        $ok = $r.AsyncWaitHandle.WaitOne(500)
-        $t.Close()
-        return $ok
-    } catch { return $false }
+    $listeners = Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction SilentlyContinue
+    return ($null -ne $listeners -and @($listeners).Count -gt 0)
 }
 
 function Clear-Port([int]$p) {
@@ -117,7 +134,7 @@ function Clear-Port([int]$p) {
         }
 }
 
-function Wait-Port([int]$p, [string]$label, [int]$max = 180) {
+function Wait-Port([int]$p, [string]$label, [int]$max = 240) {
     $sw = [Diagnostics.Stopwatch]::StartNew()
     $spin = @('|','/','-','\')
     $i = 0
@@ -132,7 +149,7 @@ function Wait-Port([int]$p, [string]$label, [int]$max = 180) {
 }
 
 # ── Service definitions ────────────────────────────────────────────────────────
-# ALL services have OpenBrowser=$true — every service opens in browser after startup
+# ALL services have OpenBrowser=$true - every service opens in browser after startup
 $ServiceDefs = [ordered]@{
     'api'            = @{ NxCmd='api';            Port=3000; Url='http://localhost:3000/api/docs'; OpenBrowser=$true }
     'web'            = @{ NxCmd='web';            Port=4208; Url='http://localhost:4208';          OpenBrowser=$true }
@@ -140,15 +157,14 @@ $ServiceDefs = [ordered]@{
     'partner-portal' = @{ NxCmd='partner-portal'; Port=4206; Url='http://localhost:4206';          OpenBrowser=$true }
     'rider-portal'   = @{ NxCmd='rider-portal';   Port=4207; Url='http://localhost:4207';          OpenBrowser=$true }
     'customer-mobile'= @{ NxCmd='customer-mobile';Port=4210; Url='http://localhost:4210';          OpenBrowser=$true }
-    'mobile-app'     = @{ NxCmd='mobile-app';     Port=4211; Url='http://localhost:4211';          OpenBrowser=$true }
     'rider-mobile'   = @{ NxCmd='rider-mobile';   Port=4212; Url='http://localhost:4212';          OpenBrowser=$true }
 }
 
 $ProfileMap = @{
     'core'     = @('api','web')
     'standard' = @('api','web','admin-portal','partner-portal','rider-portal')
-    'mobile'   = @('api','customer-mobile','mobile-app','rider-mobile')
-    'all'      = @('api','web','admin-portal','partner-portal','rider-portal','customer-mobile','mobile-app','rider-mobile')
+    'mobile'   = @('api','customer-mobile','rider-mobile')
+    'all'      = @('api','web','admin-portal','partner-portal','rider-portal','customer-mobile','rider-mobile')
 }
 
 # ── Docker / infra service definitions (informational only) ────────────────────
@@ -161,17 +177,19 @@ $InfraServices = @(
     @{ Name='Prisma Studio';  Port=5555; Url='http://localhost:5555';   BrowserUrl='http://localhost:5555' }
 )
 
-# ── Service display names ──────────────────────────────────────────────────────
+# ── Service display names (updated labels) ────────────────────────────────────
 $ServiceLabels = @{
     'api'             = 'NestJS API'
-    'web'             = 'Customer Web Portal'
+    'web'             = 'Web Portal'
     'admin-portal'    = 'Admin Portal'
     'partner-portal'  = 'Partner Portal'
     'rider-portal'    = 'Rider Portal'
-    'customer-mobile' = 'Customer Mobile App'
-    'mobile-app'      = 'Customer PWA (Mobile)'
-    'rider-mobile'    = 'Rider Mobile App'
+    'customer-mobile' = 'Mobile'
+    'rider-mobile'    = 'Rider Mobile'
 }
+
+# ── Browser launch order (confirmed by user) ───────────────────────────────────
+$BrowserLaunchOrder = @('web','admin-portal','partner-portal','rider-portal','customer-mobile','rider-mobile')
 
 # ── Service startup times tracking ────────────────────────────────────────────
 $script:ServiceStartTimes = @{}
@@ -180,7 +198,7 @@ $script:ServiceStartTimes = @{}
 # PREREQUISITE CHECKS  (self-healing)
 # ─────────────────────────────────────────────────────────────────────────────
 function Invoke-Prerequisites {
-    step '1/7' 'Checking prerequisites...'
+    step '1/7' 'Checking prerequisites & restoring dependencies...'
     rule
 
     # 1. Node.js
@@ -194,7 +212,7 @@ function Invoke-Prerequisites {
     $nodeVer = node --version 2>&1
     grn "Node.js $nodeVer"
 
-    # 2. pnpm  (auto-install if missing)
+    # 2. pnpm (auto-install if missing)
     if (-not (Get-Command pnpm -ErrorAction SilentlyContinue)) {
         yel 'pnpm not found -- installing globally...'
         npm install -g pnpm 2>&1 | Out-Null
@@ -206,24 +224,18 @@ function Invoke-Prerequisites {
     }
     grn "pnpm $(pnpm --version)"
 
-    # 3. node_modules  (auto-install if missing or stale)
-    $nmOk = (Test-Path "$Root\node_modules\.modules.yaml") -or (Test-Path "$Root\node_modules\.pnpm")
-    if (-not $nmOk) {
-        yel 'node_modules not found -- running pnpm install (this takes 1-3 min first time)...'
-        Push-Location $Root
-        pnpm install --frozen-lockfile 2>&1
-        $ok = $LASTEXITCODE -eq 0
-        Pop-Location
-        if (-not $ok) {
-            yel 'Frozen install failed -- retrying without frozen lockfile...'
-            Push-Location $Root
-            pnpm install 2>&1
-            Pop-Location
-        }
-        grn 'Dependencies installed'
-    } else {
-        grn 'node_modules present'
+    # 3. Always run pnpm install (idempotent - fast if lock unchanged, full if after deep clean)
+    dim 'Ensuring all dependencies are installed (pnpm install)...'
+    dim '(This is fast if node_modules exists; 2-5 min after a deep clean)'
+    Push-Location $Root
+    pnpm install 2>&1
+    $installOk = $LASTEXITCODE -eq 0
+    Pop-Location
+    if (-not $installOk) {
+        red 'pnpm install failed. Check network connection and pnpm-lock.yaml.'
+        exit 1
     }
+    grn 'Dependencies ready'
 
     # 4. .env (auto-create from .env.example)
     $envFile = "$Root\.env"
@@ -246,7 +258,6 @@ function Invoke-Prerequisites {
             Copy-Item "$Root\apps\api\.env.example" $apiEnv
             grn 'apps/api/.env created from .env.example'
         }
-        # Not fatal - root .env is sufficient for SQLite mode
     }
 
     # 6. Prisma
@@ -258,6 +269,125 @@ function Invoke-Prerequisites {
 
     Write-Host ''
     grn 'All prerequisites satisfied'
+    Write-Host ''
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# INTERACTIVE MENU (shown when no -Action passed)
+# ─────────────────────────────────────────────────────────────────────────────
+function Show-InteractiveMenu {
+    Show-Banner
+
+    Write-Host "  [7]  Show service status" -ForegroundColor Cyan
+    Write-Host ""
+
+    $choice = ''
+    while ($choice -notmatch '^[1-7]$') {
+        $choice = Read-Host "  Enter choice [1-7]"
+    }
+
+    switch ($choice) {
+        '1' { $script:Action = 'start'; $script:RunProfile = 'standard' }
+        '2' { $script:Action = 'start'; $script:RunProfile = 'all'      }
+        '3' { $script:Action = 'start'; $script:RunProfile = 'core'     }
+        '4' { $script:Action = 'start'; $script:RunProfile = 'mobile'   }
+        '5' { $script:Action = 'stop'  }
+        '6' { $script:Action = 'stop';  $script:DeepClean = $true       }
+        '7' { $script:Action = 'status' }
+    }
+
+    # Confirmation
+    Write-Host ""
+    $actionDesc = switch ($script:Action) {
+        'start'  { "Start services  (Profile: $($script:RunProfile.ToUpper()))" }
+        'stop'   { if ($script:DeepClean) { 'Stop services + Deep Clean' } else { 'Stop services' } }
+        'status' { 'Show service status' }
+    }
+    Write-Host "  You selected: " -NoNewline -ForegroundColor DarkGray
+    Write-Host $actionDesc -ForegroundColor Yellow
+    Write-Host ""
+    $null = Read-Host "  Press Enter to continue (Ctrl+C to cancel)"
+    Write-Host ""
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DEEP CLEAN  (delete node_modules, .nx, dist, .next)
+# ─────────────────────────────────────────────────────────────────────────────
+function Invoke-DeepClean {
+    Write-Host ''
+    Write-Host '  ─────────────────────────────────────────────────────────────' -ForegroundColor DarkGray
+    Write-Host '  Deep Clean - remove generated & dependency files?' -ForegroundColor Yellow
+    Write-Host ''
+    Write-Host '  This will DELETE:' -ForegroundColor White
+    Write-Host '    node_modules/        (all npm packages)' -ForegroundColor DarkGray
+    Write-Host '    .nx/                 (Nx daemon + build cache)' -ForegroundColor DarkGray
+    Write-Host '    dist/                (compiled output)' -ForegroundColor DarkGray
+    Write-Host '    apps/**/.next/       (Next.js build cache per app)' -ForegroundColor DarkGray
+    Write-Host '    apps/**/dist/        (per-app compiled output)' -ForegroundColor DarkGray
+    Write-Host '    .service-pids        (PID tracking file)' -ForegroundColor DarkGray
+    Write-Host ''
+    Write-Host '  This will NEVER delete:' -ForegroundColor White
+    Write-Host '    .env / .env.local    Source code   prisma/migrations   pnpm-lock.yaml' -ForegroundColor DarkGray
+    Write-Host ''
+    Write-Host '  WARNING: pnpm install will run automatically on next start.' -ForegroundColor Yellow
+    Write-Host ''
+
+    $confirm = Read-Host "  Type 'yes' to confirm deep clean, or press Enter to skip"
+    if ($confirm.Trim().ToLower() -ne 'yes') {
+        dim 'Deep clean skipped.'
+        Write-Host ''
+        return
+    }
+
+    Write-Host ''
+    cyn 'Deep cleaning workspace...'
+    rule
+
+    if (Test-Path "$Root\node_modules") {
+        dim 'Removing node_modules/ ...'
+        Remove-Item "$Root\node_modules" -Recurse -Force -ErrorAction SilentlyContinue
+        grn 'node_modules/ removed'
+    } else { dim 'node_modules/ not found (already clean)' }
+
+    if (Test-Path "$Root\.nx") {
+        dim 'Removing .nx/ (Nx daemon + build cache) ...'
+        Remove-Item "$Root\.nx" -Recurse -Force -ErrorAction SilentlyContinue
+        grn '.nx/ removed'
+    } else { dim '.nx/ not found (already clean)' }
+
+    if (Test-Path "$Root\dist") {
+        dim 'Removing dist/ ...'
+        Remove-Item "$Root\dist" -Recurse -Force -ErrorAction SilentlyContinue
+        grn 'dist/ removed'
+    } else { dim 'dist/ not found (already clean)' }
+
+    $nextDirs = Get-ChildItem -Path "$Root\apps" -Recurse -Filter '.next' -Directory -ErrorAction SilentlyContinue
+    if ($nextDirs) {
+        $nextDirs | ForEach-Object {
+            dim "Removing $($_.FullName) ..."
+            Remove-Item $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
+        }
+        grn 'All apps/**/.next/ folders removed'
+    } else { dim 'No .next/ folders found' }
+
+    $appDistDirs = Get-ChildItem -Path "$Root\apps" -Recurse -Filter 'dist' -Directory -ErrorAction SilentlyContinue
+    if ($appDistDirs) {
+        $appDistDirs | ForEach-Object {
+            dim "Removing $($_.FullName) ..."
+            Remove-Item $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
+        }
+        grn 'All apps/**/dist/ folders removed'
+    } else { dim 'No app dist/ folders found' }
+
+    if (Test-Path $PidFile) {
+        Remove-Item $PidFile -Force -ErrorAction SilentlyContinue
+        grn '.service-pids removed'
+    }
+
+    Write-Host ''
+    grn 'Deep clean complete.'
+    Write-Host ''
+    yel 'Run .\setup.ps1 start to reinstall dependencies and launch services.'
     Write-Host ''
 }
 
@@ -375,7 +505,7 @@ function Stop-AllServices([switch]$Silent) {
     }
 
     # Kill by port as fallback
-    @(3000,4205,4206,4207,4208,4210,4211,4212,5555,9229) | ForEach-Object { Clear-Port $_ }
+    @(3000,4205,4206,4207,4208,4210,4212,5555,9229) | ForEach-Object { Clear-Port $_ }
 
     if (-not $Silent) { grn 'Ports cleared'; Write-Host '' }
 }
@@ -401,8 +531,9 @@ function Open-DatabaseTool {
     Clear-Port 5555
 
     dim 'Starting Prisma Studio (database browser)...'
+    $psBin = "$Root\node_modules\.bin\prisma.CMD"
     $proc = Start-Process 'cmd.exe' `
-        -ArgumentList '/k title [OCK] Prisma Studio && pnpm prisma studio' `
+        -ArgumentList "/k title OCK-PrismaStudio && `"$psBin`" studio" `
         -WorkingDirectory $Root `
         -PassThru
 
@@ -412,7 +543,7 @@ function Open-DatabaseTool {
         grn "Prisma Studio ready at http://localhost:5555"
         return $proc.Id
     } else {
-        yel 'Prisma Studio may still be starting -- check [OCK] Prisma Studio window'
+        yel 'Prisma Studio may still be starting - check OCK-PrismaStudio window'
         return $proc.Id
     }
 }
@@ -600,9 +731,7 @@ function Start-All {
 
         foreach ($svcName in $frontends) {
             $svc     = $ServiceDefs[$svcName]
-            $feSw    = [Diagnostics.Stopwatch]::StartNew()
-            $waitSec = Wait-Port $svc.Port $svcName 180
-            $feSw.Stop()
+            $waitSec = Wait-Port $svc.Port $svcName 240
             if ($waitSec -ge 0) { grn "$($ServiceLabels[$svcName]) ready on :$($svc.Port) (${waitSec}s)" }
             else                 { yel "$($ServiceLabels[$svcName]) still compiling -- check [OCK] $svcName window" }
         }
@@ -611,7 +740,7 @@ function Start-All {
         step '7/7' 'Skipping frontend wait'
     }
 
-    # ── Open Prisma Studio (by default, unless -NoDBBrowser) ────────────────
+    # Open Prisma Studio (by default, unless -NoDBBrowser)
     if (-not $NoBrowser -and -not $NoDBBrowser) {
         Write-Host ''
         cyn 'Opening Prisma Studio (database browser) on :5555...'
@@ -624,53 +753,68 @@ function Start-All {
     Write-Host ''
     rule
 
-    # ── Open browsers ─────────────────────────────────────────────────────────
+    # ── Open browsers - UNCONDITIONALLY (browser retries naturally) ────────────
     if (-not $NoBrowser) {
         cyn 'Opening browser tabs for all services...'
         Write-Host ''
 
-        # Open all active Nx services
-        foreach ($svcName in $activeServices) {
-            $svc = $ServiceDefs[$svcName]
-            if ($svc.OpenBrowser -and (Test-Port $svc.Port)) {
+        # Launch in confirmed order: Web Portal, Admin, Partner, Rider, Mobile, Rider Mobile
+        foreach ($svcName in $BrowserLaunchOrder) {
+            if ($activeServices -contains $svcName) {
+                $svc   = $ServiceDefs[$svcName]
                 $label = $ServiceLabels[$svcName]
                 dim "  Opening: $($svc.Url)  ($label)"
-                Start-Sleep -Milliseconds 500
                 Start-Process $svc.Url
+                Start-Sleep -Milliseconds 600
             }
         }
 
-        # Also open API docs and health separately
+        # API docs
         if ($activeServices -contains 'api') {
-            Start-Sleep -Milliseconds 500
             dim '  Opening: http://localhost:3000/api/docs  (API Documentation)'
-            # Already opened via api Url above — skip duplicate
-
-            Start-Sleep -Milliseconds 500
-            dim '  Opening: http://localhost:3000/api/health  (API Health)'
-            Start-Process 'http://localhost:3000/api/health'
+            Start-Process 'http://localhost:3000/api/docs'
+            Start-Sleep -Milliseconds 600
         }
 
-        # Open Docker tool URLs if running
-        if (Test-Port 1080) {
-            Start-Sleep -Milliseconds 500
-            dim '  Opening: http://localhost:1080  (MailDev)'
-            Start-Process 'http://localhost:1080'
+        # MailDev -- start as standalone process (maildev is a dev dependency)
+        if (-not (Test-Port 1080)) {
+            Clear-Port 1080
+            Clear-Port 1025
+            cyn '  Starting MailDev (email testing UI)...'
+            $mdBin = "$Root\node_modules\.bin\maildev.CMD"
+            $mdProc = Start-Process 'cmd.exe' `
+                -ArgumentList "/k title OCK-MailDev && `"$mdBin`" --web 1080 --smtp 1025" `
+                -WorkingDirectory $Root `
+                -PassThru
+            if ($mdProc) { $pids.Add($mdProc.Id) }
+            $mdReady = Wait-Port 1080 'MailDev' 30
+            if ($mdReady -ge 0) {
+                grn '  MailDev ready on :1080 -- http://localhost:1080'
+            } else {
+                yel '  MailDev still starting -- check OCK-MailDev window'
+            }
+        } else {
+            grn '  MailDev already running on :1080'
         }
+        dim '  Opening: http://localhost:1080  (MailDev -- Email Testing)'
+        Start-Process 'http://localhost:1080'
+        Start-Sleep -Milliseconds 600
+
+        # pgAdmin (ALWAYS open -- primary database browser)
         if (Test-Port 5050) {
-            Start-Sleep -Milliseconds 500
-            dim '  Opening: http://localhost:5050  (pgAdmin)'
+            dim '  Opening: http://localhost:5050  (pgAdmin 4 -- Database Management)'
             Start-Process 'http://localhost:5050'
-        }
-        if (Test-Port 5555) {
-            Start-Sleep -Milliseconds 500
-            dim '  Opening: http://localhost:5555  (Prisma Studio)'
+            Start-Sleep -Milliseconds 600
+        } elseif (Test-Port 5555) {
+            # Fallback: Prisma Studio (when Docker not available)
+            dim '  Opening: http://localhost:5555  (Prisma Studio -- Database Management)'
             Start-Process 'http://localhost:5555'
+            Start-Sleep -Milliseconds 600
         }
 
         Write-Host ''
     } else {
-        dim '-NoBrowser flag set — skipping browser auto-open'
+        dim '-NoBrowser flag set -- skipping browser auto-open'
         Write-Host ''
     }
 
@@ -699,14 +843,22 @@ function Start-All {
 # ─────────────────────────────────────────────────────────────────────────────
 function Stop-All {
     Show-Banner
-    step '1/1' 'Stopping all OneChoiceKitchen Nx services...'
-    rule
+    Write-Host ''
+    Write-Host '  Stop all OneChoiceKitchen local services?' -ForegroundColor Yellow
+    $null = Read-Host "  Press Enter to continue (Ctrl+C to cancel)"
+    Write-Host ''
+
     Stop-AllServices
-    grn 'All Nx services stopped'
+    grn 'All Nx services stopped.'
     Write-Host ''
     dim 'Docker infrastructure (PostgreSQL / Redis / Maildev / pgAdmin) is still running.'
     dim 'To stop Docker infra: docker compose -f docker-compose.dev.yml down'
     Write-Host ''
+    dim 'Use .\setup.ps1 start to restart services.'
+    Write-Host ''
+
+    # Ask for Deep clean
+    Invoke-DeepClean
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -777,10 +929,16 @@ function Show-Status {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# DISPATCH
+# DISPATCH - show interactive menu when no -Action passed
 # ─────────────────────────────────────────────────────────────────────────────
+if (-not $Action) {
+    Show-InteractiveMenu
+}
+
+if (-not $RunProfile) { $RunProfile = 'standard' }
+
 switch ($Action) {
     'start'  { Start-All }
-    'stop'   { Stop-All }
+    'stop'   { Stop-All  }
     'status' { Show-Status }
 }

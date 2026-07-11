@@ -98,9 +98,14 @@ serve.log
 
 # ── Runtime / Process ────────────────────────────────────────
 service_pids.txt
+.service-pids
 *.pid
 *.pid.lock
 .lock
+
+# ── Local DB Seed Backups ────────────────────────────────────
+dev.db.seed-backup*
+*.seed-backup*
 
 # ── Testing ──────────────────────────────────────────────────
 coverage/

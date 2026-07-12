@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react
 import {
   // KPI Cards
   IndianRupee, ShoppingCart, Users, Store, ClipboardList,
+  PackageCheck, CalendarDays,
   // Workspace / Explore categories
   Building2, UtensilsCrossed, Receipt, BadgePercent, Globe,
   Wallet, BriefcaseBusiness, ShieldCheck, Settings2, LifeBuoy,
@@ -23,6 +24,7 @@ import {
   UserCheck, Users2, Truck, Percent, BookOpen, Image,
   MessagesSquare, Activity, Cpu, HeadphonesIcon, BarChart2,
   List, UserCog, Banknote, GitBranch, Timer, LogIn,
+  Bike,
 } from 'lucide-react';
 
 import styles from './app.module.css';
@@ -587,73 +589,61 @@ function CommandPalette({ onNav, onClose }: { onNav: (id: string) => void; onClo
 // ═══════════════════════════════════════════════════════════════════
 //  KPI STRIP
 // ═══════════════════════════════════════════════════════════════════
-function KpiStrip() {
-  const [d, setD] = useState({ rev: 1245320, orders: 1245, customers: 8642, restaurants: 14, today: 86 });
+function KpiStrip({ onNav }: { onNav: (id: string) => void }) {
+  const [d, setD] = useState({ rev: 0, orders: 0, customers: 0, restaurants: 0, today: 0, pending: 0, lowStock: 0, plans: 0, riders: 0, partners: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/orders', { headers: authH() }).then(r => r.ok ? r.json() : []).catch(() => []),
-      fetch('/api/users', { headers: authH() }).then(r => r.ok ? r.json() : []).catch(() => []),
-      fetch('/api/branches', { headers: authH() }).then(r => r.ok ? r.json() : []).catch(() => []),
-    ]).then(([orders, users, branches]) => {
-      const arr = Array.isArray(orders) ? orders : [];
+      fetch('/api/orders',              { headers: authH() }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch('/api/users',               { headers: authH() }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch('/api/branches',            { headers: authH() }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch('/api/inventory',           { headers: authH() }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch('/api/subscriptions/plans', { headers: authH() }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch('/api/riders',              { headers: authH() }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch('/api/partners',            { headers: authH() }).then(r => r.ok ? r.json() : []).catch(() => []),
+    ]).then(([orders, users, branches, inventory, plans, riders, partners]) => {
+      const arr   = Array.isArray(orders)   ? orders   : (orders?.data   ?? []);
+      const uArr  = Array.isArray(users)    ? users    : (users?.data    ?? []);
+      const bArr  = Array.isArray(branches) ? branches : (branches?.data ?? []);
+      const iArr  = Array.isArray(inventory)? inventory: (inventory?.data ?? []);
+      const pArr  = Array.isArray(plans)    ? plans    : (plans?.data    ?? []);
+      const rArr  = Array.isArray(riders)   ? riders   : (riders?.data   ?? []);
+      const ptArr = Array.isArray(partners) ? partners : (partners?.data ?? []);
       const today = new Date().toDateString();
+      const rev   = arr.filter((o: any) => ['DELIVERED','COMPLETED'].includes(o.status)).reduce((s: number, o: any) => s + (Number(o.totalAmount) || 0), 0);
       setD({
-        rev: arr.filter((o: any) => o.status === 'DELIVERED').reduce((s: number, o: any) => s + (o.totalAmount || 0), 0) || 1245320,
-        orders: arr.length || 1245,
-        customers: Array.isArray(users) ? users.length || 8642 : 8642,
-        restaurants: Array.isArray(branches) ? branches.length || 14 : 14,
-        today: arr.filter((o: any) => new Date(o.createdAt).toDateString() === today).length || 86,
+        rev,
+        orders:      arr.length,
+        customers:   uArr.length,
+        restaurants: bArr.length,
+        today:       arr.filter((o: any) => new Date(o.createdAt).toDateString() === today).length,
+        pending:     arr.filter((o: any) => ['PENDING','CONFIRMED'].includes(o.status)).length,
+        lowStock:    iArr.filter((i: any) => (i.quantity ?? i.stock ?? 0) <= (i.minStock ?? i.reorderLevel ?? 5)).length,
+        plans:       pArr.length,
+        riders:      rArr.filter((r: any) => r.status === 'APPROVED' || r.isActive).length,
+        partners:    ptArr.filter((p: any) => p.status === 'APPROVED').length,
       });
     }).finally(() => setLoading(false));
   }, []);
 
-  const fmtRev = (n: number) => `₹ ${n.toLocaleString('en-IN')}`;
+  const fmtRev = (n: number) => n > 0 ? `₹ ${n.toLocaleString('en-IN')}` : '₹ 0';
 
   const KPIS = [
-    {
-      label: 'Total Revenue',
-      value: fmtRev(d.rev),
-      color: '#2563EB', bg: '#DBEAFE',
-      trend: '12.5%', trendDir: 'up', sub: 'vs last month',
-      icon: <IndianRupee size={22} strokeWidth={2.5} />,
-    },
-    {
-      label: 'Total Orders',
-      value: d.orders.toLocaleString(),
-      color: '#16A34A', bg: '#DCFCE7',
-      trend: '8.2%', trendDir: 'up', sub: 'vs last month',
-      icon: <ShoppingBag size={22} strokeWidth={2} />,
-    },
-    {
-      label: 'Total Customers',
-      value: d.customers.toLocaleString(),
-      color: '#7C3AED', bg: '#EDE9FE',
-      trend: '15.3%', trendDir: 'up', sub: 'vs last month',
-      icon: <Users size={22} strokeWidth={2} />,
-    },
-    {
-      label: 'Active Restaurants',
-      value: d.restaurants.toLocaleString(),
-      color: '#D97706', bg: '#FEF3C7',
-      trend: '—', trendDir: 'neutral', sub: 'No change',
-      icon: <Store size={22} strokeWidth={2} />,
-    },
-    {
-      label: "Today's Orders",
-      value: d.today.toLocaleString(),
-      color: '#0284C7', bg: '#E0F2FE',
-      trend: '5.6%', trendDir: 'up', sub: 'vs yesterday',
-      icon: <ClipboardList size={22} strokeWidth={2} />,
-    },
+    { label: 'Total Revenue',      value: fmtRev(d.rev),                color: '#2563EB', bg: '#DBEAFE', sub: 'delivered + completed', icon: <IndianRupee size={22} strokeWidth={2.5} />, navId: 'orders' },
+    { label: 'Total Orders',       value: d.orders.toLocaleString(),    color: '#16A34A', bg: '#DCFCE7', sub: 'all time orders',        icon: <ShoppingBag size={22} strokeWidth={2} />,   navId: 'orders' },
+    { label: "Today's Orders",     value: d.today.toLocaleString(),     color: '#0284C7', bg: '#E0F2FE', sub: 'placed today',           icon: <ClipboardList size={22} strokeWidth={2} />, navId: 'orders' },
+    { label: 'Pending Orders',     value: d.pending.toLocaleString(),   color: '#EA580C', bg: '#FFF7ED', sub: 'awaiting processing',    icon: <PackageCheck size={22} strokeWidth={2} />,  navId: 'orders' },
+    { label: 'Total Customers',    value: d.customers.toLocaleString(), color: '#7C3AED', bg: '#EDE9FE', sub: 'registered users',       icon: <Users size={22} strokeWidth={2} />,          navId: 'users' },
+    { label: 'Active Restaurants', value: d.restaurants.toLocaleString(), color: '#D97706', bg: '#FEF3C7', sub: 'branches configured', icon: <Store size={22} strokeWidth={2} />,          navId: 'branches' },
+    { label: 'Active Riders',      value: d.riders.toLocaleString(),    color: '#0891B2', bg: '#CFFAFE', sub: 'approved delivery riders', icon: <Bike size={22} strokeWidth={2} />,          navId: 'users' },
+    { label: 'Partner Restaurants',value: d.partners.toLocaleString(),  color: '#7C3AED', bg: '#EDE9FE', sub: 'approved partners',      icon: <Building2 size={22} strokeWidth={2} />,     navId: 'users' },
+    { label: 'Low Stock Items',    value: d.lowStock.toLocaleString(),  color: '#DC2626', bg: '#FEF2F2', sub: 'need restocking',         icon: <AlertTriangle size={22} strokeWidth={2} />, navId: 'inventory' },
+    { label: 'Active Plans',       value: d.plans.toLocaleString(),     color: '#059669', bg: '#ECFDF5', sub: 'subscription plans',      icon: <CalendarDays size={22} strokeWidth={2} />,  navId: 'tiffin' },
   ];
 
-  // Convert hex color to rgba for colored box shadows
   const hexToRgba = (hex: string, alpha: number) => {
-    const r = parseInt(hex.slice(1,3),16);
-    const g = parseInt(hex.slice(3,5),16);
-    const b = parseInt(hex.slice(5,7),16);
+    const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
     return `rgba(${r},${g},${b},${alpha})`;
   };
 
@@ -663,8 +653,12 @@ function KpiStrip() {
         <div
           key={i}
           className={styles.kpiCard}
+          role="button" tabIndex={0} aria-label={`View ${k.label}`}
+          onClick={() => onNav(k.navId)}
+          onKeyDown={e => e.key === 'Enter' && onNav(k.navId)}
           style={{
-            '--card-color': k.color,  /* feeds ::before top bar */
+            '--card-color': k.color,
+            cursor: 'pointer',
             boxShadow: `0 4px 16px ${hexToRgba(k.color, 0.18)}, 0 1px 4px ${hexToRgba(k.color, 0.1)}`,
           } as React.CSSProperties}
         >
@@ -675,13 +669,7 @@ function KpiStrip() {
               {loading ? <span className={styles.kpiSkel} /> : k.value}
             </h3>
             <div className={styles.kpiBottom}>
-              <span style={{
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                color: k.trendDir === 'up' ? '#16A34A' : k.trendDir === 'down' ? '#DC2626' : '#94a3b8',
-              }}>
-                {k.trendDir === 'up' ? '↑ ' : k.trendDir === 'down' ? '↓ ' : ''}{k.trend}
-              </span>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94a3b8' }}>{k.trend}</span>
               <span style={{ fontSize: '0.72rem', color: '#94a3b8', marginLeft: '4px' }}>{k.sub}</span>
             </div>
           </div>
@@ -778,6 +766,23 @@ function WorkspaceHome({ onNav }: { onNav: (id: string) => void }) {
     roles:       { color: '#0D9488', bg: '#F0FDFA', icon: <ShieldCheck      size={20} strokeWidth={2} /> },
     app_downloads:      { color: '#0F172A', bg: '#F1F5F9', icon: <Smartphone size={20} strokeWidth={2} /> },
     app_links_settings: { color: '#0F172A', bg: '#F1F5F9', icon: <Smartphone size={20} strokeWidth={2} /> },
+    // Category page icons
+    cat_orders:         { color: '#16A34A', bg: '#DCFCE7', icon: <ShoppingBag   size={20} strokeWidth={2} /> },
+    cat_customers:      { color: '#7C3AED', bg: '#F5F3FF', icon: <Users         size={20} strokeWidth={2} /> },
+    cat_marketing:      { color: '#DB2777', bg: '#FDF2F8', icon: <Tags          size={20} strokeWidth={2} /> },
+    'cat_restaurant-ops':{ color: '#D97706', bg: '#FEF3C7', icon: <UtensilsCrossed size={20} strokeWidth={2} /> },
+    cat_dining:         { color: '#7C3AED', bg: '#F5F3FF', icon: <TableProperties size={20} strokeWidth={2} /> },
+    cat_finance:        { color: '#059669', bg: '#ECFDF5', icon: <Wallet        size={20} strokeWidth={2} /> },
+    cat_hrms:           { color: '#6D28D9', bg: '#F5F3FF', icon: <UserRoundCog  size={20} strokeWidth={2} /> },
+    cat_cms:            { color: '#0284C7', bg: '#E0F2FE', icon: <BarChart3     size={20} strokeWidth={2} /> },
+    'cat_admin-ops':    { color: '#475569', bg: '#F1F5F9', icon: <ShieldCheck   size={20} strokeWidth={2} /> },
+    cat_platform:       { color: '#2563EB', bg: '#EFF6FF', icon: <Cog          size={20} strokeWidth={2} /> },
+    cat_system:         { color: '#0F172A', bg: '#F1F5F9', icon: <Cog          size={20} strokeWidth={2} /> },
+    cat_helpdesk:       { color: '#DC2626', bg: '#FEF2F2', icon: <LifeBuoy     size={20} strokeWidth={2} /> },
+    cat_communication:  { color: '#2563EB', bg: '#EFF6FF', icon: <MessageSquare size={20} strokeWidth={2} /> },
+    cat_downloads:      { color: '#0F172A', bg: '#F1F5F9', icon: <Smartphone   size={20} strokeWidth={2} /> },
+    'cat_mobile-apps':  { color: '#0F172A', bg: '#F1F5F9', icon: <Smartphone   size={20} strokeWidth={2} /> },
+    cat_dashboards:     { color: '#0284C7', bg: '#E0F2FE', icon: <BarChart3    size={20} strokeWidth={2} /> },
   };
 
   // Label overrides for better display
@@ -786,6 +791,25 @@ function WorkspaceHome({ onNav }: { onNav: (id: string) => void }) {
     menus: 'Menu Management', inventory: 'Inventory Management', offers: 'Offers',
     hrms: 'Employees', settings: 'Settings', tiffin: 'Tiffin Management',
     tables: 'Tables', reservations: 'Reservations',
+    // Category page IDs (cat_<catId>) — must be listed so Continue Working shows proper names
+    cat_orders:         'Orders',
+    cat_customers:      'Customers',
+    cat_marketing:      'Marketing',
+    cat_restaurant_ops: 'Restaurant Ops',
+    'cat_restaurant-ops': 'Restaurant Ops',
+    cat_dining:         'Dining',
+    cat_finance:        'Finance',
+    cat_hrms:           'HR & Staff',
+    cat_cms:            'Content',
+    cat_admin_ops:      'Admin Ops',
+    'cat_admin-ops':    'Admin Ops',
+    cat_platform:       'Platform',
+    cat_system:         'System',
+    cat_helpdesk:       'Help & Support',
+    cat_communication:  'Communication',
+    cat_downloads:      'Download Apps',
+    'cat_mobile-apps':  'Mobile Apps',
+    cat_dashboards:     'Dashboards',
   };
 
   // Short descriptions shown on cards and as hover tooltips
@@ -819,6 +843,23 @@ function WorkspaceHome({ onNav }: { onNav: (id: string) => void }) {
     attendance:        'Staff attendance records & timesheets',
     leaves:            'Leave requests, approvals & balances',
     payroll:           'Salary processing & payslip generation',
+    // Category descriptions
+    cat_orders:          'All order management & tracking tools',
+    cat_customers:       'Customers, partners & rider management',
+    cat_marketing:       'Offers, coupons, loyalty & referrals',
+    'cat_restaurant-ops':'Kitchen ops, menus, tables & reservations',
+    cat_dining:          'Dining tables, reservations & floor plan',
+    cat_finance:         'Revenue, payouts & payment configuration',
+    cat_hrms:            'HR, attendance, leaves & payroll',
+    cat_cms:             'Content & static page management',
+    'cat_admin-ops':     'Admin tasks, roles & audit logs',
+    cat_platform:        'Platform settings & configurations',
+    cat_system:          'System-level controls & developer tools',
+    cat_helpdesk:        'Customer support & help desk tools',
+    cat_communication:   'Internal chat & AI assistant',
+    cat_downloads:       'App download links & mobile setup',
+    'cat_mobile-apps':   'Mobile app management & publishing',
+    cat_dashboards:      'Business analytics & reporting dashboards',
   };
 
   // Per-item icons for explore cards — alias to module-level map
@@ -837,7 +878,7 @@ function WorkspaceHome({ onNav }: { onNav: (id: string) => void }) {
         <div className={styles.wsSecHead}>
           <span className={styles.wsSecTitle}>📊 Quick Stats</span>
         </div>
-        <KpiStrip />
+        <KpiStrip onNav={onNav} />
       </section>
 
       {/* Continue Working */}
@@ -851,14 +892,18 @@ function WorkspaceHome({ onNav }: { onNav: (id: string) => void }) {
         <div className={styles.cwGrid}>
           {visibleRecent.map((id, i) => {
             const { cat } = getInfo(id);
+            // For category-page IDs (cat_orders, cat_marketing, etc.) resolve WORKSPACE directly
+            const catPageId = id.startsWith('cat_') ? id.slice(4) : null;
+            const wsCat = catPageId ? WORKSPACE.find(c => c.id === catPageId) : null;
+            const resolvedCat = cat || wsCat;
             const svgInfo = CW_SVG[id];
-            const wsIcon = cat ? WS_ICONS[cat.id] : null;
-            const fallbackIcon = wsIcon || (cat ? CAT_SVG[cat.id] : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>);
+            const wsIcon = resolvedCat ? WS_ICONS[resolvedCat.id] : null;
+            const fallbackIcon = wsIcon || (resolvedCat ? CAT_SVG[resolvedCat.id] : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>);
             const iconEl = svgInfo?.icon || fallbackIcon;
-            const iconColor = svgInfo?.color || cat?.color || '#64748b';
-            const iconBg = svgInfo?.bg || cat?.bg || '#f8fafc';
-            const label = LABEL_MAP[id] || cat?.items.find(x => x.id === id)?.label || id;
-            const catLabel = cat?.label || 'Module';
+            const iconColor = svgInfo?.color || resolvedCat?.color || '#64748b';
+            const iconBg = svgInfo?.bg || resolvedCat?.bg || '#f8fafc';
+            const label = LABEL_MAP[id] || resolvedCat?.items?.find((x: any) => x.id === id)?.label || id;
+            const catLabel = resolvedCat?.label || LABEL_MAP[id] || 'Module';
             const desc = DESC_MAP[id] || '';
             return (
               <div key={i} className={styles.cwCard}
@@ -935,13 +980,16 @@ function WorkspaceHome({ onNav }: { onNav: (id: string) => void }) {
         <div className={styles.favGrid}>
           {visibleFavs.map((id, i) => {
             const { cat } = getInfo(id);
+            const catPageId2 = id.startsWith('cat_') ? id.slice(4) : null;
+            const wsCat2 = catPageId2 ? WORKSPACE.find(c => c.id === catPageId2) : null;
+            const resolvedCat2 = cat || wsCat2;
             const svgInfo = CW_SVG[id];
-            const wsIcon = cat ? WS_ICONS[cat.id] : null;
-            const fallbackIcon = wsIcon || (cat ? CAT_SVG[cat.id] : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>);
+            const wsIcon = resolvedCat2 ? WS_ICONS[resolvedCat2.id] : null;
+            const fallbackIcon = wsIcon || (resolvedCat2 ? CAT_SVG[resolvedCat2.id] : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>);
             const iconEl = svgInfo?.icon || fallbackIcon;
-            const iconColor = svgInfo?.color || cat?.color || '#64748b';
-            const iconBg = svgInfo?.bg || cat?.bg || '#f8fafc';
-            const label = LABEL_MAP[id] || cat?.items.find(x => x.id === id)?.label || id;
+            const iconColor = svgInfo?.color || resolvedCat2?.color || '#64748b';
+            const iconBg = svgInfo?.bg || resolvedCat2?.bg || '#f8fafc';
+            const label = LABEL_MAP[id] || resolvedCat2?.items?.find((x: any) => x.id === id)?.label || id;
             const desc = DESC_MAP[id] || '';
             return (
               <div key={i} className={styles.favCard}
@@ -952,7 +1000,7 @@ function WorkspaceHome({ onNav }: { onNav: (id: string) => void }) {
                 <div className={styles.favIcon} style={{ background: iconBg, color: iconColor }}>{iconEl}</div>
                 <div className={styles.favBody}>
                   <div className={styles.favLabel}>{label}</div>
-                  <div className={styles.favCat}>{cat?.label || 'Module'}</div>
+                  <div className={styles.favCat}>{resolvedCat2?.label || LABEL_MAP[id] || 'Module'}</div>
                   {desc && <div className={styles.favDesc}>{desc}</div>}
                 </div>
                 <button className={styles.favStar} onClick={e => doFav(e, id)} title="Remove from favourites">
@@ -961,22 +1009,6 @@ function WorkspaceHome({ onNav }: { onNav: (id: string) => void }) {
               </div>
             );
           })}
-          {/* Reports card (always shown) */}
-          <div className={styles.favCard}
-            onClick={() => onNav('overall_dashboard')}
-            onKeyDown={e => e.key === 'Enter' && onNav('overall_dashboard')}
-            role="button" tabIndex={0}
-            title={DESC_MAP['overall_dashboard'] || 'Analytics dashboard'}>
-            <div className={styles.favIcon} style={{ background: '#ede9fe', color: '#7c3aed' }}>
-              {WS_ICONS['dashboards']}
-            </div>
-            <div className={styles.favBody}>
-              <div className={styles.favLabel}>Reports</div>
-              <div className={styles.favCat}>Analytics</div>
-              <div className={styles.favDesc}>{DESC_MAP['overall_dashboard'] || 'Revenue, orders & key metrics dashboard'}</div>
-            </div>
-            <span className={styles.favStar}><Star size={18} fill="currentColor" strokeWidth={0} /></span>
-          </div>
         </div>
       </section>
 
@@ -1355,7 +1387,10 @@ function MainApp() {
   const nav = useCallback((id: string, action?: string) => {
     setTab(id); setMobileSheet(false); setPalette(false);
     setNotif(false); setQuick(false); setUserMenu(false);
-    // If an action is provided (e.g. 'new'), append it to the URL so child pages can detect it
+    // Track recently visited for Continue Working section
+    pushRecent(id);
+    // Notify WorkspaceHome (same-origin storage event only fires in OTHER tabs; use custom event)
+    window.dispatchEvent(new CustomEvent('ock_recent_changed'));
     if (typeof window !== 'undefined') {
       const url = action ? `?tab=${id}&action=${action}` : `?tab=${id}`;
       window.history.pushState(null, '', url);
@@ -1530,9 +1565,10 @@ function MainApp() {
             </ModulePage>
           </Suspense>
         )}
+        {/* FOOTER - moved outside main for proper bottom placement */}
+      </main>
 
-        {/* FOOTER */}
-        <footer className={styles.footer}>
+      <footer className={styles.footer}>
           <div className={styles.footerL}>
             <span>© 2026 One Choice Kitchen. All rights reserved.</span>
             <span className={styles.fSep}>|</span>
@@ -1568,7 +1604,7 @@ function MainApp() {
             </div>
           </div>
         </footer>
-      </main>
+
 
       {/* ══════════════════════════════════════════════
           MOBILE BOTTOM NAV

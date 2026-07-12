@@ -136,7 +136,8 @@
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
     "stripe": "22.1.1",
-    "uuid": "^14.0.0"
+    "uuid": "^14.0.0",
+    "xlsx": "^0.18.5"
   },
   "resolutions": {
     "react": "19.0.0",

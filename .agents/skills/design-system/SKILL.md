@@ -1,23 +1,25 @@
 ---
 name: design-system
 description: >
-  OneChoiceKitchen design system v3.0. Brand: Blue (#2563EB) + Red (#DC2626).
+  OneChoiceKitchen design system v3.1. Brand: OCK Navy (#1A2B6D) + OCK Red (#E31E24).
+  Colors extracted directly from the transparent-logo.png file.
   Azure Portal-inspired. Covers color tokens, typography, spacing, components,
   dark mode, and responsive breakpoints. Load when building UI components or
   styling any frontend. All portals (admin, web, partner, rider) MUST use these tokens.
 ---
 
-# OneChoiceKitchen Design System v3.0
+# OneChoiceKitchen Design System v3.1
 
 ## Brand Identity
 
-**Primary Brand Color:** `#2563EB` (Blue)  
-**Secondary Brand Color:** `#DC2626` (Red)  
+**Primary Brand Color:** `#1A2B6D` (OCK Navy Blue — from logo circle, "ONE" and "KITCHEN" text)  
+**Accent Brand Color:** `#E31E24` (OCK Red — from chef hat, "CHOICE" text, tagline accent)  
 **Design Inspiration:** Microsoft Azure Portal — clean, professional, enterprise-grade  
 **Font:** Inter (Google Fonts)
 
-> All UI components, buttons, links, badges, charts, and interactive elements MUST
-> use Blue and Red brand colors. Never introduce a different primary brand color.
+> **CRITICAL:** Brand colors were extracted directly from `public/branding/transparent-logo.png`.
+> The logo uses **deep navy #1A2B6D** (NOT #2563EB) and **OCK red #E31E24** (NOT #DC2626).
+> NEVER use #2563EB, #0054A6, #003893 or any other blue — they do not match the logo.
 
 ---
 
@@ -28,16 +30,16 @@ Defined in `apps/admin/admin-portal/src/styles.css` (global) and
 
 ```css
 :root {
-  /* ── BRAND COLORS ── */
-  --brand-blue:    #2563EB;   /* Primary — buttons, links, focus rings */
-  --brand-blue-dk: #1d4ed8;   /* Hover / pressed state */
-  --brand-blue-lt: #eff6ff;   /* Light background tint */
-  --brand-blue-md: #dbeafe;   /* Medium tint (badges) */
+  /* ── BRAND COLORS (logo-matched) ── */
+  --brand-blue:    #1A2B6D;   /* OCK Navy — primary brand color */
+  --brand-blue-dk: #0F1C4E;   /* Darker navy — hover / pressed state */
+  --brand-blue-lt: #EEF1FB;   /* Light navy tint — row hover bg */
+  --brand-blue-md: #C7CFF0;   /* Medium tint — selected / badge */
 
-  --brand-red:     #DC2626;   /* Danger — delete, cancel, errors */
-  --brand-red-dk:  #b91c1c;   /* Hover / pressed state */
-  --brand-red-lt:  #fef2f2;   /* Light background tint */
-  --brand-red-md:  #fee2e2;   /* Medium tint (error badges) */
+  --brand-red:     #E31E24;   /* OCK Red — accent / danger / delete */
+  --brand-red-dk:  #B5171C;   /* Darker red — hover state */
+  --brand-red-lt:  #FEF1F1;   /* Light red tint — error bg */
+  --brand-red-md:  #FBCACA;   /* Medium red — error border */
 
   /* ── SEMANTIC ALIASES ── */
   --blue:   var(--brand-blue);

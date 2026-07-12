@@ -3,7 +3,8 @@ import axios from 'axios';
 import {
   Trash2, Edit2, UserPlus, CheckCircle, XCircle, X, Search,
   RefreshCw, Users, UserCheck, Bike, Download, Upload,
-  ChevronUp, ChevronDown, ChevronsUpDown, FileDown,
+  ChevronUp, ChevronDown, ChevronsUpDown, FileDown, Check,
+  ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight,
   FileSpreadsheet, FileText, Eye, UserX, AlertTriangle,
   Building2, Truck,
 } from 'lucide-react';
@@ -225,6 +226,74 @@ const SYSTEM_ROLES_FALLBACK: Role[] = [
   { id: 'accountant', name: 'Accountant' },
 ];
 
+// ── Custom Components ──────────────────────────────────────────────────
+function MultiSelectDropdown({ label, options, selected, onChange, width = 160 }: {
+  label: string; options: {value: string, label: string}[]; selected: string[]; onChange: (vals: string[]) => void; width?: number | string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+  
+  const allSelected = selected.length === 0 || selected.length === options.length;
+  
+  const toggle = (val: string) => {
+    if (allSelected) {
+      onChange([val]);
+      return;
+    }
+    if (selected.includes(val)) {
+      const next = selected.filter(x => x !== val);
+      onChange(next.length === 0 ? [] : next);
+    } else {
+      const next = [...selected, val];
+      onChange(next.length === options.length ? [] : next);
+    }
+  };
+
+  const toggleAll = () => onChange([]);
+
+  let displayLabel = label;
+  if (!allSelected) {
+    if (selected.length === 1) displayLabel = options.find(o => o.value === selected[0])?.label || label;
+    else displayLabel = `${selected.length} Selected`;
+  }
+
+  return (
+    <div ref={ref} style={{ position: 'relative', width, minWidth: width }}>
+      <button onClick={() => setOpen(!open)} className="input" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', cursor: 'pointer', height: 38, textAlign: 'left', padding: '0 0.8rem' }}>
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.82rem', fontWeight: 500, color: '#334155' }}>{displayLabel}</span>
+        <ChevronDown size={14} style={{ opacity: 0.5, flexShrink: 0 }} />
+      </button>
+      {open && (
+        <div style={{ position: 'absolute', top: '100%', left: 0, minWidth: '100%', marginTop: 4, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, boxShadow: '0 10px 25px rgba(0,0,0,.1)', zIndex: 50, padding: 4, maxHeight: 300, overflowY: 'auto' }}>
+          <div onClick={toggleAll} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', cursor: 'pointer', borderRadius: 4, background: allSelected ? 'var(--brand-blue-lt)' : 'transparent' }} onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'} onMouseLeave={e => e.currentTarget.style.background = allSelected ? 'var(--brand-blue-lt)' : 'transparent'}>
+            <div style={{ width: 16, height: 16, border: '1.5px solid', borderColor: allSelected ? 'var(--brand-blue)' : '#cbd5e1', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', background: allSelected ? 'var(--brand-blue)' : '#fff' }}>
+              {allSelected && <Check size={12} color="#fff" />}
+            </div>
+            <span style={{ fontSize: '0.8rem', fontWeight: allSelected ? 600 : 400, color: '#1e293b' }}>All {label.replace('All ', '')}</span>
+          </div>
+          <div style={{ height: 1, background: '#e2e8f0', margin: '4px 0' }} />
+          {options.map(o => {
+            const isSel = allSelected || selected.includes(o.value);
+            return (
+              <div key={o.value} onClick={() => toggle(o.value)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', cursor: 'pointer', borderRadius: 4, background: isSel && !allSelected ? 'var(--brand-blue-lt)' : 'transparent' }} onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'} onMouseLeave={e => e.currentTarget.style.background = isSel && !allSelected ? 'var(--brand-blue-lt)' : 'transparent'}>
+                <div style={{ width: 16, height: 16, border: '1.5px solid', borderColor: isSel ? 'var(--brand-blue)' : '#cbd5e1', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', background: isSel ? 'var(--brand-blue)' : '#fff' }}>
+                  {isSel && <Check size={12} color="#fff" />}
+                </div>
+                <span style={{ fontSize: '0.8rem', fontWeight: isSel ? 600 : 400, color: '#1e293b' }}>{o.label}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main ──────────────────────────────────────────────────────────────
 export default function UsersAdmin() {
   const [tab, setTab]               = useState<Tab>('users');
@@ -236,8 +305,19 @@ export default function UsersAdmin() {
 
   // Filters
   const [search, setSearch]             = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL');
-  const [roleFilter, setRoleFilter]     = useState('ALL');
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [roleFilter, setRoleFilter]     = useState<string[]>([]);
+
+  // Derived options for multi-selects
+  const statusOpts = useMemo(() => {
+    if (tab === 'users') return [{ value: 'ACTIVE', label: 'Active' }, { value: 'INACTIVE', label: 'Inactive' }];
+    return [{ value: 'PENDING', label: 'Pending' }, { value: 'APPROVED', label: 'Approved' }, { value: 'REJECTED', label: 'Rejected' }];
+  }, [tab]);
+  const roleOpts = useMemo(() => {
+    const combined = [...roles];
+    SYSTEM_ROLES_FALLBACK.forEach(fb => { if (!combined.some(r => r.id === fb.id)) combined.push(fb); });
+    return combined.map(r => ({ value: r.name, label: r.name })).sort((a,b) => a.label.localeCompare(b.label));
+  }, [roles]);
 
   // Sort
   const [sortKey, setSortKey] = useState('name');
@@ -319,7 +399,7 @@ export default function UsersAdmin() {
   }, []);
 
   useEffect(() => {
-    setSearch(''); setPage(1); setStatusFilter('ALL'); setRoleFilter('ALL');
+    setSearch(''); setPage(1); setStatusFilter([]); setRoleFilter([]);
     setSortKey('name'); setSortDir('asc');
     refresh();
   }, [tab]);
@@ -575,22 +655,24 @@ export default function UsersAdmin() {
   };
 
   const filteredUsers = useMemo(() =>
-    [...users.filter(u =>
-      (!q || [u.name, u.email, u.mobile || ''].some(s => s.toLowerCase().includes(q))) &&
-      (statusFilter === 'ALL' || (statusFilter === 'ACTIVE' ? u.isActive : !u.isActive)) &&
-      (roleFilter === 'ALL' || (u.role?.name || 'Customer') === roleFilter)
-    )].sort(sortFn(sortKey, sortDir)), [users, q, statusFilter, roleFilter, sortKey, sortDir]);
+    [...users.filter(u => {
+      const sMatch = !q || [u.name, u.email, u.mobile || ''].some(s => s?.toLowerCase().includes(q));
+      const activeState = u.isActive ? 'ACTIVE' : 'INACTIVE';
+      const stMatch = statusFilter.length === 0 || statusFilter.includes(activeState);
+      const rlMatch = roleFilter.length === 0 || roleFilter.includes(u.role?.name || 'Customer');
+      return sMatch && stMatch && rlMatch;
+    })].sort(sortFn(sortKey, sortDir)), [users, q, statusFilter, roleFilter, sortKey, sortDir]);
 
   const filteredPartners = useMemo(() =>
     [...partners.filter(p =>
       (!q || [p.restaurantName, p.ownerName, p.email, p.mobile].some(s => s?.toLowerCase().includes(q))) &&
-      (statusFilter === 'ALL' || p.status === statusFilter)
+      (statusFilter.length === 0 || statusFilter.includes(p.status))
     )].sort(sortFn(sortKey, sortDir)), [partners, q, statusFilter, sortKey, sortDir]);
 
   const filteredRiders = useMemo(() =>
     [...riders.filter(r =>
       (!q || [r.fullName, r.mobile].some(s => s?.toLowerCase().includes(q))) &&
-      (statusFilter === 'ALL' || r.status === statusFilter)
+      (statusFilter.length === 0 || statusFilter.includes(r.status))
     )].sort(sortFn(sortKey, sortDir)), [riders, q, statusFilter, sortKey, sortDir]);
 
   const activeList    = tab === 'users' ? filteredUsers : tab === 'partners' ? filteredPartners : filteredRiders;
@@ -703,7 +785,7 @@ export default function UsersAdmin() {
           { id: 'partners' as Tab, label: 'Partners', Icon: Building2, count: partners.length, badge: pendingPart },
           { id: 'riders' as Tab,   label: 'Riders',   Icon: Truck,     count: riders.length,   badge: pendingRide },
         ]).map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{
+          <button key={t.id} onClick={() => { setTab(t.id); setStatusFilter([]); setRoleFilter([]); }} style={{
             display: 'inline-flex', alignItems: 'center', gap: 6, padding: '0.65rem 1.1rem',
             border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem',
             borderBottom: `2px solid ${tab === t.id ? '#2563EB' : 'transparent'}`,
@@ -719,37 +801,34 @@ export default function UsersAdmin() {
         ))}
       </div>
 
-      {/* ── Filter Bar — ONE horizontal row ─────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 0', flexWrap: 'nowrap', overflowX: 'auto' }}>
+      {/* ── Filter Bar — perfectly aligned horizontal row ─────────────────────── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.625rem 0', flexWrap: 'wrap' }}>
         {/* Search */}
-        <div style={{ position: 'relative', flex: '1 1 200px', minWidth: 160, maxWidth: 320 }}>
+        <div style={{ position: 'relative', flex: '1 1 240px', minWidth: 200, maxWidth: 400 }}>
           <Search size={14} style={{ position: 'absolute', left: '0.7rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
-          <input className="input" style={{ paddingLeft: '2.1rem', width: '100%' }}
+          <input className="input" style={{ paddingLeft: '2.1rem', width: '100%', height: 38 }}
             placeholder={`Search ${tab}…`} value={search}
             onChange={e => { setSearch(e.target.value); setPage(1); }} />
         </div>
 
         {/* Status filter */}
-        <select className="input" style={{ flex: '0 0 auto', width: 132, minWidth: 100 }}
-          value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }}>
-          <option value="ALL">All Status</option>
-          {tab === 'users' ? <>
-            <option value="ACTIVE">Active</option>
-            <option value="INACTIVE">Inactive</option>
-          </> : <>
-            <option value="PENDING">Pending</option>
-            <option value="APPROVED">Approved</option>
-            <option value="REJECTED">Rejected</option>
-          </>}
-        </select>
+        <MultiSelectDropdown 
+          label="All Status" 
+          options={statusOpts} 
+          selected={statusFilter} 
+          onChange={v => { setStatusFilter(v); setPage(1); }} 
+          width={150} 
+        />
 
         {/* Role filter — users only */}
         {tab === 'users' && (
-          <select className="input" style={{ flex: '0 0 auto', width: 148, minWidth: 100 }}
-            value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setPage(1); }}>
-            <option value="ALL">All Roles</option>
-            {roleNames.map(r => <option key={r} value={r}>{r}</option>)}
-          </select>
+          <MultiSelectDropdown 
+            label="All Roles" 
+            options={roleOpts} 
+            selected={roleFilter} 
+            onChange={v => { setRoleFilter(v); setPage(1); }} 
+            width={180} 
+          />
         )}
 
         {/* Record count */}
@@ -895,11 +974,15 @@ export default function UsersAdmin() {
         </div>
       )}
 
-      {/* ── Pagination: «  ‹  1 of N  [25 rows ∨]  ›  » ─────────── */}
+      {/* ── Pagination: << < 1 of N [25 rows per page] > >> ─────────── */}
       {!loading && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.35rem', padding: '0.5rem 0', borderTop: '1px solid #e2e8f0' }}>
-          <button onClick={() => setPage(1)} disabled={safePage === 1} style={pgBtnStyle(safePage === 1)} title="First">«</button>
-          <button onClick={() => setPage(p => p - 1)} disabled={safePage === 1} style={pgBtnStyle(safePage === 1)} title="Previous">‹</button>
+          <button onClick={() => setPage(1)} disabled={safePage === 1} style={pgBtnStyle(safePage === 1)} title="First">
+            <ChevronsLeft size={16} />
+          </button>
+          <button onClick={() => setPage(p => p - 1)} disabled={safePage === 1} style={pgBtnStyle(safePage === 1)} title="Previous">
+            <ChevronLeft size={16} />
+          </button>
           <span style={{ fontSize: '0.82rem', color: '#334155', fontWeight: 600, padding: '0 0.4rem', whiteSpace: 'nowrap' }}>
             {safePage} of {totalPages}
           </span>
@@ -907,8 +990,12 @@ export default function UsersAdmin() {
             style={{ fontSize: '0.82rem', fontWeight: 600, color: '#334155', border: '1px solid #e2e8f0', borderRadius: 6, padding: '0 0.6rem', background: '#fff', cursor: 'pointer', height: 32 }}>
             {[10, 25, 50, 100].map(n => <option key={n} value={n}>{n} rows per page</option>)}
           </select>
-          <button onClick={() => setPage(p => p + 1)} disabled={safePage === totalPages} style={pgBtnStyle(safePage === totalPages)} title="Next">›</button>
-          <button onClick={() => setPage(totalPages)} disabled={safePage === totalPages} style={pgBtnStyle(safePage === totalPages)} title="Last">»</button>
+          <button onClick={() => setPage(p => p + 1)} disabled={safePage === totalPages} style={pgBtnStyle(safePage === totalPages)} title="Next">
+            <ChevronRight size={16} />
+          </button>
+          <button onClick={() => setPage(totalPages)} disabled={safePage === totalPages} style={pgBtnStyle(safePage === totalPages)} title="Last">
+            <ChevronsRight size={16} />
+          </button>
         </div>
       )}
 

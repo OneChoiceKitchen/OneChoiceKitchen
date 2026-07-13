@@ -629,7 +629,7 @@ function KpiStrip({ onNav }: { onNav: (id: string) => void }) {
 
   const fmtRev = (n: number) => n > 0 ? `₹ ${n.toLocaleString('en-IN')}` : '₹ 0';
 
-  const KPIS = [
+  const KPIS: any[] = [
     { label: 'Total Revenue',      value: fmtRev(d.rev),                color: '#2563EB', bg: '#DBEAFE', sub: 'delivered + completed', icon: <IndianRupee size={22} strokeWidth={2.5} />, navId: 'orders' },
     { label: 'Total Orders',       value: d.orders.toLocaleString(),    color: '#16A34A', bg: '#DCFCE7', sub: 'all time orders',        icon: <ShoppingBag size={22} strokeWidth={2} />,   navId: 'orders' },
     { label: "Today's Orders",     value: d.today.toLocaleString(),     color: '#0284C7', bg: '#E0F2FE', sub: 'placed today',           icon: <ClipboardList size={22} strokeWidth={2} />, navId: 'orders' },

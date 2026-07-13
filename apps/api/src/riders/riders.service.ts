@@ -26,7 +26,9 @@ export class RidersService {
   }
 
   findAll() {
+    // Make sure this matches the model you are using for the "Riders" tab
     return this.prisma.riderRegistration.findMany({
+      where: { status: 'APPROVED' }, // If the tab only wants approved riders
       orderBy: { createdAt: 'desc' }
     });
   }

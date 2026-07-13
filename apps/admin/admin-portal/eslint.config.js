@@ -19,8 +19,9 @@ module.exports = [
   {
     // Service worker uses self as the global scope — this is correct and expected
     files: ['**/public/sw.js', '**/sw.js', '**/service-worker.js'],
-    env: { serviceworker: true },
-    globals: { self: 'readonly' },
+    languageOptions: {
+      globals: { self: 'readonly' },
+    },
     rules: { 'no-restricted-globals': 'off' },
   },
 ];

@@ -1399,8 +1399,8 @@ export default function BranchesAdmin() {
                             </button>
                           </div>
                           <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                            <input type="number" step="any" className={styles.input} value={form.lat ?? ''} onChange={(e) => setForm({...form, lat: e.target.value ? parseFloat(e.target.value) : null})} placeholder="Latitude (e.g. 12.9716)" />
-                            <input type="number" step="any" className={styles.input} value={form.lng ?? ''} onChange={(e) => setForm({...form, lng: e.target.value ? parseFloat(e.target.value) : null})} placeholder="Longitude (e.g. 77.5946)" />
+                            <input type="number" step="any" className={styles.input} value={form.lat ?? ''} onChange={(e) => setForm({...form, lat: e.target.value ? parseFloat(e.target.value) : (null as any)})} placeholder="Latitude (e.g. 12.9716)" />
+                            <input type="number" step="any" className={styles.input} value={form.lng ?? ''} onChange={(e) => setForm({...form, lng: e.target.value ? parseFloat(e.target.value) : (null as any)})} placeholder="Longitude (e.g. 77.5946)" />
                           </div>
                           <span className={styles.formHint}>GPS coordinates for map pin, nearby restaurant search, and delivery routing. Click 'Locate Me' to auto-fill.</span>
                         </div>

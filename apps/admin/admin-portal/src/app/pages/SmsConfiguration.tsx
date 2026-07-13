@@ -8,7 +8,7 @@ const authHeaders = () => ({
   'Content-Type': 'application/json'
 });
 
-const ALL_PROVIDERS = ['Twilio', 'MSG91', 'Fast2SMS', 'AWS SNS', 'Nexmo', 'Custom API'];
+const ALL_PROVIDERS = ['Local Mock (Console)', 'Twilio', 'MSG91', 'Fast2SMS', 'AWS SNS', 'Nexmo', 'Custom API'];
 
 const PROVIDER_FIELDS: any = {
   'Twilio': [
@@ -148,11 +148,25 @@ export default function SmsConfiguration() {
     setIsTestModalOpen(false);
   };
 
+  const setLocalDefault = () => {
+    const updated = providers.map(p => ({
+      ...p,
+      isActive: p.providerName === 'Local Mock (Console)'
+    }));
+    handleSaveProviders(updated);
+    toast.success('Local Dev Mode Active. OTPs will print in the backend terminal.');
+  };
+
   return (
     <div className={styles.pageContainer}>
-      <div className={styles.header}>
-        <h1 className={styles.pageTitle}>📱 SMS Configuration</h1>
-        <p className={styles.subtitle}>Manage SMS service providers and routing priority.</p>
+      <div className={styles.header} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1 className={styles.pageTitle}>📱 SMS Configuration</h1>
+          <p className={styles.subtitle}>Manage SMS service providers and routing priority.</p>
+        </div>
+        <button onClick={setLocalDefault} style={{ background: '#10b981', color: '#fff', border: 'none', padding: '0.65rem 1.25rem', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', display: 'flex', gap: 6, alignItems: 'center' }}>
+          🛠️ Set Local Dev as Default
+        </button>
       </div>
 
       <div className={styles.providersGrid}>

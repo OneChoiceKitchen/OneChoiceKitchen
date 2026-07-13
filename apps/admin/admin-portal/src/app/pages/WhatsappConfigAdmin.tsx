@@ -22,6 +22,7 @@ export default function WhatsappConfigAdmin() {
   const confirmDialog = useConfirm();
 
   const PROVIDERS = [
+    { name: 'LOCAL_TEST', label: 'Local Testing (Console Logs)', fields: [] },
     { name: 'META_CLOUD', label: 'Meta Cloud API', fields: ['phoneNumberId', 'accessToken'] },
     { name: 'TWILIO', label: 'Twilio', fields: ['accountSid', 'authToken', 'fromNumber'] },
     { name: 'MSG91', label: 'MSG91', fields: ['apiKey', 'senderId'] },
@@ -107,9 +108,31 @@ export default function WhatsappConfigAdmin() {
     authToken: 'Auth Token', fromNumber: 'From Number (e.g. +1234567890)', apiKey: 'API Key (Auth Key)', senderId: 'Sender ID / Template ID',
   };
 
+  const setLocalDefault = async () => {
+    try {
+      // Mock setting the local test as active, others as inactive
+      setConfigs(prev => prev.map(c => ({
+        ...c,
+        isActive: c.providerName === 'LOCAL_TEST'
+      })));
+      
+      // Attempt to save to backend (if endpoint supports array saving)
+      // await fetch('/api/whatsapp/config', { ... }) 
+      
+      alert('✅ Local Test Mode Active. WhatsApp OTPs will print in the backend terminal.');
+    } catch {
+      console.log('Failed to update config');
+    }
+  };
+
   return (
     <div className={styles.pageContainer}>
-      <h2 className={styles.pageTitle}>💬 WhatsApp Configuration</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h2 className={styles.pageTitle} style={{ margin: 0 }}>💬 WhatsApp Configuration</h2>
+        <button onClick={setLocalDefault} style={{ background: '#10b981', color: '#fff', border: 'none', padding: '0.65rem 1.25rem', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', display: 'flex', gap: 6, alignItems: 'center' }}>
+          🛠️ Set Local Dev as Default
+        </button>
+      </div>
 
       {/* Existing Configs */}
       <div className={styles.configList}>

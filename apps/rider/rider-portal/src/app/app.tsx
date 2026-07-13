@@ -294,7 +294,7 @@ export function MainApp({ onLogout }: { onLogout: () => void }) {
          localStorage.setItem("rider_status", meData.status);
       }
       
-      onLogin();
+      window.location.reload();
 
     } catch (err: any) {
       setErrors({ general: err.message || err.response?.data?.message || 'An error occurred during the process.' });
@@ -530,10 +530,6 @@ export function LoginScreen({ onLogin }: { onLogin: () => void }) {
     setErrors({});
     
     if (isRegister) {
-      if (otp !== '1234') {
-        setErrors({ general: 'Invalid OTP. Use 1234.' });
-        return;
-      }
       setLoading(true);
       try {
         const verRes = await axios.post('/api/auth/verify-otp', { phone: mobile, otp });
@@ -701,8 +697,8 @@ export function LoginScreen({ onLogin }: { onLogin: () => void }) {
                     <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, color: '#475569', marginBottom: '0.5rem' }}>Enter OTP</label>
                     <input 
                       type="text" 
-                      placeholder="••••" 
-                      maxLength={4}
+                      placeholder="••••••" 
+                      maxLength={6}
                       value={otp}
                       onChange={(e: any) => setOtp(e.target.value)}
                       style={{ width: '100%', padding: '0.9rem 1.1rem', borderRadius: '12px', border: '1px solid #e2e8f0', background: '#f8fafc', color: '#0f172a', fontSize: '0.95rem', boxSizing: 'border-box', outline: 'none', transition: 'border-color 0.2s' }} 

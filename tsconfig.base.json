@@ -19,7 +19,15 @@
     "baseUrl": ".",
     "customConditions": ["@org/source"],
     "paths": {
-      "@org/ui-design-system": ["libs/ui-design-system/src/index.ts"]
+      "@org/ui-design-system": ["libs/ui-design-system/src/index.ts"],
+      "@prisma/client": [
+        "node_modules/@prisma/client/default.d.ts",
+        "node_modules/.pnpm/@prisma+client@7.8.0_prisma_740c3c6bd3867f866ac3f0580ec9b5f6/node_modules/@prisma/client/default.d.ts"
+      ],
+      "@prisma/client/*": [
+        "node_modules/@prisma/client/*",
+        "node_modules/.pnpm/@prisma+client@7.8.0_prisma_740c3c6bd3867f866ac3f0580ec9b5f6/node_modules/@prisma/client/*"
+      ]
     }
   }
 }

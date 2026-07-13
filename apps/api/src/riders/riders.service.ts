@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class RidersService {
@@ -49,9 +50,61 @@ export class RidersService {
       data: { status: 'APPROVED' }
     });
 
-    // We can also create a User record for them if needed, but for now just approve
-    // e.g., create User with role "RIDER"
+    // Ensure RIDER role exists
+    let role = await this.prisma.role.findFirst({ where: { name: 'RIDER' } });
+    if (!role) {
+      role = await this.prisma.role.create({ data: { name: 'RIDER' } } as any);
+    }
+
+    // Auto-create the User account so the rider can log in
+    // We map their mobile number to an email format required by the login system
+    const riderEmail = `${registration.mobile}@rider.com`;
+    const existingUser = await this.prisma.user.findUnique({ where: { email: riderEmail } });
+
+    if (!existingUser) {
+      const hashedPassword = await bcrypt.hash('Welcome@123', 10);
+      
+      try {
+         // Attempt to create user (Schema handling for standard roleId)
+         await this.prisma.user.create({
+           data: {
+             name: registration.fullName,
+             email: riderEmail,
+             mobile: registration.mobile,
+             password: hashedPassword,
+             isActive: true,
+             roleId: role.id
+           } as any
+         });
+      } catch (e) {
+         // Fallback if your Prisma schema uses a many-to-many "roles" array instead
+         await this.prisma.user.create({
+           data: {
+             name: registration.fullName,
+             email: riderEmail,
+             mobile: registration.mobile,
+             password: hashedPassword,
+             isActive: true,
+             roles: { connect: { id: role.id } }
+           } as any
+         });
+      }
+    }
 
     return approved;
+  }
+
+  async reject(id: string) {
+    return this.prisma.riderRegistration.update({
+      where: { id },
+      data: { status: 'REJECTED' }
+    });
+  }
+
+  async update(id: string, data: Partial<{ fullName: string; mobile: string; vehicleType?: string }>) {
+    return this.prisma.riderRegistration.update({
+      where: { id },
+      data
+    });
   }
 }

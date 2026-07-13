@@ -339,47 +339,55 @@ export function MainApp({ onLogout }: { onLogout: () => void }) {
         
         <div className={styles.headerRight}>
           <div className={styles.tabs}>
-            <button className={`${styles.tab} ${activeTab === 'orders' ? styles.activeTab : ''}`} onClick={() => setActiveTab('orders')}>
-              <span>🥣</span> Live Orders
+            <button className={`${styles.tab} ${activeTab === 'orders' ? styles.activeTab : ''} ${!canModule('food_ordering') ? styles.lockedTab : ''}`} onClick={() => setActiveTab('orders')}>
+              <span>{!canModule('food_ordering') ? '🔒' : '🥣'}</span> Live Orders
             </button>
+            <button className={`${styles.tab} ${activeTab === 'menu' ? styles.activeTab : ''} ${!canModule('food_ordering') ? styles.lockedTab : ''}`} onClick={() => setActiveTab('menu')}>
+              <span>{!canModule('food_ordering') ? '🔒' : '📋'}</span> Menu Builder
+            </button>
+            <button className={`${styles.tab} ${activeTab === 'inventory' ? styles.activeTab : ''} ${!canModule('food_ordering') ? styles.lockedTab : ''}`} onClick={() => setActiveTab('inventory')}>
+              <span>{!canModule('food_ordering') ? '🔒' : '📦'}</span> Inventory
+            </button>
+
+            <button className={`${styles.tab} ${activeTab === 'reservations' ? styles.activeTab : ''} ${!canModule('dining') ? styles.lockedTab : ''}`} onClick={() => setActiveTab('reservations')}>
+              <span>{!canModule('dining') ? '🔒' : '🍽️'}</span> Reservations
+            </button>
+
+            <button className={`${styles.tab} ${activeTab === 'venues' ? styles.activeTab : ''} ${!canModule('hall_party') ? styles.lockedTab : ''}`} onClick={() => setActiveTab('venues')}>
+              <span>{!canModule('hall_party') ? '🔒' : '🏰'}</span> My Venues
+            </button>
+            <button className={`${styles.tab} ${activeTab === 'packages' ? styles.activeTab : ''} ${!canModule('hall_party') ? styles.lockedTab : ''}`} onClick={() => setActiveTab('packages')}>
+              <span>{!canModule('hall_party') ? '🔒' : '🎉'}</span> Packages
+            </button>
+            <button className={`${styles.tab} ${activeTab === 'hall_bookings' ? styles.activeTab : ''} ${!canModule('hall_party') ? styles.lockedTab : ''}`} onClick={() => setActiveTab('hall_bookings')}>
+              <span>{!canModule('hall_party') ? '🔒' : '📅'}</span> Bookings
+            </button>
+
+            <button className={`${styles.tab} ${activeTab === 'tiffin' ? styles.activeTab : ''} ${!canModule('tiffin') ? styles.lockedTab : ''}`} onClick={() => setActiveTab('tiffin')}>
+              <span>{!canModule('tiffin') ? '🔒' : '🍱'}</span> Tiffin Plans
+            </button>
+
+            <button className={`${styles.tab} ${activeTab === 'staff' ? styles.activeTab : ''} ${!canModule('hrms') ? styles.lockedTab : ''}`} onClick={() => setActiveTab('staff')}>
+              <span>{!canModule('hrms') ? '🔒' : '👨‍🍳'}</span> Staff Hub
+            </button>
+            <button className={`${styles.tab} ${activeTab === 'kiosk' ? styles.activeTab : ''} ${!canModule('hrms') ? styles.lockedTab : ''}`} onClick={() => setActiveTab('kiosk')}>
+              <span>{!canModule('hrms') ? '🔒' : '📸'}</span> Staff Kiosk
+            </button>
+
+            <button className={`${styles.tab} ${activeTab === 'analytics' ? styles.activeTab : ''} ${!canModule('analytics') ? styles.lockedTab : ''}`} onClick={() => setActiveTab('analytics')}>
+              <span>{!canModule('analytics') ? '🔒' : '📈'}</span> Analytics
+            </button>
+
+            <button className={`${styles.tab} ${activeTab === 'earnings' ? styles.activeTab : ''} ${!canModule('finance') ? styles.lockedTab : ''}`} onClick={() => setActiveTab('earnings')}>
+              <span>{!canModule('finance') ? '🔒' : '💰'}</span> Earnings
+            </button>
+
+            {/* Core features that don't require specific module subscriptions */}
             <button className={`${styles.tab} ${activeTab === 'branches' ? styles.activeTab : ''}`} onClick={() => setActiveTab('branches')}>
               <span>🏢</span> Branches
             </button>
             <button className={`${styles.tab} ${activeTab === 'compliance' ? styles.activeTab : ''}`} onClick={() => setActiveTab('compliance')}>
               <span>✅</span> Compliance
-            </button>
-            <button className={`${styles.tab} ${activeTab === 'reservations' ? styles.activeTab : ''}`} onClick={() => setActiveTab('reservations')}>
-              <span>🍽️</span> Reservations
-            </button>
-            <button className={`${styles.tab} ${activeTab === 'staff' ? styles.activeTab : ''}`} onClick={() => setActiveTab('staff')}>
-              <span>👨‍🍳</span> Staff Hub
-            </button>
-            <button className={`${styles.tab} ${activeTab === 'analytics' ? styles.activeTab : ''}`} onClick={() => setActiveTab('analytics')}>
-              <span>📈</span> Analytics
-            </button>
-            <button className={`${styles.tab} ${activeTab === 'earnings' ? styles.activeTab : ''}`} onClick={() => setActiveTab('earnings')}>
-              <span>💰</span> Earnings
-            </button>
-            <button className={`${styles.tab} ${activeTab === 'inventory' ? styles.activeTab : ''}`} onClick={() => setActiveTab('inventory')}>
-              <span>📦</span> Inventory
-            </button>
-            <button className={`${styles.tab} ${activeTab === 'menu' ? styles.activeTab : ''}`} onClick={() => setActiveTab('menu')}>
-              <span>📋</span> Menu Builder
-            </button>
-            <button className={`${styles.tab} ${activeTab === 'tiffin' ? styles.activeTab : ''}`} onClick={() => setActiveTab('tiffin')}>
-              <span>🍱</span> Tiffin Plans
-            </button>
-            <button className={`${styles.tab} ${activeTab === 'kiosk' ? styles.activeTab : ''}`} onClick={() => setActiveTab('kiosk')}>
-              <span>📸</span> Staff Kiosk
-            </button>
-            <button className={`${styles.tab} ${activeTab === 'venues' ? styles.activeTab : ''}`} onClick={() => setActiveTab('venues')}>
-              <span>🏰</span> My Venues
-            </button>
-            <button className={`${styles.tab} ${activeTab === 'packages' ? styles.activeTab : ''}`} onClick={() => setActiveTab('packages')}>
-              <span>🎉</span> Packages
-            </button>
-            <button className={`${styles.tab} ${activeTab === 'hall_bookings' ? styles.activeTab : ''}`} onClick={() => setActiveTab('hall_bookings')}>
-              <span>📅</span> Bookings
             </button>
             <button className={`${styles.tab} ${activeTab === 'chat' ? styles.activeTab : ''}`} onClick={() => setActiveTab('chat')}>
               <span>💬</span> Team Chat
@@ -397,8 +405,41 @@ export function MainApp({ onLogout }: { onLogout: () => void }) {
       <div style={{ padding: '0 2rem', flex: 1 }}>
         <PortalCards portalName="partner" onCardClick={handleCardClick} />
 
+        {/* Helper function to wrap locked modules */}
+        {(() => {
+          const checkAccess = (module: string) => {
+            if (canModule(module)) return true;
+            return false;
+          };
+
+          const LockedScreen = ({ moduleName }: { moduleName: string }) => (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '5rem 2rem', textAlign: 'center', background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', marginTop: '2rem' }}>
+              <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🔒</div>
+              <h2 style={{ fontSize: '1.5rem', color: '#0f172a', marginBottom: '0.5rem', fontWeight: 800 }}>Subscription Required</h2>
+              <p style={{ color: '#64748b', maxWidth: '400px', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+                Your current plan does not include access to the <strong>{moduleName}</strong> module. Please upgrade your subscription via the Admin to unlock these features.
+              </p>
+              <button onClick={() => setActiveTab('dashboard')} style={{ background: '#2563EB', color: '#fff', border: 'none', padding: '0.75rem 1.5rem', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>
+                Return to Dashboard
+              </button>
+            </div>
+          );
+
+          if (activeTab === 'orders' && !checkAccess('food_ordering')) return <LockedScreen moduleName="Food Ordering" />;
+          if (activeTab === 'menu' && !checkAccess('food_ordering')) return <LockedScreen moduleName="Food Ordering" />;
+          if (activeTab === 'inventory' && !checkAccess('food_ordering')) return <LockedScreen moduleName="Food Ordering" />;
+          if (activeTab === 'reservations' && !checkAccess('dining')) return <LockedScreen moduleName="Dining Management" />;
+          if ((activeTab === 'venues' || activeTab === 'packages' || activeTab === 'hall_bookings') && !checkAccess('hall_party')) return <LockedScreen moduleName="Hall & Party Booking" />;
+          if (activeTab === 'tiffin' && !checkAccess('tiffin')) return <LockedScreen moduleName="Tiffin Subscriptions" />;
+          if ((activeTab === 'staff' || activeTab === 'kiosk') && !checkAccess('hrms')) return <LockedScreen moduleName="HRMS" />;
+          if (activeTab === 'analytics' && !checkAccess('analytics')) return <LockedScreen moduleName="Advanced Analytics" />;
+          if (activeTab === 'earnings' && !checkAccess('finance')) return <LockedScreen moduleName="Finance" />;
+
+          return null; // Return null if accessed properly, so the standard components render below
+        })()}
+
         {/* Render Orders Tab */}
-        {activeTab === 'orders' && (
+        {activeTab === 'orders' && canModule('food_ordering') && (
           <div className={styles.ordersGrid}>
             {orders.length > 0 ? (
               orders.map((ord: any) => (
@@ -434,30 +475,31 @@ export function MainApp({ onLogout }: { onLogout: () => void }) {
         )}
 
         {/* Render Staff Tab */}
-        {activeTab === 'staff' && <StaffManagementAdmin />}
+        {activeTab === 'staff' && canModule('hrms') && <StaffManagementAdmin />}
 
         {/* Render Analytics Tab */}
-        {activeTab === 'analytics' && <AnalyticsAdmin />}
+        {activeTab === 'analytics' && canModule('analytics') && <AnalyticsAdmin />}
         {/* Render Inventory Tab */}
-        {activeTab === 'inventory' && <InventoryAdmin />}
+        {activeTab === 'inventory' && canModule('food_ordering') && <InventoryAdmin />}
         {/* Render Menu Tab */}
-        {activeTab === 'menu' && <MenuBuilderAdmin />}
+        {activeTab === 'menu' && canModule('food_ordering') && <MenuBuilderAdmin />}
         {/* Render Tiffin Tab */}
-        {activeTab === 'tiffin' && <TiffinManagementAdmin />}
+        {activeTab === 'tiffin' && canModule('tiffin') && <TiffinManagementAdmin />}
         {/* Render Earnings Tab */}
-        {activeTab === 'earnings' && <EarningsPartner />}
-        {/* Render Branches Tab */}
+        {activeTab === 'earnings' && canModule('finance') && <EarningsPartner />}
+        
+        {/* Core modules always available */}
         {activeTab === 'branches' && <BranchesPartner />}
-        {/* Render Compliance Tab */}
         {activeTab === 'compliance' && <CompliancePartner />}
+        
         {/* Render Reservations Tab */}
-        {activeTab === 'reservations' && <ReservationsPartner />}
+        {activeTab === 'reservations' && canModule('dining') && <ReservationsPartner />}
         {/* Render Kiosk Tab */}
-        {activeTab === 'kiosk' && <ESSKioskAdmin />}
+        {activeTab === 'kiosk' && canModule('hrms') && <ESSKioskAdmin />}
         {/* Render Party Booking Tabs */}
-        {activeTab === 'venues' && <VenuesPartner />}
-        {activeTab === 'packages' && <PackagesPartner />}
-        {activeTab === 'hall_bookings' && <BookingsPartner />}
+        {activeTab === 'venues' && canModule('hall_party') && <VenuesPartner />}
+        {activeTab === 'packages' && canModule('hall_party') && <PackagesPartner />}
+        {activeTab === 'hall_bookings' && canModule('hall_party') && <BookingsPartner />}
         {/* Internal Chat */}
         {activeTab === 'chat' && (
           <div style={{ padding: '1.5rem 0' }}>

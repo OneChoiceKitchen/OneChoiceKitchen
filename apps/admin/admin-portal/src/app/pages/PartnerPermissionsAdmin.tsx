@@ -73,7 +73,16 @@ export const PARTNER_MODULES = [
   },
 ];
 
-interface Partner { id: string; name: string; email: string; role: string; isActive: boolean; }
+interface Partner { 
+  id: string; 
+  name: string; 
+  email: string; 
+  role: string; 
+  isActive: boolean;
+  subscriptionPlan?: 'MONTHLY' | 'YEARLY' | 'NONE';
+  subscriptionStatus?: 'ACTIVE' | 'EXPIRED' | 'PENDING';
+  subscriptionExpiry?: string;
+}
 interface Permission { module: string; feature: string; isEnabled: boolean; }
 interface DeleteRequest { id: string; partnerId: string; module: string; entity: string; entityId: string; status: string; requestedAt: string; }
 
@@ -81,6 +90,11 @@ export default function PartnerPermissionsAdmin() {
   const [partners,      setPartners]      = useState<Partner[]>([]);
   const [selectedP,     setSelectedP]     = useState<Partner | null>(null);
   const [permissions,   setPermissions]   = useState<Permission[]>([]);
+  
+  // Local state for editing subscriptions
+  const [subPlan, setSubPlan] = useState<'MONTHLY' | 'YEARLY' | 'NONE'>('NONE');
+  const [subStatus, setSubStatus] = useState<'ACTIVE' | 'EXPIRED' | 'PENDING'>('PENDING');
+  const [subExpiry, setSubExpiry] = useState<string>('');
   const [deleteReqs,    setDeleteReqs]    = useState<DeleteRequest[]>([]);
   const [loading,       setLoading]       = useState(true);
   const [saving,        setSaving]        = useState(false);
@@ -103,7 +117,16 @@ export default function PartnerPermissionsAdmin() {
 
   // Load permissions when partner selected
   useEffect(() => {
-    if (!selectedP) { setPermissions([]); return; }
+    if (!selectedP) { 
+      setPermissions([]); 
+      return; 
+    }
+    
+    // Set local subscription state from selected partner
+    setSubPlan(selectedP.subscriptionPlan || 'NONE');
+    setSubStatus(selectedP.subscriptionStatus || 'PENDING');
+    setSubExpiry(selectedP.subscriptionExpiry ? new Date(selectedP.subscriptionExpiry).toISOString().split('T')[0] : '');
+
     setLoading(true);
     fetch(`/api/partner-permissions/${selectedP.id}`, { headers: authH() })
       .then(r => r.ok ? r.json() : []).catch(() => [])
@@ -141,9 +164,25 @@ export default function PartnerPermissionsAdmin() {
       await fetch(`/api/partner-permissions/${selectedP.id}`, {
         method: 'POST',
         headers: authH(),
-        body: JSON.stringify({ permissions }),
+        body: JSON.stringify({ 
+          permissions,
+          subscription: {
+            plan: subPlan,
+            status: subStatus,
+            expiryDate: subExpiry
+          }
+        }),
       });
-      setToast(`✅ Permissions saved for ${selectedP.name}`);
+
+      // Update the local list so the UI reflects changes instantly
+      setPartners(prev => prev.map(p => p.id === selectedP.id ? {
+        ...p,
+        subscriptionPlan: subPlan,
+        subscriptionStatus: subStatus,
+        subscriptionExpiry: subExpiry
+      } : p));
+
+      setToast(`✅ Settings saved for ${selectedP.name}`);
       setTimeout(() => setToast(''), 3000);
     } catch {
       setToast('❌ Failed to save permissions');
@@ -265,17 +304,74 @@ export default function PartnerPermissionsAdmin() {
               </div>
             ) : (
               <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:12, overflow:'hidden' }}>
-                <div style={{ padding:'1rem 1.25rem', borderBottom:'1px solid #e2e8f0', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                <div style={{ padding:'1rem 1.25rem', borderBottom:'1px solid #e2e8f0', display:'flex', alignItems:'center', justifyContent:'space-between', background: '#f8fafc' }}>
                   <div>
-                    <div style={{ fontWeight:700, fontSize:'.95rem', color:'#0f172a' }}>{selectedP.name}</div>
-                    <div style={{ fontSize:'.75rem', color:'#64748b' }}>{selectedP.email} · Configure module &amp; feature access</div>
+                    <div style={{ fontWeight:800, fontSize:'1.1rem', color:'#0f172a' }}>{selectedP.name}</div>
+                    <div style={{ fontSize:'.8rem', color:'#64748b' }}>{selectedP.email}</div>
                   </div>
                   <button onClick={savePermissions} disabled={saving}
                     style={{ padding:'.5rem 1.25rem', background:'#2563EB', color:'#fff', border:'none', borderRadius:8, cursor:'pointer', fontFamily:'inherit', fontSize:'.85rem', fontWeight:600, opacity: saving ? .7 : 1 }}>
-                    {saving ? 'Saving…' : '💾 Save Permissions'}
+                    {saving ? 'Saving…' : '💾 Save Changes'}
                   </button>
                 </div>
-                <div style={{ padding:'1.25rem', display:'flex', flexDirection:'column', gap:'1rem', maxHeight:'72vh', overflowY:'auto' }}>
+                
+                <div style={{ padding:'1.25rem', display:'flex', flexDirection:'column', gap:'1.5rem', maxHeight:'72vh', overflowY:'auto' }}>
+                  
+                  {/* Subscription Control Panel */}
+                  <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '1rem' }}>
+                    <h3 style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: '#166534', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      💳 Partner Subscription Assignment
+                    </h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#15803d', marginBottom: 4 }}>Plan Type</label>
+                        <select 
+                          value={subPlan} 
+                          onChange={(e) => setSubPlan(e.target.value as any)}
+                          style={{ width: '100%', padding: '0.5rem', borderRadius: 6, border: '1px solid #86efac', outline: 'none' }}
+                        >
+                          <option value="NONE">No Subscription</option>
+                          <option value="MONTHLY">Monthly Billing</option>
+                          <option value="YEARLY">Annual Billing</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#15803d', marginBottom: 4 }}>Status</label>
+                        <select 
+                          value={subStatus} 
+                          onChange={(e) => setSubStatus(e.target.value as any)}
+                          style={{ width: '100%', padding: '0.5rem', borderRadius: 6, border: '1px solid #86efac', outline: 'none' }}
+                        >
+                          <option value="PENDING">Pending Payment</option>
+                          <option value="ACTIVE">Active & Allowed</option>
+                          <option value="EXPIRED">Expired / Locked</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#15803d', marginBottom: 4 }}>Expiry Date</label>
+                        <input 
+                          type="date" 
+                          value={subExpiry} 
+                          onChange={(e) => setSubExpiry(e.target.value)}
+                          style={{ width: '100%', padding: '0.5rem', borderRadius: 6, border: '1px solid #86efac', outline: 'none' }}
+                        />
+                      </div>
+                    </div>
+                    {subStatus !== 'ACTIVE' && subPlan !== 'NONE' && (
+                      <p style={{ margin: '0.75rem 0 0 0', fontSize: '0.75rem', color: '#b45309', fontWeight: 600 }}>
+                        ⚠️ Warning: If status is not ACTIVE, the partner will only have read-only access to their assigned modules.
+                      </p>
+                    )}
+                  </div>
+
+                  <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: 0 }} />
+
+                  {/* Module Access Panel */}
+                  <h3 style={{ margin: '0 0 -0.5rem 0', fontSize: '0.9rem', color: '#0f172a', fontWeight: 700 }}>
+                    🔧 Granular Module Access Control
+                  </h3>
                   {PARTNER_MODULES.map(mod => {
                     const modEnabled = isModuleEnabled(mod.id);
                     return (

@@ -1,13 +1,14 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../../dist/out-tsc",
+    "outDir": "../../dist/out-tsc",
     "types": [
       "node",
       "vite/client"
     ],
     "noUnusedLocals": false,
-    "noUnusedParameters": false
+    "noUnusedParameters": false,
+    "ignoreDeprecations": "6.0"
   },
   "exclude": [
     "src/**/*.spec.ts",

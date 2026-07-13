@@ -17,7 +17,14 @@ export function MainApp({ onLogout }: { onLogout: () => void }) {
   const [selectedCard, setSelectedCard] = useState<any>(null);
   const [pageSlug, setPageSlug] = useState('');
   
+  const [riderStatus, setRiderStatus] = useState<string>('PENDING'); // Default to restricted
   const [riderId, setRiderId] = useState('');
+
+  useEffect(() => {
+    // Read the status set during login
+    const storedStatus = localStorage.getItem('rider_status');
+    if (storedStatus) setRiderStatus(storedStatus);
+  }, []);
   const [pin, setPin] = useState('');
   const [errors, setErrors] = useState<{ riderId?: string; pin?: string; general?: string; mobile?: string; otp?: string }>({});
   const [loading, setLoading] = useState(false);
@@ -282,9 +289,12 @@ export function MainApp({ onLogout }: { onLogout: () => void }) {
 
       localStorage.setItem("rider_token", data.access_token);
       localStorage.setItem("rider_role", meData.role);
+      // Store their status so we can block/allow them in the main app
+      if (meData.status) {
+         localStorage.setItem("rider_status", meData.status);
+      }
       
-      // Reload to activate main app
-      window.location.reload();
+      onLogin();
 
     } catch (err: any) {
       setErrors({ general: err.message || err.response?.data?.message || 'An error occurred during the process.' });
@@ -404,7 +414,15 @@ export function MainApp({ onLogout }: { onLogout: () => void }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <h2 style={{ fontSize: '1.25rem', color: '#0f172a', margin: '0 0 0.5rem 0' }}>Available for Pickup ({claimableDeliveries.length})</h2>
                 
-                {claimableDeliveries.length > 0 ? (
+                {riderStatus !== 'ACTIVE' && riderStatus !== 'APPROVED' ? (
+                  <div style={{ background: '#fef2f2', padding: '2rem', borderRadius: '16px', border: '1px solid #fecaca', textAlign: 'center' }}>
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔒</div>
+                    <h3 style={{ color: '#991b1b', margin: '0 0 0.5rem 0', fontWeight: 800 }}>Account Not Active</h3>
+                    <p style={{ color: '#b91c1c', fontSize: '0.95rem' }}>
+                      Your rider account status is currently <strong>{riderStatus}</strong>. You cannot accept new deliveries until an Admin approves and activates your account.
+                    </p>
+                  </div>
+                ) : claimableDeliveries.length > 0 ? (
                   claimableDeliveries.map(ord => (
                     <div key={ord.id} style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
@@ -559,10 +577,13 @@ export function LoginScreen({ onLogin }: { onLogin: () => void }) {
 
     setLoading(true);
     try {
+      // Automatically map their mobile number Rider ID to the backend email format
+      const formattedEmail = riderId.includes('@') ? riderId : `${riderId}@rider.com`;
+      
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: riderId, password: pin }) // backend expects email + password
+        body: JSON.stringify({ email: formattedEmail, password: pin })
       });
       if (!res.ok) throw new Error('Invalid credentials');
       const data = await res.json();
@@ -773,6 +794,7 @@ export default function App() {
   const handleLogout = () => {
     localStorage.removeItem("rider_token");
     localStorage.removeItem("rider_role");
+    localStorage.removeItem("rider_status");
     setIsLoggedIn(false);
   };
 

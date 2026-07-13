@@ -14,7 +14,8 @@ import { useToast, useConfirm } from '@org/ui-design-system';
 interface Role { id: string; name: string; }
 interface User {
   id: string; name: string; email: string; mobile?: string;
-  role: Role | null;
+  role?: Role | null;
+  roles?: Role[];
   restaurant: { name: string } | null;
   isActive: boolean; loyaltyPoints: number; createdAt?: string;
 }
@@ -38,7 +39,14 @@ const fmtDate = (d?: string) => {
   if (!d) return '—';
   const dt = new Date(d);
   if (isNaN(dt.getTime())) return '—';
-  return dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  return dt.toLocaleString('en-IN', { 
+    day: '2-digit', 
+    month: 'short', 
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short'
+  });
 };
 const fmtNum = (n: number) => n.toLocaleString('en-IN');
 
@@ -200,13 +208,22 @@ function ActBtn({ icon, label, onClick, danger, disabled, title }: {
         padding: '0.28rem 0.6rem', borderRadius: 6, border: 'none',
         cursor: disabled ? 'not-allowed' : 'pointer',
         fontSize: '0.72rem', fontWeight: 600, flexShrink: 0,
-        background: danger ? '#fef2f2' : '#eff6ff',
-        color: danger ? '#DC2626' : '#2563EB',
+        whiteSpace: 'nowrap', lineHeight: 1, height: '28px',
+        background: danger ? '#fef2f2' : 'var(--brand-blue-lt, #eff6ff)',
+        color: danger ? '#DC2626' : 'var(--brand-blue, #2563EB)',
         opacity: disabled ? 0.5 : 1,
-        transition: 'all .12s',
+        transition: 'all .15s ease',
       }}
-      onMouseEnter={e => { if (!disabled) e.currentTarget.style.background = danger ? '#fee2e2' : '#dbeafe'; }}
-      onMouseLeave={e => { e.currentTarget.style.background = danger ? '#fef2f2' : '#eff6ff'; }}
+      onMouseEnter={e => { 
+        if (!disabled) {
+          e.currentTarget.style.background = danger ? '#fee2e2' : 'var(--brand-blue, #2563EB)'; 
+          if (!danger) e.currentTarget.style.color = '#fff';
+        }
+      }}
+      onMouseLeave={e => { 
+        e.currentTarget.style.background = danger ? '#fef2f2' : 'var(--brand-blue-lt, #eff6ff)'; 
+        if (!danger && !disabled) e.currentTarget.style.color = 'var(--brand-blue, #2563EB)';
+      }}
     >
       {icon} {label}
     </button>
@@ -216,14 +233,20 @@ function ActBtn({ icon, label, onClick, danger, disabled, title }: {
 
 // ── System-level fallback roles (shown when /api/roles returns empty) ──────
 const SYSTEM_ROLES_FALLBACK: Role[] = [
-  { id: 'customer',   name: 'Customer' },
-  { id: 'admin',      name: 'Admin' },
-  { id: 'manager',    name: 'Manager' },
-  { id: 'partner',    name: 'Partner' },
-  { id: 'rider',      name: 'Rider' },
-  { id: 'staff',      name: 'Staff' },
-  { id: 'support',    name: 'Support Agent' },
-  { id: 'accountant', name: 'Accountant' },
+  { id: 'SUPER_ADMIN',     name: 'Super Admin' },
+  { id: 'ADMIN',           name: 'Admin' },
+  { id: 'IT_ADMIN',        name: 'IT Admin' },
+  { id: 'HR_ADMIN',        name: 'HR Admin' },
+  { id: 'MARKETING_ADMIN', name: 'Marketing Admin' },
+  { id: 'SALES_MANAGER',   name: 'Sales Manager' },
+  { id: 'SUPPORT_ADMIN',   name: 'Support Admin' },
+  { id: 'FINANCE_ADMIN',   name: 'Finance Admin' },
+  { id: 'ACCOUNTANT',      name: 'Accountant' },
+  { id: 'MANAGER',         name: 'Manager' },
+  { id: 'STAFF',           name: 'Staff' },
+  { id: 'PARTNER',         name: 'Partner' },
+  { id: 'RIDER',           name: 'Rider' },
+  { id: 'CUSTOMER',        name: 'Customer' },
 ];
 
 // ── Custom Components ──────────────────────────────────────────────────
@@ -336,7 +359,7 @@ export default function UsersAdmin() {
   // Form state
   const [editId, setEditId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [uForm, setUForm]   = useState({ name: '', email: '', mobile: '', roleId: '', isActive: true });
+  const [uForm, setUForm]   = useState({ name: '', email: '', mobile: '', roleIds: [] as string[], isActive: true });
   const [pForm, setPForm]   = useState({ restaurantName: '', ownerName: '', email: '', mobile: '', address: '', fssaiNumber: '' });
   const [rForm, setRForm]   = useState({ fullName: '', mobile: '', vehicleType: 'Bike', licenseNumber: '', address: '' });
 
@@ -352,10 +375,19 @@ export default function UsersAdmin() {
   const confirm = useConfirm();
 
   // ── Fetch ───────────────────────────────────────────────────────────
+  // Helper to safely extract arrays no matter how the backend nests the response
+  const extractArray = (resData: any) => {
+    if (Array.isArray(resData)) return resData;
+    if (resData?.data && Array.isArray(resData.data)) return resData.data;
+    if (resData?.items && Array.isArray(resData.items)) return resData.items;
+    if (resData?.results && Array.isArray(resData.results)) return resData.results;
+    return [];
+  };
+
   const fetchRoles = useCallback(async () => {
     try {
       const { data } = await axios.get('/api/roles', { headers: authH() });
-      const fetched = Array.isArray(data) ? data : (data?.data ?? []);
+      const fetched = extractArray(data);
       // Use API roles if returned, otherwise fall back to system roles
       setRoles(fetched.length > 0 ? fetched : SYSTEM_ROLES_FALLBACK);
     } catch { setRoles(SYSTEM_ROLES_FALLBACK); }
@@ -365,7 +397,7 @@ export default function UsersAdmin() {
     setLoading(true);
     try {
       const { data } = await axios.get('/api/users', { headers: authH() });
-      setUsers(Array.isArray(data) ? data : (data?.data ?? []));
+      setUsers(extractArray(data));
     } catch { setUsers([]); toast.error('Failed to load users'); }
     finally { setLoading(false); }
   }, []);
@@ -374,7 +406,7 @@ export default function UsersAdmin() {
     setLoading(true);
     try {
       const { data } = await axios.get('/api/partners', { headers: authH() });
-      setPartners(Array.isArray(data) ? data : (data?.data ?? []));
+      setPartners(extractArray(data));
     } catch { setPartners([]); toast.error('Failed to load partners'); }
     finally { setLoading(false); }
   }, []);
@@ -383,7 +415,7 @@ export default function UsersAdmin() {
     setLoading(true);
     try {
       const { data } = await axios.get('/api/riders', { headers: authH() });
-      setRiders(Array.isArray(data) ? data : (data?.data ?? []));
+      setRiders(extractArray(data));
     } catch { setRiders([]); toast.error('Failed to load riders'); }
     finally { setLoading(false); }
   }, []);
@@ -407,12 +439,14 @@ export default function UsersAdmin() {
   // ── CRUD — Users ─────────────────────────────────────────────────────
   const openAddUser = () => {
     setEditId(null);
-    setUForm({ name: '', email: '', mobile: '', roleId: roles.find(r => r.name === 'Customer')?.id || '', isActive: true });
+    const defaultRole = roles.find(r => r.name === 'Customer')?.id;
+    setUForm({ name: '', email: '', mobile: '', roleIds: defaultRole ? [defaultRole] : [], isActive: true });
     setAddEditModal('add');
   };
-  const openEditUser = (u: User) => {
+  const openEditUser = (u: any) => {
     setEditId(u.id);
-    setUForm({ name: u.name, email: u.email, mobile: u.mobile || '', roleId: u.role?.id || '', isActive: u.isActive });
+    const existingRoleIds = u.roles ? u.roles.map((r: any) => r.id) : (u.role?.id ? [u.role.id] : []);
+    setUForm({ name: u.name, email: u.email, mobile: u.mobile || '', roleIds: existingRoleIds, isActive: u.isActive });
     setAddEditModal('edit');
   };
 
@@ -421,7 +455,7 @@ export default function UsersAdmin() {
     if (!uForm.email.trim()) { toast.error('Email is required'); return; }
     setSaving(true);
     try {
-      const payload = { name: uForm.name, email: uForm.email, mobile: uForm.mobile, isActive: uForm.isActive, roleId: uForm.roleId || undefined };
+      const payload = { name: uForm.name, email: uForm.email, mobile: uForm.mobile, isActive: uForm.isActive, roleIds: uForm.roleIds.length > 0 ? uForm.roleIds : undefined };
       if (editId) {
         await axios.patch(`/api/users/${editId}`, payload, { headers: authH() });
         toast.success('User updated successfully');
@@ -554,8 +588,8 @@ export default function UsersAdmin() {
     setExportMenu(false);
     const fn = fmt === 'xlsx' ? exportExcel : exportCSV;
     if (tab === 'users') {
-      await fn('users', ['Name', 'Email', 'Phone', 'Role', 'Status', 'Points', 'Joined'],
-        filteredUsers.map(u => [u.name, u.email, u.mobile || '', u.role?.name || 'Customer', u.isActive ? 'Active' : 'Inactive', String(u.loyaltyPoints), fmtDate(u.createdAt)]));
+      await fn('users', ['Name', 'Email', 'Phone', 'Roles', 'Status', 'Points', 'Joined'],
+        filteredUsers.map((u: any) => [u.name, u.email, u.mobile || '', u.roles ? u.roles.map((r: any) => r.name).join(', ') : (u.role?.name || 'Customer'), u.isActive ? 'Active' : 'Inactive', String(u.loyaltyPoints), fmtDate(u.createdAt)]));
     } else if (tab === 'partners') {
       await fn('partners', ['Restaurant', 'Owner', 'Email', 'Mobile', 'Status', 'Applied'],
         filteredPartners.map(p => [p.restaurantName, p.ownerName, p.email, p.mobile, p.status, fmtDate(p.createdAt)]));
@@ -656,10 +690,19 @@ export default function UsersAdmin() {
 
   const filteredUsers = useMemo(() =>
     [...users.filter(u => {
-      const sMatch = !q || [u.name, u.email, u.mobile || ''].some(s => s?.toLowerCase().includes(q));
+      // Include the single role and multiple roles in the searchable text array
+      const searchFields = [
+        u.name, 
+        u.email, 
+        u.mobile || '', 
+        u.role?.name || 'Customer',
+        ...((u as any).roles?.map((r: any) => r.name) || [])
+      ];
+      const sMatch = !q || searchFields.some(s => s?.toLowerCase().includes(q));
       const activeState = u.isActive ? 'ACTIVE' : 'INACTIVE';
       const stMatch = statusFilter.length === 0 || statusFilter.includes(activeState);
-      const rlMatch = roleFilter.length === 0 || roleFilter.includes(u.role?.name || 'Customer');
+      const rlMatch = roleFilter.length === 0 || 
+        ((u as any).roles ? (u as any).roles.some((r: any) => roleFilter.includes(r.name)) : roleFilter.includes(u.role?.name || 'Customer'));
       return sMatch && stMatch && rlMatch;
     })].sort(sortFn(sortKey, sortDir)), [users, q, statusFilter, roleFilter, sortKey, sortDir]);
 
@@ -689,12 +732,13 @@ export default function UsersAdmin() {
   const pendingRide = riders.filter(r => r.status === 'PENDING').length;
 
   // ── Render helpers ────────────────────────────────────────────────────
-  const Th = ({ k, label, right }: { k: string; label: string; right?: boolean }) => (
-    <th onClick={() => handleSort(k)} style={{
+  const Th = ({ k, label, right, minW }: { k: string; label: string; right?: boolean; minW?: number }) => (
+  <th onClick={() => handleSort(k)} style={{
       cursor: 'pointer', userSelect: 'none',
       textAlign: right ? 'right' : 'left', whiteSpace: 'nowrap',
+      minWidth: minW
     }}>
-      <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: right ? 'flex-end' : 'flex-start' }}>
         {label}<SortIco active={sortKey === k} dir={sortDir} />
       </span>
     </th>
@@ -848,43 +892,53 @@ export default function UsersAdmin() {
 
           {/* Users table */}
           {tab === 'users' && (
-            <table className="table">
+            <table className="table" style={{ width: '100%', tableLayout: 'auto' }}>
               <thead><tr>
-                <Th k="name"      label="Name" />
-                <Th k="email"     label="Email" />
-                <Th k="mobile"    label="Phone" />
-                <Th k="role"      label="Role" />
-                <Th k="status"    label="Status" />
-                <Th k="points"    label="Points" right />
-                <Th k="createdAt" label="Joined" />
-                <th style={{ textAlign: 'right', width: 140, minWidth: 140 }}>Actions</th>
+                <Th k="name"      label="Name" minW={180} />
+                <Th k="email"     label="Email" minW={200} />
+                <Th k="mobile"    label="Phone" minW={130} />
+                <Th k="role"      label="Role" minW={140} />
+                <Th k="status"    label="Status" minW={110} />
+                <Th k="points"    label="Points" right minW={100} />
+                <Th k="createdAt" label="Joined" minW={180} />
+                <th style={{ textAlign: 'right', width: 240, minWidth: 240 }}>Actions</th>
               </tr></thead>
               <tbody>
                 {pagedUsers.length === 0 ? <Empty cols={8} msg="No users match your filters" /> : pagedUsers.map(u => (
                   <tr key={u.id}>
-                    <td data-label="Name">
+                    <td data-label="Name" style={{ minWidth: 180 }}>
                       <div style={{ fontWeight: 600, color: '#0f172a' }}>{u.name || '—'}</div>
                       {u.restaurant && <div style={{ fontSize: '0.72rem', color: 'var(--brand-blue)', marginTop: 1 }}>📍 {u.restaurant.name}</div>}
                     </td>
-                    <td data-label="Email" style={{ color: '#475569', fontSize: '0.85rem' }}>{u.email}</td>
-                    <td data-label="Phone" style={{ color: '#64748b', fontSize: '0.85rem' }}>{u.mobile || '—'}</td>
-                    <td data-label="Role">
-                      <span style={{ fontSize: '0.78rem', background: '#f1f5f9', color: '#334155', padding: '0.15rem 0.45rem', borderRadius: 5, fontWeight: 600 }}>
-                        {u.role?.name || 'Customer'}
-                      </span>
+                    <td data-label="Email" style={{ color: '#475569', fontSize: '0.85rem', minWidth: 200 }}>{u.email}</td>
+                    <td data-label="Phone" style={{ color: '#64748b', fontSize: '0.85rem', minWidth: 130 }}>{u.mobile || '—'}</td>
+                    <td data-label="Role" style={{ minWidth: 140 }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                        {((u as any).roles && (u as any).roles.length > 0) ? (
+                          (u as any).roles.map((r: any) => (
+                            <span key={r.id} style={{ fontSize: '0.78rem', background: '#f1f5f9', color: '#334155', padding: '0.15rem 0.45rem', borderRadius: 5, fontWeight: 600 }}>
+                              {r.name}
+                            </span>
+                          ))
+                        ) : (
+                          <span style={{ fontSize: '0.78rem', background: '#f1f5f9', color: '#334155', padding: '0.15rem 0.45rem', borderRadius: 5, fontWeight: 600 }}>
+                            {u.role?.name || 'Customer'}
+                          </span>
+                        )}
+                      </div>
                     </td>
-                    <td data-label="Status">
+                    <td data-label="Status" style={{ minWidth: 110 }}>
                       <button onClick={() => toggleUserStatus(u)} title="Click to toggle status"
                         style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                         <Badge active={u.isActive} />
                       </button>
                     </td>
-                    <td data-label="Points" style={{ textAlign: 'right', color: u.loyaltyPoints > 0 ? '#b45309' : '#cbd5e1', fontWeight: u.loyaltyPoints > 0 ? 700 : 400 }}>
+                    <td data-label="Points" style={{ textAlign: 'right', color: u.loyaltyPoints > 0 ? '#b45309' : '#cbd5e1', fontWeight: u.loyaltyPoints > 0 ? 700 : 400, minWidth: 100 }}>
                       {u.loyaltyPoints > 0 ? `🏅 ${fmtNum(u.loyaltyPoints)}` : '—'}
                     </td>
-                    <td data-label="Joined" style={{ color: '#94a3b8', fontSize: '0.8rem', whiteSpace: 'nowrap', minWidth: 110 }}>{fmtDate(u.createdAt)}</td>
-                    <td data-label="Actions">
-                      <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                    <td data-label="Joined" style={{ color: '#94a3b8', fontSize: '0.8rem', whiteSpace: 'nowrap', minWidth: 180 }}>{fmtDate(u.createdAt)}</td>
+                    <td data-label="Actions" style={{ minWidth: 240, padding: '0.4rem 0.75rem', verticalAlign: 'middle' }}>
+                      <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'nowrap' }}>
                         <ActBtn icon={<Eye size={12} />}   label="View"   onClick={() => setViewModal(u)} />
                         <ActBtn icon={<Edit2 size={12} />} label="Edit"   onClick={() => openEditUser(u)} />
                         <ActBtn icon={<Trash2 size={12} />} label="Delete" onClick={() => deleteUser(u)} danger />
@@ -898,27 +952,27 @@ export default function UsersAdmin() {
 
           {/* Partners table */}
           {tab === 'partners' && (
-            <table className="table">
+            <table className="table" style={{ width: '100%', tableLayout: 'auto' }}>
               <thead><tr>
-                <Th k="restaurantName" label="Restaurant" />
-                <Th k="ownerName"      label="Owner" />
-                <Th k="email"          label="Email" />
-                <Th k="mobile"         label="Mobile" />
-                <Th k="status"         label="Status" />
-                <Th k="createdAt"      label="Applied" />
-                <th style={{ textAlign: 'right', width: 180 }}>Actions</th>
+                <Th k="restaurantName" label="Restaurant" minW={180} />
+                <Th k="ownerName"      label="Owner" minW={150} />
+                <Th k="email"          label="Email" minW={200} />
+                <Th k="mobile"         label="Mobile" minW={130} />
+                <Th k="status"         label="Status" minW={110} />
+                <Th k="createdAt"      label="Applied" minW={180} />
+                <th style={{ textAlign: 'right', width: 280, minWidth: 280 }}>Actions</th>
               </tr></thead>
               <tbody>
                 {pagedPartners.length === 0 ? <Empty cols={7} msg="No partner requests match filters" /> : pagedPartners.map(p => (
                   <tr key={p.id}>
-                    <td data-label="Restaurant" style={{ fontWeight: 600, color: '#0f172a' }}>{p.restaurantName}</td>
-                    <td data-label="Owner" style={{ color: '#334155' }}>{p.ownerName}</td>
-                    <td data-label="Email" style={{ color: '#475569', fontSize: '0.85rem' }}>{p.email}</td>
-                    <td data-label="Mobile" style={{ color: '#64748b', fontSize: '0.85rem' }}>{p.mobile}</td>
-                    <td data-label="Status"><Badge status={p.status} /></td>
-                    <td data-label="Applied" style={{ color: '#94a3b8', fontSize: '0.8rem', whiteSpace: 'nowrap', minWidth: 110 }}>{fmtDate(p.createdAt)}</td>
-                    <td data-label="Actions">
-                      <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                    <td data-label="Restaurant" style={{ fontWeight: 600, color: '#0f172a', minWidth: 180 }}>{p.restaurantName}</td>
+                    <td data-label="Owner" style={{ color: '#334155', minWidth: 150 }}>{p.ownerName}</td>
+                    <td data-label="Email" style={{ color: '#475569', fontSize: '0.85rem', minWidth: 200 }}>{p.email}</td>
+                    <td data-label="Mobile" style={{ color: '#64748b', fontSize: '0.85rem', minWidth: 130 }}>{p.mobile}</td>
+                    <td data-label="Status" style={{ minWidth: 110 }}><Badge status={p.status} /></td>
+                    <td data-label="Applied" style={{ color: '#94a3b8', fontSize: '0.8rem', whiteSpace: 'nowrap', minWidth: 180 }}>{fmtDate(p.createdAt)}</td>
+                    <td data-label="Actions" style={{ minWidth: 280, padding: '0.4rem 0.75rem', verticalAlign: 'middle' }}>
+                      <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'nowrap' }}>
                         <ActBtn icon={<Eye size={12} />}   label="View" onClick={() => setViewModal(p)} />
                         <ActBtn icon={<Edit2 size={12} />} label="Edit" onClick={() => openEditPartner(p)} />
                         {p.status === 'PENDING' && <>
@@ -935,29 +989,29 @@ export default function UsersAdmin() {
 
           {/* Riders table */}
           {tab === 'riders' && (
-            <table className="table">
+            <table className="table" style={{ width: '100%', tableLayout: 'auto' }}>
               <thead><tr>
-                <Th k="fullName"    label="Name" />
-                <Th k="mobile"      label="Mobile" />
-                <Th k="vehicleType" label="Vehicle" />
-                <Th k="status"      label="Status" />
-                <Th k="createdAt"   label="Applied" />
-                <th style={{ textAlign: 'right', width: 180 }}>Actions</th>
+                <Th k="fullName"    label="Name" minW={180} />
+                <Th k="mobile"      label="Mobile" minW={130} />
+                <Th k="vehicleType" label="Vehicle" minW={130} />
+                <Th k="status"      label="Status" minW={110} />
+                <Th k="createdAt"   label="Applied" minW={180} />
+                <th style={{ textAlign: 'right', width: 280, minWidth: 280 }}>Actions</th>
               </tr></thead>
               <tbody>
                 {pagedRiders.length === 0 ? <Empty cols={6} msg="No rider requests match filters" /> : pagedRiders.map(r => (
                   <tr key={r.id}>
-                    <td data-label="Name" style={{ fontWeight: 600, color: '#0f172a' }}>{r.fullName}</td>
-                    <td data-label="Mobile" style={{ color: '#475569', fontSize: '0.85rem' }}>{r.mobile}</td>
-                    <td data-label="Vehicle">
+                    <td data-label="Name" style={{ fontWeight: 600, color: '#0f172a', minWidth: 180 }}>{r.fullName}</td>
+                    <td data-label="Mobile" style={{ color: '#475569', fontSize: '0.85rem', minWidth: 130 }}>{r.mobile}</td>
+                    <td data-label="Vehicle" style={{ minWidth: 130 }}>
                       <span style={{ fontSize: '0.78rem', background: '#f1f5f9', color: '#334155', padding: '0.15rem 0.45rem', borderRadius: 5, fontWeight: 600 }}>
                         {r.vehicleType === 'Bike' ? '🏍️' : r.vehicleType === 'Car' ? '🚗' : '🚲'} {r.vehicleType}
                       </span>
                     </td>
-                    <td data-label="Status"><Badge status={r.status} /></td>
-                    <td data-label="Applied" style={{ color: '#94a3b8', fontSize: '0.8rem', whiteSpace: 'nowrap', minWidth: 110 }}>{fmtDate(r.createdAt)}</td>
-                    <td data-label="Actions">
-                      <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                    <td data-label="Status" style={{ minWidth: 110 }}><Badge status={r.status} /></td>
+                    <td data-label="Applied" style={{ color: '#94a3b8', fontSize: '0.8rem', whiteSpace: 'nowrap', minWidth: 180 }}>{fmtDate(r.createdAt)}</td>
+                    <td data-label="Actions" style={{ minWidth: 280, padding: '0.4rem 0.75rem', verticalAlign: 'middle' }}>
+                      <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'nowrap' }}>
                         <ActBtn icon={<Eye size={12} />}   label="View" onClick={() => setViewModal(r)} />
                         <ActBtn icon={<Edit2 size={12} />} label="Edit" onClick={() => openEditRider(r)} />
                         {r.status === 'PENDING' && <>
@@ -1000,6 +1054,74 @@ export default function UsersAdmin() {
       )}
 
       {/* ══════════════════════════════════════════════════════════════
+          VIEW MODAL — Read-only details
+      ══════════════════════════════════════════════════════════════ */}
+      {viewModal && (
+        <ModalBase title={`👁️ View Details`} onClose={() => setViewModal(null)}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+            {Object.entries(viewModal).map(([k, v]) => {
+              if (k === 'id' || k === 'password') return null; // Hide sensitive/internal fields
+              
+              let displayValue = v;
+              if (typeof v === 'object' && v !== null) displayValue = (v as any).name || JSON.stringify(v);
+              if (k === 'createdAt' || k === 'updatedAt') displayValue = fmtDate(v as string);
+              if (typeof v === 'boolean') displayValue = v ? 'Yes' : 'No';
+              
+              return (
+                <div key={k} style={{ display: 'grid', gridTemplateColumns: '130px 1fr', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.5rem', alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginTop: 2 }}>
+                    {k.replace(/([A-Z])/g, ' $1').trim()}
+                  </span>
+                  <span style={{ fontSize: '0.85rem', color: '#0f172a', wordBreak: 'break-word', fontWeight: 500 }}>
+                    {String(displayValue || '—')}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+            <button onClick={() => setViewModal(null)} className="btn btn-primary" style={{ padding: '0.65rem 1.5rem', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <CheckCircle size={14} /> Done
+            </button>
+          </div>
+        </ModalBase>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
+          VIEW MODAL — Read-only details
+      ══════════════════════════════════════════════════════════════ */}
+      {viewModal && (
+        <ModalBase title={`👁️ View Details`} onClose={() => setViewModal(null)}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+            {Object.entries(viewModal).map(([k, v]) => {
+              if (k === 'id' || k === 'password') return null; // Hide sensitive/internal fields
+              
+              let displayValue = v;
+              if (typeof v === 'object' && v !== null) displayValue = (v as any).name || JSON.stringify(v);
+              if (k === 'createdAt' || k === 'updatedAt') displayValue = fmtDate(v as string);
+              if (typeof v === 'boolean') displayValue = v ? 'Yes' : 'No';
+              
+              return (
+                <div key={k} style={{ display: 'grid', gridTemplateColumns: '130px 1fr', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.5rem', alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginTop: 2 }}>
+                    {k.replace(/([A-Z])/g, ' $1').trim()}
+                  </span>
+                  <span style={{ fontSize: '0.85rem', color: '#0f172a', wordBreak: 'break-word', fontWeight: 500 }}>
+                    {String(displayValue || '—')}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+            <button onClick={() => setViewModal(null)} className="btn btn-primary" style={{ padding: '0.65rem 1.5rem', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <CheckCircle size={14} /> Done
+            </button>
+          </div>
+        </ModalBase>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
           ADD / EDIT MODAL — tab-aware, full fields for each type
       ══════════════════════════════════════════════════════════════ */}
       {addEditModal && (
@@ -1027,12 +1149,14 @@ export default function UsersAdmin() {
                   onChange={e => setUForm(p => ({ ...p, mobile: e.target.value }))} />
               </div>
               <div>
-                <FieldLabel>Role / Access Level</FieldLabel>
-                <select className="input" value={uForm.roleId}
-                  onChange={e => setUForm(p => ({ ...p, roleId: e.target.value }))}>
-                  <option value="">— Select Role —</option>
-                  {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-                </select>
+                <FieldLabel>Roles / Access Levels</FieldLabel>
+                <MultiSelectDropdown 
+                  label="Select Roles"
+                  options={roles.map(r => ({ value: r.id, label: r.name }))}
+                  selected={uForm.roleIds}
+                  onChange={vals => setUForm(p => ({ ...p, roleIds: vals }))}
+                  width="100%"
+                />
               </div>
               <div>
                 <FieldLabel>Account Status</FieldLabel>

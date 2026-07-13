@@ -50,7 +50,7 @@
   background: #dc2626;
 }
 
-/* Toolbar */
+/* ─Toolbar─ */
 .toolbar {
   display: flex;
   gap: 1rem;
@@ -68,7 +68,7 @@
   background: white;
 }
 
-/* Table */
+/* ─Table─ */
 .panel {
   background: white;
   border-radius: 12px;

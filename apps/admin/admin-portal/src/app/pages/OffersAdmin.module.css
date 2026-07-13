@@ -53,7 +53,7 @@
   background: #0284c7;
 }
 
-/* Edit Form Container */
+/* ─Edit─Form─Container─ */
 .formContainer {
   background: white;
   padding: 1.75rem;
@@ -224,7 +224,7 @@
   border: 1px dashed #cbd5e1;
 }
 
-/* Offers Grid */
+/* ─Offers─Grid─ */
 .offersGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));

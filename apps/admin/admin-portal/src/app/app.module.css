@@ -1,4 +1,4 @@
-﻿/* ==========================================================
+/* ==========================================================
    ONE CHOICE KITCHEN Ã¢â‚¬â€ ADMIN PORTAL DESIGN SYSTEM v4.0
    Pixel-perfect match to reference screenshot
    ========================================================== */
@@ -67,14 +67,14 @@ body { background: var(--bg); color: var(--text); overflow: hidden; font-size: 1
   overflow: hidden;
 }
 
-/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-   HEADER Ã¢â‚¬â€ compact, sticky, full width (Azure Portal style)
-   Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
+/* ═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿ 
+   HEADER — compact, sticky, full width (Azure Portal style)
+   ═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿═﻿ */
 .header {
   position: sticky;
   top: 0; left: 0; right: 0;
   width: 100%;
-  height: var(--h);          /* 72px Ã¢â‚¬â€ matches reference */
+  height: var(--h);          /* 72px — matches reference */
   z-index: 900;
   display: flex;
   align-items: center;
@@ -113,6 +113,11 @@ body { background: var(--bg); color: var(--text); overflow: hidden; font-size: 1
   object-fit: contain;
   display: block;
   flex-shrink: 0;
+}
+[data-theme='dark'] .loginLogoImg, [data-theme='dark'] .hLogoImg {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 6px 14px;
+  border-radius: 12px;
 }
 
 /* Search Ã¢â‚¬â€ rounded rectangle (NOT pill), visible border, centered at 520px */
@@ -184,10 +189,10 @@ body { background: var(--bg); color: var(--text); overflow: hidden; font-size: 1
   width: 44px; height: 44px;   /* larger clickable area */
   display: flex; align-items: center; justify-content: center;
   border-radius: 50%;
-  cursor: pointer; color: #374151;  /* darker icon color Ã¢â‚¬â€ more visible */
+  cursor: pointer; color: var(--text2);  /* darker icon color Ã¢â‚¬â€ more visible */
   transition: all var(--t); user-select: none;
 }
-.hBtn:hover { background: #f3f4f6; color: #111827; }
+.hBtn:hover { background: var(--brand-blue-lt); color: var(--blue); }
 
 /* Notification badge Ã¢â‚¬â€ red circle on top-right, clearly visible */
 .badge {
@@ -333,26 +338,26 @@ body { background: var(--bg); color: var(--text); overflow: hidden; font-size: 1
   padding: 0.45rem 1rem;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #111827;
+  color: var(--text);
   cursor: pointer; transition: background var(--t);
 }
 .uItemIco {
   width: 18px; height: 18px;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
-  color: #6b7280;
+  color: var(--text2);
 }
-.uItem:hover { background: #f3f4f6; color: #000; }
-.uItem:hover .uItemIco { color: #111827; }
+.uItem:hover { background: var(--brand-blue-lt); color: var(--blue); }
+.uItem:hover .uItemIco { color: var(--blue); }
 .uItemToggle {
   display: flex; align-items: center; justify-content: space-between;
   padding: 0.45rem 1rem;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #111827;
+  color: var(--text);
   cursor: pointer; transition: background var(--t);
 }
-.uItemToggle:hover { background: #f3f4f6; }
+.uItemToggle:hover { background: var(--brand-blue-lt); }
 .uLogout { color: #E31E24; font-weight: 600; }
 .uLogout:hover { background: #FEF1F1 !important; color: #B5171C; }
 .uLogout .uItemIco { color: #E31E24; }
@@ -443,7 +448,7 @@ body { background: var(--bg); color: var(--text); overflow: hidden; font-size: 1
   font-weight: 400;
 }
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ KPI Strip Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ── KPI Strip ───────────────────────────────────────── */
 .kpiRow {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -464,13 +469,13 @@ body { background: var(--bg); color: var(--text); overflow: hidden; font-size: 1
   position: relative;
   overflow: hidden;
 }
-/* Top color bar on hover Ã¢â‚¬â€ uses --card-color set inline per card */
+/* Top color bar on hover — uses --card-color set inline per card */
 .kpiCard::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 3px;
-  background: var(--card-color, #1A2B6D); /* dynamic per card â€” uses OCK Navy as fallback */
+  background: var(--card-color, #1A2B6D); /* dynamic per card — uses OCK Navy as fallback */
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.22s ease;
@@ -488,10 +493,10 @@ body { background: var(--bg); color: var(--text); overflow: hidden; font-size: 1
   flex: 1;
 }
 .kpiLbl {
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 0.8125rem;
+  font-weight: 600;
   color: var(--text2);
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.25rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -590,7 +595,7 @@ body { background: var(--bg); color: var(--text); overflow: hidden; font-size: 1
 .cwCat   { font-size: 0.82rem; color: var(--text2); margin-top: 4px; line-height: 1.3; font-weight: 600; }
 .cwDesc  {
   font-size: 0.82rem; color: var(--text2); margin-top: 0.5rem; line-height: 1.55;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 
 /* â”€â”€ Show More pill (Continue Working & Favourites expand button) â”€â”€ */
@@ -657,7 +662,7 @@ body { background: var(--bg); color: var(--text); overflow: hidden; font-size: 1
 .favCat   { font-size: 0.82rem; color: var(--text2); margin-top: 4px; line-height: 1.3; font-weight: 600; }
 .favDesc  {
   font-size: 0.82rem; color: var(--text2); margin-top: 0.5rem; line-height: 1.55;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   white-space: normal;
 }
 .favStar {

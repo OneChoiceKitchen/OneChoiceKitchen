@@ -128,7 +128,7 @@
   border-color: #94a3b8;
 }
 
-/* Test Panel */
+/* ─Test─Panel─ */
 .testPanel {
   background: white;
   padding: 2rem;
@@ -195,7 +195,7 @@
 .testResult.success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
 .testResult.error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
 
-/* Modal */
+/* ─Modal─ */
 .overlay {
   position: fixed;
   inset: 0;

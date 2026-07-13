@@ -27,7 +27,7 @@
   letter-spacing: -0.025em;
 }
 
-/* Filters */
+/* ─Filters─ */
 .filtersGroup {
   display: flex;
   gap: 0.75rem;
@@ -62,7 +62,7 @@
   box-sizing: border-box;
 }
 
-/* Table */
+/* ─Table─ */
 .tableContainer {
   background: white;
   border-radius: 12px;
@@ -249,7 +249,7 @@
 
   .commentContainer {
     max-width: 100%;
-    -webkit-line-clamp: 5; /* Show more lines on mobile */
+    -webkit-line-clamp: 5; /* ─Show─more─lines─on─mobile─ */
   }
 
   .table {

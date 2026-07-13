@@ -163,7 +163,7 @@
   border: 1px dashed #cbd5e1;
 }
 
-/* Modals */
+/* ─Modals─ */
 .modalOverlay {
   position: fixed;
   top: 0;
@@ -293,7 +293,7 @@
 }
 .cancelBtn:hover { background: #e2e8f0; }
 
-/* Table styles for subscriptions */
+/* ─Table─styles─for─subscriptions─ */
 .tableContainer {
   background: white;
   border-radius: 8px;

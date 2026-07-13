@@ -1,18 +1,6 @@
-/* ============================================================
-   ONE CHOICE KITCHEN — PAGE DEFAULTS v3.0
-   Azure Portal-inspired overrides for all 57+ admin module pages.
+/* -------------------- ONE CHOICE KITCHEN PAGE DEFAULTS v3 0 Azure Portal inspired overrides for all 57 admin module pages STRATEGY Override module level hardcoded hex colors using CSS variable inheritance CSS Modules produce class names like filename pageContainer XXXX we target the semantic role via descendant selectors on common root patterns This file is imported AFTER styles css in main tsx All module specific CSS Modules still win on their own rules this only patches the theme dependent color values -------------------- */
 
-   STRATEGY: Override module-level hardcoded hex colors using CSS
-   variable inheritance. CSS Modules produce class names like
-   [filename]_pageContainer__XXXX — we target the semantic role
-   via descendant selectors on common root patterns.
-
-   This file is imported AFTER styles.css in main.tsx.
-   All module-specific CSS Modules still win on their own rules;
-   this only patches the theme-dependent color values.
-   ============================================================ */
-
-/* ── 1. Page Container — background & font ─────────────────── */
+/* -------------------- 1 Page Container background font -------------------- */
 /*
    Every module wraps its content in a div with class containing
    "pageContainer" or is the first div child of .modContent.
@@ -24,7 +12,7 @@
   font-family: var(--font-sans) !important;
 }
 
-/* Content cards within page containers */
+/* ─Content─cards─within─page─containers─ */
 [class*="contentCard"],
 [class*="content-card"],
 [class*="tableCard"],
@@ -35,7 +23,7 @@
   box-shadow: var(--shadow-sm) !important;
 }
 
-/* ── 2. Page Headers ────────────────────────────────────────── */
+/* -------------------- 2 Page Headers -------------------- */
 [class*="pageHeader"],
 [class*="page-header"],
 [class*="headerRow"],
@@ -43,14 +31,14 @@
   border-bottom: none !important;
 }
 
-/* Page titles */
+/* ─Page─titles─ */
 [class*="pageTitle"],
 [class*="page-title"] {
   color: var(--text) !important;
   font-family: var(--font-sans) !important;
 }
 
-/* Page subtitles */
+/* ─Page─subtitles─ */
 [class*="pageSubtitle"],
 [class*="page-subtitle"],
 [class*="subTitle"] {
@@ -58,7 +46,7 @@
   font-size: var(--text-sm) !important;
 }
 
-/* ── 3. Tables ──────────────────────────────────────────────── */
+/* -------------------- 3 Tables -------------------- */
 [class*="tableContainer"],
 [class*="table-container"],
 [class*="tableWrapper"],
@@ -66,20 +54,20 @@
   background: var(--surf) !important;
   border: 1px solid var(--bdr) !important;
   border-radius: var(--r-lg) !important;
-  overflow-x: auto;       /* ← responsive: scroll table on narrow screens */
+  overflow-x: auto;       /* -------------------- responsive scroll table on narrow screens -------------------- */
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
 }
-/* Ensure the inner table doesn't wrap narrower than its content */
+/* -------------------- Ensure the inner table doesn t wrap narrower than its content -------------------- */
 [class*="tableContainer"] table,
 [class*="table-container"] table,
 [class*="tableWrapper"] table,
 [class*="table-wrapper"] table {
-  min-width: 600px;       /* table never collapses below this */
+  min-width: 600px;       /* ─table─never─collapses─below─this─ */
   width: 100%;
 }
 
-/* Table headers */
+/* ─Table─headers─ */
 [class*="pageContainer"] table th,
 [class*="contentCard"] table th {
   background: var(--surf2) !important;
@@ -93,7 +81,7 @@
   white-space: nowrap;
 }
 
-/* Table cells */
+/* ─Table─cells─ */
 [class*="pageContainer"] table td,
 [class*="contentCard"] table td {
   color: var(--text) !important;
@@ -104,19 +92,19 @@
   font-size: var(--text-sm) !important;
 }
 
-/* Table row hover — brand blue tint */
+/* -------------------- Table row hover brand blue tint -------------------- */
 [class*="pageContainer"] table tr:hover td,
 [class*="contentCard"] table tr:hover td {
   background: var(--brand-blue-lt) !important;
 }
 
-/* Last row no border */
+/* ─Last─row─no─border─ */
 [class*="pageContainer"] table tr:last-child td,
 [class*="contentCard"] table tr:last-child td {
   border-bottom: none !important;
 }
 
-/* ── 4. Search inputs ───────────────────────────────────────── */
+/* -------------------- 4 Search inputs -------------------- */
 [class*="searchInput"],
 [class*="search-input"] {
   border: 1.5px solid var(--bdr) !important;
@@ -132,7 +120,7 @@
   outline: none !important;
 }
 
-/* Date inputs */
+/* ─Date─inputs─ */
 [class*="dateInput"],
 [class*="date-input"] {
   border: 1.5px solid var(--bdr) !important;
@@ -147,7 +135,7 @@
   outline: none !important;
 }
 
-/* Select / filter dropdowns */
+/* ─Select─/─filter─dropdowns─ */
 [class*="filterSelect"],
 [class*="filter-select"],
 [class*="statusSelect"],
@@ -165,8 +153,8 @@
   outline: none !important;
 }
 
-/* ── 5. Action Buttons ─────────────────────────────────────── */
-/* Refresh / secondary buttons */
+/* -------------------- 5 Action Buttons -------------------- */
+/* ─Refresh─/─secondary─buttons─ */
 [class*="refreshBtn"],
 [class*="refresh-btn"],
 [class*="secondaryBtn"],
@@ -188,7 +176,7 @@
   color: var(--text) !important;
 }
 
-/* Primary / action buttons (add / create / save) */
+/* -------------------- Primary action buttons add create save -------------------- */
 [class*="addBtn"],
 [class*="add-btn"],
 [class*="createBtn"],
@@ -214,7 +202,7 @@
   transform: translateY(-1px) !important;
 }
 
-/* Delete / danger buttons */
+/* ─Delete─/─danger─buttons─ */
 [class*="deleteBtn"],
 [class*="delete-btn"],
 [class*="dangerBtn"],
@@ -231,7 +219,7 @@
   box-shadow: 0 4px 14px rgba(220,38,38,.25) !important;
 }
 
-/* Pagination buttons */
+/* ─Pagination─buttons─ */
 [class*="pageBtn"],
 [class*="page-btn"],
 [class*="paginationBtn"],
@@ -249,7 +237,7 @@
   color: var(--brand-blue) !important;
 }
 
-/* ── 6. Status Badges / Pills ───────────────────────────────── */
+/* -------------------- 6 Status Badges Pills -------------------- */
 [class*="statusBadge"],
 [class*="status-badge"],
 [class*="badge"] {
@@ -258,7 +246,7 @@
   border-radius: 999px !important;
 }
 
-/* Error / alert states */
+/* ─Error─/─alert─states─ */
 [class*="errorState"],
 [class*="error-state"],
 [class*="errorMsg"],
@@ -269,13 +257,13 @@
   border-radius: var(--r-md) !important;
 }
 
-/* Empty states */
+/* ─Empty─states─ */
 [class*="emptyState"],
 [class*="empty-state"] {
   color: var(--text3) !important;
 }
 
-/* ── 7. Section Cards / Stat Cards ─────────────────────────── */
+/* -------------------- 7 Section Cards Stat Cards -------------------- */
 [class*="statCard"],
 [class*="stat-card"],
 [class*="kpiCard"],
@@ -295,7 +283,7 @@
   transform: translateY(-1px) !important;
 }
 
-/* ── 8. Modals ──────────────────────────────────────────────── */
+/* -------------------- 8 Modals -------------------- */
 [class*="modalOverlay"],
 [class*="modal-overlay"],
 [class*="overlay"] {
@@ -327,7 +315,7 @@
   background: var(--surf) !important;
 }
 
-/* ── 9. Form Inputs (inside module pages) ───────────────────── */
+/* -------------------- 9 Form Inputs inside module pages -------------------- */
 [class*="formInput"],
 [class*="form-input"],
 [class*="inputField"],
@@ -351,7 +339,7 @@
   outline: none !important;
 }
 
-/* ── 10. Order ID / Link Colors ─────────────────────────────── */
+/* -------------------- 10 Order ID Link Colors -------------------- */
 [class*="orderId"],
 [class*="order-id"],
 [class*="recordId"],
@@ -359,7 +347,7 @@
   color: var(--brand-blue) !important;
 }
 
-/* ── 11. Tabs ───────────────────────────────────────────────── */
+/* -------------------- 11 Tabs -------------------- */
 [class*="tabBtn"].active,
 [class*="tab-btn"].active,
 [class*="activeTab"],
@@ -369,7 +357,7 @@
   border-color: var(--brand-blue-md) !important;
 }
 
-/* ── 12. Pagination info text ───────────────────────────────── */
+/* -------------------- 12 Pagination info text -------------------- */
 [class*="pageInfo"],
 [class*="page-info"],
 [class*="paginationInfo"] {
@@ -382,7 +370,7 @@
   font-weight: 600 !important;
 }
 
-/* ── 13. Dark Mode compatibility ─────────────────────────────── */
+/* -------------------- 13 Dark Mode compatibility -------------------- */
 [data-theme="dark"] [class*="contentCard"],
 [data-theme="dark"] [class*="tableWrapper"],
 [data-theme="dark"] [class*="modalContent"] {
@@ -400,7 +388,7 @@
   border-bottom-color: var(--bdr) !important;
 }
 
-/* ── 14. Breadcrumb (global override) ───────────────────────── */
+/* -------------------- 14 Breadcrumb global override -------------------- */
 [class*="breadcrumb"],
 [class*="Breadcrumb"] {
   background: var(--surf) !important;

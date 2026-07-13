@@ -241,7 +241,7 @@ export default function CommentsAdmin() {
                       {comment.authorName || comment.user?.name || 'Anonymous'}
                     </div>
                     <div className={styles.authorEmail}>
-                      {comment.authorEmail || comment.user?.email || 'Ã¢â‚¬â€'}
+                      {comment.authorEmail || comment.user?.email || '—'}
                     </div>
                   </td>
                   <td data-label="Comment" className={styles.contentCell}>
@@ -266,7 +266,7 @@ export default function CommentsAdmin() {
                     {comment.blog?.title || 'Unknown Post'}
                   </td>
                   <td data-label="Date" className={styles.dateCell}>
-                    {comment.createdAt ? new Date(comment.createdAt).toLocaleDateString('en-IN') : 'Ã¢â‚¬â€'}
+                    {comment.createdAt ? new Date(comment.createdAt).toLocaleDateString('en-IN') : '—'}
                   </td>
                   <td data-label="Status">
                     <span className={`${styles.statusBadge} ${styles[comment.status.toLowerCase()] || ''}`}>

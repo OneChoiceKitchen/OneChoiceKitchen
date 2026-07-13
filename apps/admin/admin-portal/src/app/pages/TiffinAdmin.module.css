@@ -1,9 +1,6 @@
-/* TiffinAdmin.module.css — OneChoiceKitchen Design System v3.0
-   Brand: Blue #2563EB + Red #DC2626 | Azure Portal inspired
-   All classes use global CSS tokens — NO hardcoded hex colors
-*/
+/* -------------------- TiffinAdmin module css OneChoiceKitchen Design System v3 0 Brand Blue 2563EB Red DC2626 Azure Portal inspired All classes use global CSS tokens NO hardcoded hex colors -------------------- */
 
-/* ── Page Container ──────────────────────────────────────────── */
+/* -------------------- Page Container -------------------- */
 .pageContainer {
   padding: clamp(1rem, 2vw, 1.75rem) clamp(1rem, 3vw, 2rem);
   display: flex;
@@ -13,7 +10,7 @@
   box-sizing: border-box;
 }
 
-/* ── Page Header ─────────────────────────────────────────────── */
+/* -------------------- Page Header -------------------- */
 .pageHeader {
   display: flex;
   align-items: flex-start;
@@ -39,7 +36,7 @@
   margin: 0.25rem 0 0;
 }
 
-/* ── Tabs Container ──────────────────────────────────────────── */
+/* -------------------- Tabs Container -------------------- */
 .tabsContainer {
   display: flex;
   gap: 0;
@@ -68,7 +65,7 @@
   border-bottom-color: var(--brand-blue);
 }
 
-/* ── Segmented Control ───────────────────────────────────────── */
+/* -------------------- Segmented Control -------------------- */
 .segmentedControl {
   display: flex;
   border: 1.5px solid var(--bdr);
@@ -97,7 +94,7 @@
 }
 .segmentBtn:hover:not(.active) { background: var(--brand-blue-lt); color: var(--brand-blue); }
 
-/* ── Filter Bar ──────────────────────────────────────────────── */
+/* -------------------- Filter Bar -------------------- */
 .filterBar {
   display: flex;
   align-items: center;
@@ -117,7 +114,7 @@
   flex-wrap: wrap;
 }
 
-/* ── Table Container ─────────────────────────────────────────── */
+/* -------------------- Table Container -------------------- */
 .tableContainer {
   width: 100%;
   background: var(--surf);
@@ -160,13 +157,13 @@
 .table tr:last-child td { border-bottom: none; }
 .table tr:hover td { background: var(--brand-blue-lt); transition: background 0.15s; }
 
-/* ── Meal Info Cell ──────────────────────────────────────────── */
+/* -------------------- Meal Info Cell -------------------- */
 .mealInfo { display: flex; flex-direction: column; gap: 0.25rem; }
 .mealTitle { font-weight: 600; color: var(--text); font-size: var(--text-sm); }
 .mealDesc { font-size: var(--text-xs); color: var(--text3); }
 .mealSlotWrapper { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.25rem; }
 
-/* ── Badges ──────────────────────────────────────────────────── */
+/* -------------------- Badges -------------------- */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -181,7 +178,7 @@
 .active  { background: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; }
 .inactive { background: var(--surf2); color: var(--text3); border: 1px solid var(--bdr); }
 
-/* ── Action Buttons ──────────────────────────────────────────── */
+/* -------------------- Action Buttons -------------------- */
 .actionBtn {
   display: flex;
   align-items: center;
@@ -198,7 +195,7 @@
 .actionBtn.edit:hover { background: var(--brand-blue-lt); color: var(--brand-blue); border-color: var(--brand-blue); }
 .actionBtn.delete:hover { background: var(--brand-red-lt); color: var(--brand-red); border-color: var(--brand-red); }
 
-/* ── Buttons ─────────────────────────────────────────────────── */
+/* -------------------- Buttons -------------------- */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -236,7 +233,7 @@
   flex-wrap: wrap;
 }
 
-/* ── Form Elements ───────────────────────────────────────────── */
+/* -------------------- Form Elements -------------------- */
 .formGroup {
   display: flex;
   flex-direction: column;
@@ -306,11 +303,11 @@
 }
 .textarea:focus { outline: none; border-color: var(--brand-blue); }
 
-/* Grid layouts */
+/* ─Grid─layouts─ */
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
 
-/* Checkbox */
+/* ─Checkbox─ */
 .checkbox {
   display: flex;
   align-items: center;
@@ -320,7 +317,7 @@
 }
 .checkboxLabel { font-size: var(--text-sm); color: var(--text); }
 
-/* ── Section Title ───────────────────────────────────────────── */
+/* -------------------- Section Title -------------------- */
 .sectionTitle {
   font-size: var(--text-base);
   font-weight: 700;
@@ -333,7 +330,7 @@
   margin: 0 0 1rem;
 }
 
-/* ── Card ────────────────────────────────────────────────────── */
+/* -------------------- Card -------------------- */
 .card {
   background: var(--surf);
   border: 1px solid var(--bdr);
@@ -344,7 +341,7 @@
 }
 .card:hover { box-shadow: var(--shadow-md); }
 
-/* ── List Items (for plan/schedule list) ─────────────────────── */
+/* -------------------- List Items for plan schedule list -------------------- */
 .listItem {
   display: flex;
   align-items: flex-start;
@@ -357,7 +354,7 @@
 .listItemTitle { font-weight: 600; font-size: var(--text-sm); color: var(--text); }
 .listItemMeta { font-size: var(--text-xs); color: var(--text3); margin-top: 0.125rem; }
 
-/* ── Tip Box ─────────────────────────────────────────────────── */
+/* -------------------- Tip Box -------------------- */
 .tipBox {
   background: var(--brand-blue-lt);
   border: 1px solid var(--brand-blue-md);
@@ -370,7 +367,7 @@
   gap: 0.5rem;
 }
 
-/* ── Pagination ──────────────────────────────────────────────── */
+/* -------------------- Pagination -------------------- */
 .pagination {
   display: flex;
   align-items: center;
@@ -441,7 +438,7 @@
   font-size: var(--text-sm);
 }
 
-/* ── Responsive ──────────────────────────────────────────────── */
+/* -------------------- Responsive -------------------- */
 @media (max-width: 768px) {
   .pageContainer { padding: 1rem; gap: 1rem; }
   .pageHeader { flex-direction: column; }

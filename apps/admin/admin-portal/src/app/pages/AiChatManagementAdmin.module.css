@@ -1,4 +1,4 @@
-/* AI Chat Management page styles */
+/* ─AI─Chat─Management─page─styles─ */
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -27,7 +27,7 @@
 .statValue { font-size: var(--text-xl); font-weight: 800; color: var(--text); }
 .statTrend { font-size: var(--text-xs); color: var(--text3); margin-top: .1rem; }
 
-/* Tabs */
+/* ─Tabs─ */
 .tabs {
   display: flex;
   gap: .35rem;
@@ -51,30 +51,30 @@
 .tab:hover { color: var(--text); }
 .tabActive { color: var(--brand-blue); border-bottom-color: var(--brand-blue); font-weight: 700; }
 
-/* Overview grid */
+/* ─Overview─grid─ */
 .overviewGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
 @media (max-width: 900px) { .overviewGrid { grid-template-columns: 1fr; } }
 
-/* Intent chart */
+/* ─Intent─chart─ */
 .intentRow { display: flex; align-items: center; gap: .75rem; margin-bottom: .6rem; }
 .intentName { font-size: var(--text-xs); color: var(--text2); width: 160px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .intentBar { flex: 1; height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; }
 .intentFill { height: 100%; background: var(--brand-blue); border-radius: 4px; transition: width .4s; }
 .intentCount { font-size: var(--text-xs); color: var(--text3); width: 32px; text-align: right; flex-shrink: 0; }
 
-/* Active provider */
+/* ─Active─provider─ */
 .activeProvider { text-align: center; padding: 1rem; }
 .providerName { font-size: var(--text-xl); font-weight: 700; color: var(--text); margin-bottom: .35rem; }
 .providerModel { font-size: var(--text-sm); color: var(--text2); }
 .providerUsage { font-size: var(--text-xs); color: var(--text3); margin-top: .25rem; }
 
-/* Pending requests */
+/* ─Pending─requests─ */
 .pendingRow { border: 1px solid var(--bdr); border-radius: var(--r-md); padding: .75rem; margin-bottom: .6rem; }
 .pendingUser { font-weight: 600; font-size: var(--text-sm); color: var(--text); margin-bottom: .2rem; }
 .pendingReason { font-size: var(--text-xs); color: var(--text2); margin-bottom: .5rem; }
 .pendingActions { display: flex; gap: .35rem; }
 
-/* Provider grid */
+/* ─Provider─grid─ */
 .providersNote {
   display: flex; align-items: flex-start; gap: .75rem;
   background: #eff6ff;
@@ -104,7 +104,7 @@
   font-weight: 600;
 }
 
-/* Form */
+/* ─Form─ */
 .formGrid { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
 .spanFull { grid-column: 1 / -1; }
 .formRow { display: flex; gap: 1rem; align-items: flex-start; }
@@ -127,7 +127,7 @@
 .keyInput input { flex: 1; }
 .keyInput button { padding: .45rem .75rem; border: 1px solid var(--bdr); border-radius: var(--r-sm); background: var(--bg); cursor: pointer; }
 
-/* Toggles */
+/* ─Toggles─ */
 .toggleRow { display: flex; gap: 1.5rem; margin: .75rem 0; }
 .toggle { display: flex; align-items: center; gap: .5rem; cursor: pointer; font-size: var(--text-sm); }
 .toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
@@ -151,17 +151,17 @@
 .toggle input:checked + .toggleSlider { background: var(--brand-blue); }
 .toggle input:checked + .toggleSlider::after { left: 18px; }
 
-/* Test result */
+/* ─Test─result─ */
 .testResult { padding: .6rem .75rem; border-radius: var(--r-sm); font-size: var(--text-sm); margin-bottom: .5rem; }
 .testOk { background: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; }
 .testFail { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
 
 .providerActions { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; border-top: 1px solid var(--bdr); padding-top: .75rem; }
 
-/* Knowledge base */
+/* ─Knowledge─base─ */
 .empty { text-align: center; color: var(--text3); padding: 1.5rem; font-size: var(--text-sm); }
 
-/* Canned responses */
+/* ─Canned─responses─ */
 .cannedGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
 .cannedCard { background: var(--surf); border: 1px solid var(--bdr); border-radius: var(--r-lg); padding: 1rem; }
 .cannedHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: .35rem; }
@@ -170,11 +170,11 @@
 .cannedContent { font-size: var(--text-xs); color: var(--text2); margin: .5rem 0; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .cannedActions { display: flex; gap: .35rem; justify-content: flex-end; }
 
-/* Analytics */
+/* ─Analytics─ */
 .analyticsGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 @media (max-width: 700px) { .analyticsGrid { grid-template-columns: 1fr; } }
 
-/* Modals */
+/* ─Modals─ */
 .modalOverlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,.45);

@@ -45,7 +45,7 @@
   transform: translateY(-1px);
 }
 
-/* Editor Form */
+/* ─Editor─Form─ */
 .editorContainer {
   background: white;
   padding: 2rem;
@@ -166,7 +166,7 @@
   background: #059669;
 }
 
-/* Table */
+/* ─Table─ */
 .tableContainer {
   background: white;
   border-radius: 12px;

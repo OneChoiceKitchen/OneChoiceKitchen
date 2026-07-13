@@ -45,7 +45,7 @@
   transform: translateY(-1px);
 }
 
-/* Editor Form */
+/* ─Editor─Form─ */
 .editorContainer {
   background: white;
   padding: 2rem;
@@ -138,7 +138,7 @@
   cursor: pointer;
   font-weight: 600;
   color: #0f172a;
-  padding-top: 2rem; /* Aligns with the input fields next to it */
+  padding-top: 2rem; /* -------------------- Aligns with the input fields next to it -------------------- */
   user-select: none;
 }
 
@@ -160,7 +160,7 @@
   background: #059669;
 }
 
-/* Grid Layout */
+/* ─Grid─Layout─ */
 .gridContainer {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));

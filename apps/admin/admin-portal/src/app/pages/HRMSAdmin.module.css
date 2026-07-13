@@ -28,7 +28,7 @@
   font-size: 1rem;
 }
 
-/* Stats Grid */
+/* ─Stats─Grid─ */
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -87,7 +87,7 @@
   line-height: 1.2;
 }
 
-/* Module Controls Panel */
+/* ─Module─Controls─Panel─ */
 .panel {
   background: white;
   border-radius: 12px;
@@ -112,7 +112,7 @@
   font-weight: 600;
 }
 
-/* Table */
+/* ─Table─ */
 .tableContainer {
   width: 100%;
   overflow-x: auto;
@@ -217,7 +217,7 @@
   color: #64748b;
 }
 
-/* Tabs */
+/* ─Tabs─ */
 .tabsContainer {
   margin-bottom: 2rem;
   border-bottom: 1px solid #e2e8f0;

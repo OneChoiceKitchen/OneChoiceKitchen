@@ -18,7 +18,7 @@
   letter-spacing: -0.025em;
 }
 
-/* Stats Cards */
+/* ─Stats─Cards─ */
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -47,7 +47,7 @@
   opacity: 0.8;
 }
 
-/* Filters */
+/* ─Filters─ */
 .filtersGroup {
   display: flex;
   gap: 1rem;
@@ -84,7 +84,7 @@
   box-sizing: border-box;
 }
 
-/* Table */
+/* ─Table─ */
 .tableContainer {
   background: white;
   border-radius: 12px;

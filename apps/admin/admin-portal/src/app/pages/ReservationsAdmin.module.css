@@ -87,7 +87,7 @@
   border: 1px dashed #cbd5e1;
 }
 
-/* Tables & Lists */
+/* ─Tables─&─Lists─ */
 .tableContainer {
   background: white;
   border-radius: 12px;
@@ -100,7 +100,7 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 800px; /* Gives some space for 8 columns on desktop */
+  min-width: 800px; /* -------------------- Gives some space for 8 columns on desktop -------------------- */
 }
 
 .table th {

@@ -60,7 +60,7 @@
   background: #1e293b;
 }
 
-/* Form Container */
+/* ─Form─Container─ */
 .formContainer {
   background: #f8fafc;
   padding: 2rem;
@@ -164,7 +164,7 @@
   font-family: monospace;
 }
 
-/* Live Preview */
+/* ─Live─Preview─ */
 .previewPanel {
   background: white;
   border: 1px solid #e2e8f0;
@@ -229,7 +229,7 @@
 
 .cancelBtn:hover { background: #f1f5f9; }
 
-/* Filters */
+/* ─Filters─ */
 .filters {
   display: flex;
   gap: 1rem;
@@ -264,7 +264,7 @@
   box-sizing: border-box;
 }
 
-/* Table */
+/* ─Table─ */
 .tableContainer {
   border: 1px solid #e2e8f0;
   border-radius: 12px;

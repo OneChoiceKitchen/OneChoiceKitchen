@@ -142,7 +142,7 @@
   background: #e2e8f0;
 }
 
-/* Table Styles */
+/* ─Table─Styles─ */
 .tableContainer {
   overflow: auto;
   width: 100%;
@@ -265,7 +265,7 @@
   border: 1px solid #fecaca;
 }
 
-/* Pagination */
+/* ─Pagination─ */
 .pagination {
   display: flex;
   justify-content: space-between;

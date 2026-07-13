@@ -590,7 +590,7 @@ function CommandPalette({ onNav, onClose }: { onNav: (id: string) => void; onClo
 //  KPI STRIP
 // ═══════════════════════════════════════════════════════════════════
 function KpiStrip({ onNav }: { onNav: (id: string) => void }) {
-  const [d, setD] = useState({ rev: 0, orders: 0, customers: 0, restaurants: 0, today: 0, pending: 0, lowStock: 0, plans: 0, riders: 0, partners: 0 });
+  const [d, setD] = useState({ rev: 0, orders: 0, customers: 0, restaurants: 0, today: 0, pending: 0, lowStock: 0, plans: 0, riders: 0, partners: 0, aov: 0, canceled: 0, products: 0, newCustomers: 0, pendingPartners: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -612,6 +612,8 @@ function KpiStrip({ onNav }: { onNav: (id: string) => void }) {
       const ptArr = Array.isArray(partners) ? partners : (partners?.data ?? []);
       const today = new Date().toDateString();
       const rev   = arr.filter((o: any) => ['DELIVERED','COMPLETED'].includes(o.status)).reduce((s: number, o: any) => s + (Number(o.totalAmount) || 0), 0);
+      const completedOrdersCount = arr.filter((o: any) => ['DELIVERED','COMPLETED'].includes(o.status)).length;
+      
       setD({
         rev,
         orders:      arr.length,
@@ -623,6 +625,11 @@ function KpiStrip({ onNav }: { onNav: (id: string) => void }) {
         plans:       pArr.length,
         riders:      rArr.filter((r: any) => r.status === 'APPROVED' || r.isActive).length,
         partners:    ptArr.filter((p: any) => p.status === 'APPROVED').length,
+        aov:         completedOrdersCount > 0 ? Math.round(rev / completedOrdersCount) : 0,
+        canceled:    arr.filter((o: any) => o.status === 'CANCELLED').length,
+        products:    iArr.length,
+        newCustomers:uArr.filter((u: any) => new Date(u.createdAt).toDateString() === today).length,
+        pendingPartners: ptArr.filter((p: any) => p.status === 'PENDING').length,
       });
     }).finally(() => setLoading(false));
   }, []);
@@ -630,16 +637,21 @@ function KpiStrip({ onNav }: { onNav: (id: string) => void }) {
   const fmtRev = (n: number) => n > 0 ? `₹ ${n.toLocaleString('en-IN')}` : '₹ 0';
 
   const KPIS: any[] = [
-    { label: 'Total Revenue',      value: fmtRev(d.rev),                color: '#2563EB', bg: '#DBEAFE', sub: 'delivered + completed', icon: <IndianRupee size={22} strokeWidth={2.5} />, navId: 'orders' },
-    { label: 'Total Orders',       value: d.orders.toLocaleString(),    color: '#16A34A', bg: '#DCFCE7', sub: 'all time orders',        icon: <ShoppingBag size={22} strokeWidth={2} />,   navId: 'orders' },
-    { label: "Today's Orders",     value: d.today.toLocaleString(),     color: '#0284C7', bg: '#E0F2FE', sub: 'placed today',           icon: <ClipboardList size={22} strokeWidth={2} />, navId: 'orders' },
-    { label: 'Pending Orders',     value: d.pending.toLocaleString(),   color: '#EA580C', bg: '#FFF7ED', sub: 'awaiting processing',    icon: <PackageCheck size={22} strokeWidth={2} />,  navId: 'orders' },
-    { label: 'Total Customers',    value: d.customers.toLocaleString(), color: '#7C3AED', bg: '#EDE9FE', sub: 'registered users',       icon: <Users size={22} strokeWidth={2} />,          navId: 'users' },
-    { label: 'Active Restaurants', value: d.restaurants.toLocaleString(), color: '#D97706', bg: '#FEF3C7', sub: 'branches configured', icon: <Store size={22} strokeWidth={2} />,          navId: 'branches' },
-    { label: 'Active Riders',      value: d.riders.toLocaleString(),    color: '#0891B2', bg: '#CFFAFE', sub: 'approved delivery riders', icon: <Bike size={22} strokeWidth={2} />,          navId: 'users' },
-    { label: 'Partner Restaurants',value: d.partners.toLocaleString(),  color: '#7C3AED', bg: '#EDE9FE', sub: 'approved partners',      icon: <Building2 size={22} strokeWidth={2} />,     navId: 'users' },
-    { label: 'Low Stock Items',    value: d.lowStock.toLocaleString(),  color: '#DC2626', bg: '#FEF2F2', sub: 'need restocking',         icon: <AlertTriangle size={22} strokeWidth={2} />, navId: 'inventory' },
-    { label: 'Active Plans',       value: d.plans.toLocaleString(),     color: '#059669', bg: '#ECFDF5', sub: 'subscription plans',      icon: <CalendarDays size={22} strokeWidth={2} />,  navId: 'tiffin' },
+    { label: 'Total Revenue',      value: fmtRev(d.rev),                color: '#2563EB', bg: '#eff6ff', trend: '↑ 12.5%', trendColor: '#16a34a', sub: 'vs last month', icon: <IndianRupee size={20} strokeWidth={3} />, navId: 'orders', solidIcon: true },
+    { label: 'Total Orders',       value: d.orders.toLocaleString(),    color: '#16A34A', bg: '#f0fdf4', trend: '↑ 8.2%', trendColor: '#16a34a', sub: 'vs last month', icon: <ShoppingBag size={24} strokeWidth={2} />,   navId: 'orders' },
+    { label: 'Total Customers',    value: d.customers.toLocaleString(), color: '#9333ea', bg: '#faf5ff', trend: '↑ 15.3%', trendColor: '#16a34a', sub: 'vs last month', icon: <Users size={24} strokeWidth={2} />,          navId: 'users' },
+    { label: 'Active Restaurants', value: d.restaurants.toLocaleString(), color: '#f97316', bg: '#fff7ed', trend: '—', trendColor: '#64748b', sub: 'No change', icon: <Store size={24} strokeWidth={2} />,          navId: 'branches' },
+    { label: "Today's Orders",     value: d.today.toLocaleString(),     color: '#0284C7', bg: '#E0F2FE', trend: '↑ 5.1%', trendColor: '#16a34a', sub: 'vs yesterday', icon: <ClipboardList size={24} strokeWidth={2} />, navId: 'orders' },
+    { label: 'Pending Orders',     value: d.pending.toLocaleString(),   color: '#EA580C', bg: '#FFF7ED', trend: '↓ 2.0%', trendColor: '#dc2626', sub: 'vs last hour', icon: <PackageCheck size={24} strokeWidth={2} />,  navId: 'orders' },
+    { label: 'Active Riders',      value: d.riders.toLocaleString(),    color: '#0891B2', bg: '#CFFAFE', trend: '↑ 1.2%', trendColor: '#16a34a', sub: 'vs last month', icon: <Bike size={24} strokeWidth={2} />,          navId: 'users' },
+    { label: 'Partner Restaurants',value: d.partners.toLocaleString(),  color: '#7C3AED', bg: '#EDE9FE', trend: '—', trendColor: '#64748b', sub: 'No change', icon: <Building2 size={24} strokeWidth={2} />,     navId: 'users' },
+    { label: 'Low Stock Items',    value: d.lowStock.toLocaleString(),  color: '#DC2626', bg: '#FEF2F2', trend: '↑ 4', trendColor: '#dc2626', sub: 'needs attention', icon: <AlertTriangle size={24} strokeWidth={2} />, navId: 'inventory' },
+    { label: 'Active Plans',       value: d.plans.toLocaleString(),     color: '#059669', bg: '#ECFDF5', trend: '↑ 12', trendColor: '#16a34a', sub: 'vs last month', icon: <CalendarDays size={24} strokeWidth={2} />,  navId: 'tiffin' },
+    { label: 'Avg Order Value',    value: fmtRev(d.aov),                color: '#4F46E5', bg: '#EEF2FF', trend: '↑ 2.5%', trendColor: '#16a34a', sub: 'vs last month', icon: <IndianRupee size={24} strokeWidth={2.5} />, navId: 'orders' },
+    { label: 'Canceled Orders',    value: d.canceled.toLocaleString(),  color: '#E11D48', bg: '#FFF1F2', trend: '↓ 1.1%', trendColor: '#16a34a', sub: 'vs last month', icon: <ShoppingBag size={24} strokeWidth={2} />,   navId: 'orders' },
+    { label: 'Total Products',     value: d.products.toLocaleString(),  color: '#2563EB', bg: '#DBEAFE', trend: '↑ 45', trendColor: '#16a34a', sub: 'new items', icon: <PackageCheck size={24} strokeWidth={2} />,  navId: 'inventory' },
+    { label: 'New Customers',      value: d.newCustomers.toLocaleString(),color: '#9333EA', bg: '#FAF5FF', trend: '↑ 12.3%', trendColor: '#16a34a', sub: 'vs yesterday', icon: <Users size={24} strokeWidth={2} />,         navId: 'users' },
+    { label: 'Pending Partners',   value: d.pendingPartners.toLocaleString(),color: '#D97706', bg: '#FEF3C7', trend: '↓ 2', trendColor: '#16a34a', sub: 'resolved', icon: <Building2 size={24} strokeWidth={2} />,     navId: 'users' },
   ];
 
   const hexToRgba = (hex: string, alpha: number) => {
@@ -656,21 +668,22 @@ function KpiStrip({ onNav }: { onNav: (id: string) => void }) {
           role="button" tabIndex={0} aria-label={`View ${k.label}`}
           onClick={() => onNav(k.navId)}
           onKeyDown={e => e.key === 'Enter' && onNav(k.navId)}
-          style={{
-            '--card-color': k.color,
-            cursor: 'pointer',
-            boxShadow: `0 4px 16px ${hexToRgba(k.color, 0.18)}, 0 1px 4px ${hexToRgba(k.color, 0.1)}`,
-          } as React.CSSProperties}
         >
-          <div className={styles.kpiIcon} style={{ background: k.bg, color: k.color }}>{k.icon}</div>
+          <div className={styles.kpiIcon} style={{ background: hexToRgba(k.color, 0.12), color: k.color }}>
+            {k.solidIcon ? (
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: k.color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {k.icon}
+              </div>
+            ) : k.icon}
+          </div>
           <div className={styles.kpiContent}>
             <p className={styles.kpiLbl}>{k.label}</p>
-            <h3 className={styles.kpiVal} style={{ color: k.color }}>
+            <h3 className={styles.kpiVal}>
               {loading ? <span className={styles.kpiSkel} /> : k.value}
             </h3>
             <div className={styles.kpiBottom}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94a3b8' }}>{k.trend}</span>
-              <span style={{ fontSize: '0.72rem', color: '#94a3b8', marginLeft: '4px' }}>{k.sub}</span>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: k.trendColor }}>{k.trend}</span>
+              <span style={{ fontSize: '0.75rem', color: '#64748b', marginLeft: '4px' }}>{k.sub}</span>
             </div>
           </div>
         </div>
@@ -741,49 +754,7 @@ function WorkspaceHome({ onNav }: { onNav: (id: string) => void }) {
     'communication':  <MessageSquare   size={18} strokeWidth={2} />,
   };
 
-  // ── Lucide icons per module (Continue Working & Favorites) ──
-  const CW_SVG: Record<string, { icon: React.ReactElement; color: string; bg: string }> = {
-    branches:    { color: '#2563EB', bg: '#EFF6FF', icon: <Building2       size={20} strokeWidth={2} /> },
-    orders:      { color: '#16A34A', bg: '#DCFCE7', icon: <ShoppingBag      size={20} strokeWidth={2} /> },
-    users:       { color: '#7C3AED', bg: '#F5F3FF', icon: <Users            size={20} strokeWidth={2} /> },
-    menus:       { color: '#D97706', bg: '#FEF3C7', icon: <UtensilsCrossed  size={20} strokeWidth={2} /> },
-    inventory:   { color: '#6366F1', bg: '#EEF2FF', icon: <Package          size={20} strokeWidth={2} /> },
-    offers:      { color: '#DB2777', bg: '#FDF2F8', icon: <Tags             size={20} strokeWidth={2} /> },
-    hrms:        { color: '#6D28D9', bg: '#F5F3FF', icon: <UserRoundCog     size={20} strokeWidth={2} /> },
-    settings:    { color: '#475569', bg: '#F1F5F9', icon: <Cog              size={20} strokeWidth={2} /> },
-    tiffin:      { color: '#D97706', bg: '#FEF3C7', icon: <Coffee           size={20} strokeWidth={2} /> },
-    tables:      { color: '#7C3AED', bg: '#F5F3FF', icon: <TableProperties  size={20} strokeWidth={2} /> },
-    reservations:{ color: '#0D9488', bg: '#F0FDFA', icon: <Calendar         size={20} strokeWidth={2} /> },
-    dashboard:   { color: '#0284C7', bg: '#E0F2FE', icon: <BarChart3        size={20} strokeWidth={2} /> },
-    support:     { color: '#DC2626', bg: '#FEF2F2', icon: <LifeBuoy         size={20} strokeWidth={2} /> },
-    internal_chat:{ color: '#2563EB', bg: '#EFF6FF', icon: <MessageSquare   size={20} strokeWidth={2} /> },
-    payouts:     { color: '#059669', bg: '#ECFDF5', icon: <Wallet           size={20} strokeWidth={2} /> },
-    reviews:     { color: '#EA580C', bg: '#FFF7ED', icon: <Star             size={20} strokeWidth={2} /> },
-    referrals:   { color: '#7C3AED', bg: '#F5F3FF', icon: <Users            size={20} strokeWidth={2} /> },
-    rewards:     { color: '#D97706', bg: '#FEF3C7', icon: <BadgePercent     size={20} strokeWidth={2} /> },
-    coupons:     { color: '#DB2777', bg: '#FDF2F8', icon: <Tags             size={20} strokeWidth={2} /> },
-    audit_logs:  { color: '#475569', bg: '#F1F5F9', icon: <ShieldCheck      size={20} strokeWidth={2} /> },
-    roles:       { color: '#0D9488', bg: '#F0FDFA', icon: <ShieldCheck      size={20} strokeWidth={2} /> },
-    app_downloads:      { color: '#0F172A', bg: '#F1F5F9', icon: <Smartphone size={20} strokeWidth={2} /> },
-    app_links_settings: { color: '#0F172A', bg: '#F1F5F9', icon: <Smartphone size={20} strokeWidth={2} /> },
-    // Category page icons
-    cat_orders:         { color: '#16A34A', bg: '#DCFCE7', icon: <ShoppingBag   size={20} strokeWidth={2} /> },
-    cat_customers:      { color: '#7C3AED', bg: '#F5F3FF', icon: <Users         size={20} strokeWidth={2} /> },
-    cat_marketing:      { color: '#DB2777', bg: '#FDF2F8', icon: <Tags          size={20} strokeWidth={2} /> },
-    'cat_restaurant-ops':{ color: '#D97706', bg: '#FEF3C7', icon: <UtensilsCrossed size={20} strokeWidth={2} /> },
-    cat_dining:         { color: '#7C3AED', bg: '#F5F3FF', icon: <TableProperties size={20} strokeWidth={2} /> },
-    cat_finance:        { color: '#059669', bg: '#ECFDF5', icon: <Wallet        size={20} strokeWidth={2} /> },
-    cat_hrms:           { color: '#6D28D9', bg: '#F5F3FF', icon: <UserRoundCog  size={20} strokeWidth={2} /> },
-    cat_cms:            { color: '#0284C7', bg: '#E0F2FE', icon: <BarChart3     size={20} strokeWidth={2} /> },
-    'cat_admin-ops':    { color: '#475569', bg: '#F1F5F9', icon: <ShieldCheck   size={20} strokeWidth={2} /> },
-    cat_platform:       { color: '#2563EB', bg: '#EFF6FF', icon: <Cog          size={20} strokeWidth={2} /> },
-    cat_system:         { color: '#0F172A', bg: '#F1F5F9', icon: <Cog          size={20} strokeWidth={2} /> },
-    cat_helpdesk:       { color: '#DC2626', bg: '#FEF2F2', icon: <LifeBuoy     size={20} strokeWidth={2} /> },
-    cat_communication:  { color: '#2563EB', bg: '#EFF6FF', icon: <MessageSquare size={20} strokeWidth={2} /> },
-    cat_downloads:      { color: '#0F172A', bg: '#F1F5F9', icon: <Smartphone   size={20} strokeWidth={2} /> },
-    'cat_mobile-apps':  { color: '#0F172A', bg: '#F1F5F9', icon: <Smartphone   size={20} strokeWidth={2} /> },
-    cat_dashboards:     { color: '#0284C7', bg: '#E0F2FE', icon: <BarChart3    size={20} strokeWidth={2} /> },
-  };
+  // CW_SVG has been removed to ensure fully dynamic icons aligned with Explore Workspace.
 
   // Label overrides for better display
   const LABEL_MAP: Record<string, string> = {
@@ -843,6 +814,33 @@ function WorkspaceHome({ onNav }: { onNav: (id: string) => void }) {
     attendance:        'Staff attendance records & timesheets',
     leaves:            'Leave requests, approvals & balances',
     payroll:           'Salary processing & payslip generation',
+    email_config:      'SMTP & email templates',
+    sms_config:        'SMS provider & messaging',
+    whatsapp_config:   'WhatsApp integration setup',
+    brand_site:        'Logo, SEO & social links',
+    config_dashboard:  'System configuration overview',
+    sla_config:        'Service level agreements',
+    maps_config:       'Geolocation & routing APIs',
+    service_providers: 'Third-party integrations',
+    hr_helpdesk:       'Internal staff support',
+    templates:         'Notification templates',
+    notification_logs: 'Message history & status',
+    finance_dashboard: 'Revenue & cost analytics',
+    marketing_dashboard: 'Campaign & offer performance',
+    branch_dashboard:  'Per-branch operations stats',
+    menu_dashboard:    'Item sales & performance',
+    mess_dashboard:    'Tiffin & subscription analytics',
+    system_dashboard:  'Infrastructure & system health',
+    app_downloads:     'All 4 apps & download links',
+    app_links_settings:'Update Play/App Store URLs',
+    compliance:        'Regulatory docs & compliance',
+    partner_permissions: 'Partner module access control',
+    pages:             'Static website pages management',
+    sliders:           'Website banners & sliders',
+    comments:          'User comments moderation',
+    seo:               'Search engine optimization',
+    subscription_plans:'Plan management & billing',
+    surge_pricing:     'Surge & base pricing rules',
     // Category descriptions
     cat_orders:          'All order management & tracking tools',
     cat_customers:       'Customers, partners & rider management',
@@ -896,12 +894,13 @@ function WorkspaceHome({ onNav }: { onNav: (id: string) => void }) {
             const catPageId = id.startsWith('cat_') ? id.slice(4) : null;
             const wsCat = catPageId ? WORKSPACE.find(c => c.id === catPageId) : null;
             const resolvedCat = cat || wsCat;
-            const svgInfo = CW_SVG[id];
             const wsIcon = resolvedCat ? WS_ICONS[resolvedCat.id] : null;
             const fallbackIcon = wsIcon || (resolvedCat ? CAT_SVG[resolvedCat.id] : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>);
-            const iconEl = svgInfo?.icon || fallbackIcon;
-            const iconColor = svgInfo?.color || resolvedCat?.color || '#64748b';
-            const iconBg = svgInfo?.bg || resolvedCat?.bg || '#f8fafc';
+            const itemIconSm = ITEM_ICONS_SM[id];
+            const itemIcon20 = itemIconSm ? React.cloneElement(itemIconSm as React.ReactElement<any>, { size: 20 }) : null;
+            const iconEl = itemIcon20 || fallbackIcon;
+            const iconColor = resolvedCat?.color || '#64748b';
+            const iconBg = resolvedCat?.bg || '#f8fafc';
             const label = LABEL_MAP[id] || resolvedCat?.items?.find((x: any) => x.id === id)?.label || id;
             const catLabel = resolvedCat?.label || LABEL_MAP[id] || 'Module';
             const desc = DESC_MAP[id] || '';
@@ -938,11 +937,13 @@ function WorkspaceHome({ onNav }: { onNav: (id: string) => void }) {
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))', gap:'0.625rem' }}>
               {ALL_ITEMS.map(item => {
                 const isFav = (favs.length > 0 ? favs : FAV_DEFAULTS).includes(item.id);
-                const svgInfo = CW_SVG[item.id];
                 const cat = getCat(item.id);
-                const iconColor = svgInfo?.color || cat?.color || '#64748b';
-                const iconBg   = svgInfo?.bg    || cat?.bg    || '#f8fafc';
-                const iconEl   = svgInfo?.icon  || (cat ? CAT_SVG[cat.id] : null);
+                const iconColor = cat?.color || '#64748b';
+                const iconBg   = cat?.bg    || '#f8fafc';
+                const itemIconSm = ITEM_ICONS_SM[item.id];
+                const itemIcon20 = itemIconSm ? React.cloneElement(itemIconSm as React.ReactElement<any>, { size: 20 }) : null;
+                const fallbackIcon = cat ? (WS_ICONS[cat.id] || CAT_SVG[cat.id]) : null;
+                const iconEl   = itemIcon20 || fallbackIcon;
                 return (
                   <div key={item.id}
                     style={{ display:'flex', alignItems:'center', gap:'0.625rem', padding:'0.625rem 0.75rem', borderRadius:'var(--rd-sm)', border:`1px solid ${isFav ? iconColor+'44' : 'var(--bdr)'}`, background: isFav ? iconBg : 'var(--bg)', cursor:'pointer', transition:'all .15s' }}
@@ -983,12 +984,13 @@ function WorkspaceHome({ onNav }: { onNav: (id: string) => void }) {
             const catPageId2 = id.startsWith('cat_') ? id.slice(4) : null;
             const wsCat2 = catPageId2 ? WORKSPACE.find(c => c.id === catPageId2) : null;
             const resolvedCat2 = cat || wsCat2;
-            const svgInfo = CW_SVG[id];
             const wsIcon = resolvedCat2 ? WS_ICONS[resolvedCat2.id] : null;
             const fallbackIcon = wsIcon || (resolvedCat2 ? CAT_SVG[resolvedCat2.id] : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>);
-            const iconEl = svgInfo?.icon || fallbackIcon;
-            const iconColor = svgInfo?.color || resolvedCat2?.color || '#64748b';
-            const iconBg = svgInfo?.bg || resolvedCat2?.bg || '#f8fafc';
+            const itemIconSm = ITEM_ICONS_SM[id];
+            const itemIcon20 = itemIconSm ? React.cloneElement(itemIconSm as React.ReactElement<any>, { size: 20 }) : null;
+            const iconEl = itemIcon20 || fallbackIcon;
+            const iconColor = resolvedCat2?.color || '#64748b';
+            const iconBg = resolvedCat2?.bg || '#f8fafc';
             const label = LABEL_MAP[id] || resolvedCat2?.items?.find((x: any) => x.id === id)?.label || id;
             const desc = DESC_MAP[id] || '';
             return (

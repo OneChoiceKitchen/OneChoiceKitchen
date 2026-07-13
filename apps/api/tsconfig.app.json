@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
     "types": ["node", "@prisma/client"],
-    
+
     "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
@@ -17,9 +17,5 @@
     "src/**/*.spec.ts",
     "src/**/*.test.ts"
   ],
-  "references": [
-    {
-      "path": "../../libs/ui-design-system/tsconfig.lib.json"
-    }
-  ]
+  "references": []
 }

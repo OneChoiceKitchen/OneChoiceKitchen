@@ -4,7 +4,7 @@
   font-family: 'Inter', -apple-system, sans-serif;
 }
 
-/* ── Header ─────────────────────────────────────────────────────────────── */
+/* -------------------- Header -------------------- */
 .header { text-align: center; margin-bottom: 2.5rem; }
 .headerBadge {
   display: inline-flex;
@@ -32,7 +32,7 @@
   font-weight: 500;
 }
 
-/* ── App Tabs ────────────────────────────────────────────────────────────── */
+/* -------------------- App Tabs -------------------- */
 .appTabs {
   display: flex;
   gap: .75rem;
@@ -69,7 +69,7 @@
   letter-spacing: .05em;
 }
 
-/* ── Detail Panel ────────────────────────────────────────────────────────── */
+/* -------------------- Detail Panel -------------------- */
 .detail {
   background: #fff;
   border: 1.5px solid #e2e8f0;
@@ -142,7 +142,7 @@
 .dlBtn:hover { opacity: .85; transform: translateY(-1px); }
 .dlBtnIcon { width: 24px; height: 24px; flex-shrink: 0; }
 
-/* ── All Apps Quick Grid ─────────────────────────────────────────────────── */
+/* -------------------- All Apps Quick Grid -------------------- */
 .allAppsSection { margin-bottom: 2.5rem; }
 .allAppsTitle { font-size: 1.1rem; font-weight: 700; color: #0f172a; margin: 0 0 1.25rem; }
 .allAppsGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
@@ -163,7 +163,7 @@
 .quickLink { font-size: .8rem; color: #2563eb; text-decoration: none; font-weight: 500; }
 .quickLink:hover { text-decoration: underline; }
 
-/* ── FAQ ─────────────────────────────────────────────────────────────────── */
+/* -------------------- FAQ -------------------- */
 .faqSection { margin-bottom: 2rem; }
 .faqTitle { font-size: 1.1rem; font-weight: 700; color: #0f172a; margin: 0 0 1.25rem; }
 .faqList { display: flex; flex-direction: column; gap: .75rem; }

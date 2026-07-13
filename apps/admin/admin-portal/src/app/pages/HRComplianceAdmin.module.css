@@ -50,7 +50,7 @@
   background: #2563eb;
 }
 
-/* Tabs */
+/* ─Tabs─ */
 .tabsContainer {
   margin-bottom: 2rem;
   border-bottom: 1px solid #e2e8f0;
@@ -85,7 +85,7 @@
   border-bottom-color: #3b82f6;
 }
 
-/* Toolbar */
+/* ─Toolbar─ */
 .toolbar {
   display: flex;
   gap: 1rem;
@@ -103,7 +103,7 @@
   background: white;
 }
 
-/* Table */
+/* ─Table─ */
 .panel {
   background: white;
   border-radius: 12px;

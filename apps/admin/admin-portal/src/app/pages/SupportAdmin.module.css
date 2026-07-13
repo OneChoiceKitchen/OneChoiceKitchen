@@ -74,7 +74,7 @@
   background: #e2e8f0;
 }
 
-/* Table */
+/* ─Table─ */
 .tableContainer {
   width: 100%;
   overflow-x: auto;
@@ -222,7 +222,7 @@
 
 .resolveBtn:hover { background: #059669; }
 
-/* FAQ Section */
+/* ─FAQ─Section─ */
 .faqForm {
   display: flex;
   gap: 1rem;

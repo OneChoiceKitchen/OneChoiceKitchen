@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     OneChoiceKitchen - Production Deployment Script v3.0
     Handles Docker, Vercel, VPS/bare-metal, and shared-hosting deployments.
@@ -77,6 +77,10 @@ param (
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Continue'
 $Root = $PSScriptRoot
+
+# Fix mojibake/Unicode output in some Windows terminals
+[console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
 
 # Keep window open on any unhandled error
 trap {
@@ -261,6 +265,11 @@ Write-Host ''
 function Stop-Deployment {
     hdr "STOPPING SERVICES  ($($Target.ToUpper()) / $($Env.ToUpper()) / $($DeployProfile.ToUpper()))"
     rule
+
+    # Kill standalone MailDev window if it exists (avoids killing Docker if MailDev is in Docker)
+    if (-not $DryRun) {
+        Get-Process -Name "cmd" -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -match "OCK-MailDev" } | Stop-Process -Force -ErrorAction SilentlyContinue
+    }
 
     switch ($Target) {
         'docker' {
@@ -777,3 +786,4 @@ do {
 Write-Host ''
 Write-Host '  Goodbye! Deployment orchestrator closed.' -ForegroundColor Cyan
 Write-Host ''
+

@@ -8,8 +8,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "target": "es2021",
-    "noImplicitAny": false,
-    "paths": {}
+    "noImplicitAny": false
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts"],
   "exclude": [

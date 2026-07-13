@@ -87,7 +87,7 @@ async function parseUploadedFile(file: File): Promise<string[][]> {
   const buf = await file.arrayBuffer();
   const wb = XLSX.read(buf, { type: 'array' });
   const ws = wb.Sheets[wb.SheetNames[0]];
-  return XLSX.utils.sheet_to_json<string[]>(ws, { header: 1, defval: '' });
+  return XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' }) as string[][];
 }
 
 // ── Sample templates per tab ──────────────────────────────────────────
@@ -756,11 +756,11 @@ export default function UsersAdmin() {
 
   // ── Add/Edit modal content per tab ────────────────────────────────────
   const isEditing = addEditModal === 'edit';
-  const modalTitle = {
+  const modalTitle = ({
     users:    isEditing ? '✏️ Edit User'    : '➕ Add New User',
     partners: isEditing ? '✏️ Edit Partner' : '🏪 Add Partner Request',
     riders:   isEditing ? '✏️ Edit Rider'   : '🛵 Register New Rider',
-  }[tab];
+  } as Record<string, string>)[tab];
 
   return (
     <div className="page-container">

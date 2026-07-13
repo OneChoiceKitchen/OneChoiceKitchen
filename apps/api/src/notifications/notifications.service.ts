@@ -29,7 +29,7 @@ export class NotificationsService {
       where: { id: { notIn: currentIds } },
     });
 
-    const results = [];
+    const results: any[] = [];
     for (const config of configs) {
       if (config.id && !config.id.startsWith('new_')) {
         results.push(
@@ -189,7 +189,7 @@ export class NotificationsService {
       where: { id: { notIn: currentIds } },
     });
 
-    const results = [];
+    const results: any[] = [];
     for (const config of configs) {
       if (config.id && !config.id.startsWith('new_')) {
         results.push(

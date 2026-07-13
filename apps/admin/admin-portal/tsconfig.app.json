@@ -7,8 +7,7 @@
       "vite/client"
     ],
     "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "ignoreDeprecations": "6.0"
+    "noUnusedParameters": false
   },
   "exclude": [
     "src/**/*.spec.ts",

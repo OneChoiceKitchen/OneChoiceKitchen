@@ -86,6 +86,10 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Continue'
 $ProgressPreference    = 'SilentlyContinue'
 
+# Fix mojibake/Unicode output in some Windows terminals
+[console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+
 # Keep window open on any unhandled error (prevents immediate close on crash)
 trap {
     Write-Host ""
@@ -95,11 +99,11 @@ trap {
     exit 1
 }
 
-# ── Constants ──────────────────────────────────────────────────────────────────
+# -- Constants ------------------------------------------------------------------
 $Root    = $PSScriptRoot
 $PidFile = Join-Path $Root '.service-pids'
 
-# ── Colour helpers ─────────────────────────────────────────────────────────────
+# -- Colour helpers -------------------------------------------------------------
 function cyn  { param($t) Write-Host "  $t" -ForegroundColor Cyan }
 function grn  { param($t) Write-Host "  OK   $t" -ForegroundColor Green }
 function yel  { param($t) Write-Host "  WARN $t" -ForegroundColor Yellow }
@@ -118,7 +122,7 @@ function Show-Banner {
     Write-Host ""
 }
 
-# ── Port utilities ─────────────────────────────────────────────────────────────
+# -- Port utilities -------------------------------------------------------------
 # Uses Get-NetTCPConnection so it detects BOTH IPv4 (127.0.0.1) AND IPv6 (::1)
 # listeners. The old TcpClient approach only checked 127.0.0.1 which missed
 # Next.js dev servers that bind to ::1 on Windows.
@@ -148,7 +152,7 @@ function Wait-Port([int]$p, [string]$label, [int]$max = 240) {
     return -1
 }
 
-# ── Service definitions ────────────────────────────────────────────────────────
+# -- Service definitions --------------------------------------------------------
 $ServiceDefs = [ordered]@{
     'api'            = @{ NxCmd='api';            Port=3000; Url='http://localhost:3000/api/docs'; OpenBrowser=$true }
     'web'            = @{ NxCmd='web';            Port=4208; Url='http://localhost:4208';          OpenBrowser=$true }
@@ -166,7 +170,7 @@ $ProfileMap = @{
     'all'      = @('api','web','admin-portal','partner-portal','rider-portal','customer-mobile','rider-mobile')
 }
 
-# ── Docker / infra service definitions (informational only) ────────────────────
+# -- Docker / infra service definitions (informational only) --------------------
 $InfraServices = @(
     @{ Name='PostgreSQL';     Port=5432; Url='localhost:5432'        }
     @{ Name='Redis';          Port=6379; Url='localhost:6379'        }
@@ -176,7 +180,7 @@ $InfraServices = @(
     @{ Name='Prisma Studio';  Port=5555; Url='http://localhost:5555' }
 )
 
-# ── Service display names ──────────────────────────────────────────────────────
+# -- Service display names ------------------------------------------------------
 $ServiceLabels = @{
     'api'             = 'NestJS API'
     'web'             = 'Web Portal'
@@ -187,13 +191,13 @@ $ServiceLabels = @{
     'rider-mobile'    = 'Rider Mobile'
 }
 
-# ── Browser launch order (confirmed by user) ───────────────────────────────────
+# -- Browser launch order (confirmed by user) -----------------------------------
 # Prisma Studio is opened separately via Open-DatabaseTool
 $BrowserLaunchOrder = @('web','admin-portal','partner-portal','rider-portal','customer-mobile','rider-mobile')
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # INTERACTIVE MENU (shown when no -Action passed)
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Show-InteractiveMenu {
     Show-Banner
 
@@ -257,9 +261,9 @@ function Show-InteractiveMenu {
     Write-Host ''
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # PREREQUISITE CHECKS  (self-healing - always runs pnpm install)
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Invoke-Prerequisites {
     step '1/7' 'Checking prerequisites & restoring dependencies...'
     rule
@@ -335,9 +339,9 @@ function Invoke-Prerequisites {
     Write-Host ''
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # DATABASE SETUP  (Prisma generate + db push)
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Invoke-DatabaseSetup {
     step '2/7' 'Setting up database...'
     rule
@@ -383,9 +387,9 @@ function Invoke-DatabaseSetup {
     Write-Host ''
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # INFRASTRUCTURE CHECK  (warns about Docker, never starts it unless -WithDocker)
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Test-Infrastructure {
     step '3/7' 'Checking infrastructure services (Docker)...'
     rule
@@ -429,9 +433,9 @@ function Test-Infrastructure {
     Write-Host ''
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # SET NX ENVIRONMENT
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Set-NxEnv {
     $env:NX_REJECT_DYNAMIC_QUESTIONS = 'true'
     $env:CI                          = 'true'
@@ -442,9 +446,9 @@ function Set-NxEnv {
     $env:FORCE_COLOR                 = '1'
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # STOP ALL SERVICES (kill ports + PID file)
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Stop-AllServices([switch]$Silent) {
     if (-not $Silent) { step '1/1' 'Stopping all services...'; rule }
 
@@ -458,18 +462,22 @@ function Stop-AllServices([switch]$Silent) {
         Remove-Item $PidFile -Force -ErrorAction SilentlyContinue
     }
 
+    # Kill standalone MailDev window if it exists (avoids killing Docker)
+    Get-Process -Name "cmd" -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -match "OCK-MailDev" } | Stop-Process -Force -ErrorAction SilentlyContinue
+
+
     # Kill by port as fallback
     @(3000,4205,4206,4207,4208,4210,4212,5555,9229) | ForEach-Object { Clear-Port $_ }
 
     if (-not $Silent) { grn 'All ports cleared'; Write-Host '' }
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # DEEP CLEAN  (delete node_modules, .nx, dist, .next)
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Invoke-DeepClean {
     Write-Host ''
-    Write-Host '  ─────────────────────────────────────────────────────────────' -ForegroundColor DarkGray
+    Write-Host '  -------------------------------------------------------------' -ForegroundColor DarkGray
     Write-Host '  Deep Clean - remove generated & dependency files?' -ForegroundColor Yellow
     Write-Host ''
     Write-Host '  This will DELETE:' -ForegroundColor White
@@ -544,6 +552,13 @@ function Invoke-DeepClean {
         grn '.service-pids removed'
     }
 
+    # Temp scratch files
+    $tmpFiles = Get-ChildItem -Path "$Root" -Filter "tmp_*" -File -ErrorAction SilentlyContinue
+    if ($tmpFiles) {
+        $tmpFiles | ForEach-Object { Remove-Item $_.FullName -Force -ErrorAction SilentlyContinue }
+        grn 'Temporary files (tmp_*) removed'
+    }
+
     Write-Host ''
     grn 'Deep clean complete.'
     Write-Host ''
@@ -551,9 +566,9 @@ function Invoke-DeepClean {
     Write-Host ''
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # START A SINGLE SERVICE IN A NEW WINDOW
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Start-NxService([string]$name, [string]$nxCmd) {
     $title = "[OCK] $name"
     $cmd   = "pnpm nx serve $nxCmd"
@@ -564,9 +579,9 @@ function Start-NxService([string]$name, [string]$nxCmd) {
     return $proc.Id
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # OPEN PRISMA STUDIO (Database browser)
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Open-DatabaseTool {
     Clear-Port 5555
     dim 'Starting Prisma Studio (database management)...'
@@ -585,9 +600,9 @@ function Open-DatabaseTool {
     return $proc.Id
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # API HEALTH CHECK
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Test-ApiHealth([int]$timeoutSec = 30) {
     $sw = [Diagnostics.Stopwatch]::StartNew()
     while ($sw.Elapsed.TotalSeconds -lt $timeoutSec) {
@@ -601,9 +616,9 @@ function Test-ApiHealth([int]$timeoutSec = 30) {
     return $false
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # PRINT RICH STARTUP SUMMARY TABLE
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Show-Summary([string[]]$activeServices, [int]$totalTime) {
     Write-Host ''
     Write-Host '  +--------------------------------------------------------------------+' -ForegroundColor Cyan
@@ -675,9 +690,9 @@ function Show-Summary([string[]]$activeServices, [int]$totalTime) {
     Write-Host ''
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # MAIN: START
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Start-All {
     $globalSw = [Diagnostics.Stopwatch]::StartNew()
     Show-Banner
@@ -783,9 +798,6 @@ function Start-All {
         if ($studioPid -gt 0) { $pids.Add($studioPid) }
     }
 
-    # Save PIDs
-    $pids | Out-File $PidFile -Encoding ascii
-    Write-Host ''
     rule
 
     # Open browsers - UNCONDITIONALLY after wait phase (browser retries naturally)
@@ -849,6 +861,9 @@ function Start-All {
         Write-Host ''
     }
 
+    # Save PIDs (must be done after all Start-Process calls including MailDev)
+    $pids | Out-File $PidFile -Encoding ascii
+
     # Final summary
     $globalSw.Stop()
     Show-Summary $activeServices ([int]$globalSw.Elapsed.TotalSeconds)
@@ -865,9 +880,9 @@ function Start-All {
     Write-Host ''
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # MAIN: STOP
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Stop-All {
     Show-Banner
     Write-Host ''
@@ -876,10 +891,16 @@ function Stop-All {
     Write-Host ''
 
     Stop-AllServices
-    grn 'All Nx services stopped.'
-    Write-Host ''
-    dim 'Docker infrastructure (PostgreSQL / Redis / Maildev / pgAdmin) is still running.'
-    dim 'To stop Docker infra: docker compose -f docker-compose.dev.yml down'
+    dim 'Stopping Docker infrastructure (PostgreSQL / Redis / Maildev / pgAdmin)...'
+    docker info 2>&1 | Out-Null
+    if ($LASTEXITCODE -eq 0) {
+        docker compose -f "$Root\docker-compose.dev.yml" down 2>&1 | Out-Null
+        if ($LASTEXITCODE -eq 0) { grn 'Docker infrastructure stopped.' }
+        else { yel 'Failed to stop Docker infra properly. Run manually: docker compose -f docker-compose.dev.yml down' }
+    } else {
+        dim 'Docker daemon is not running (skipped).'
+    }
+    
     Write-Host ''
     dim 'Use .\setup_local.ps1 start to restart services.'
     Write-Host ''
@@ -888,9 +909,9 @@ function Stop-All {
     Invoke-DeepClean
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # MAIN: STATUS
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 function Show-Status {
     Show-Banner
     Write-Host ''
@@ -954,11 +975,11 @@ function Show-Status {
     Write-Host ''
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # DISPATCH
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
-# ── Mode A: Arguments passed directly -- run once, then exit ─────────────────
+# -- Mode A: Arguments passed directly -- run once, then exit -----------------
 if ($Action -ne '') {
     if (-not $RunProfile) { $RunProfile = 'standard' }
     switch ($Action) {
@@ -973,7 +994,7 @@ if ($Action -ne '') {
     exit 0
 }
 
-# ── Mode B: Interactive menu loop -- stays open until user chooses Exit ───────
+# -- Mode B: Interactive menu loop -- stays open until user chooses Exit -------
 do {
     # Reset per-loop state so each iteration is independent
     $script:Action     = ''
@@ -1007,3 +1028,4 @@ do {
 Write-Host ''
 Write-Host '  Goodbye! OneChoiceKitchen orchestrator closed.' -ForegroundColor Cyan
 Write-Host ''
+

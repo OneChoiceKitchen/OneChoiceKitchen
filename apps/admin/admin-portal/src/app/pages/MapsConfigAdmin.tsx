@@ -25,7 +25,16 @@ export default function MapsConfigAdmin() {
       const parsed = Array.isArray(data) ? data : [];
       setConfigs(parsed.length > 0 ? parsed : DUMMY_CONFIGS);
     } catch (e: any) {
-      setConfigs(DUMMY_CONFIGS);
+      const stored = localStorage.getItem('mock_maps_configs');
+      if (stored) {
+        try {
+          setConfigs(JSON.parse(stored));
+        } catch {
+          setConfigs(DUMMY_CONFIGS);
+        }
+      } else {
+        setConfigs(DUMMY_CONFIGS);
+      }
     }
   };
 
@@ -35,16 +44,19 @@ export default function MapsConfigAdmin() {
       if (!res.ok) throw new Error(await res.text());
       setEditing(null);
       fetchConfigs();
-      toast.success('Configuration saved successfully');
+      toast.success('Configuration saved successfully to Database');
     } catch (e: any) {
-      // Mock save
+      // Still save to localStorage as a fallback so the app works, but show the real error.
+      let newConfigs;
       if (editing.id) {
-        setConfigs(prev => prev.map(c => c.id === editing.id ? editing : c));
+        newConfigs = configs.map(c => c.id === editing.id ? editing : c);
       } else {
-        setConfigs(prev => [...prev, { ...editing, id: `maps_mock_${Date.now()}` }]);
+        newConfigs = [...configs, { ...editing, id: `maps_mock_${Date.now()}` }];
       }
+      setConfigs(newConfigs);
+      localStorage.setItem('mock_maps_configs', JSON.stringify(newConfigs));
       setEditing(null);
-      toast.success('(Mocked) Configuration saved successfully');
+      toast.success('Saved locally (Backend error: ' + (e.message || 'Connection failed') + ')');
     }
   };
 
@@ -56,10 +68,12 @@ export default function MapsConfigAdmin() {
       toast.success('Provider activated');
     } catch (e: any) {
       // Mock activate
-      setConfigs(prev => prev.map(c => ({
+      const newConfigs = configs.map(c => ({
         ...c,
         isActive: c.id === id
-      })));
+      }));
+      setConfigs(newConfigs);
+      localStorage.setItem('mock_maps_configs', JSON.stringify(newConfigs));
       toast.success('(Mocked) Provider activated');
     }
   };
@@ -86,10 +100,7 @@ export default function MapsConfigAdmin() {
       
       setTestResult({ status: 'success', message: 'Connection successful!' });
     } catch (e: any) {
-      // Mock test connection
-      setTimeout(() => {
-        setTestResult({ status: 'success', message: '(Mocked) Connection successful!' });
-      }, 800);
+      setTestResult({ status: 'error', message: e.message || 'Connection failed' });
     }
   };
 
@@ -99,14 +110,28 @@ export default function MapsConfigAdmin() {
       label: 'Google Maps Platform', 
       icon: 'https://upload.wikimedia.org/wikipedia/commons/a/aa/Google_Maps_icon_%282020%29.svg', 
       description: 'Enterprise-grade mapping with highly accurate routing, real-time traffic updates, and reliable geocoding. Requires a Google Cloud billing account.',
-      fields: [{ key: 'apiKey', label: 'API Key', type: 'password' }, { key: 'mapId', label: 'Map ID', type: 'text' }] 
+      fields: [{ key: 'apiKey', label: 'API Key', type: 'password' }, { key: 'mapId', label: 'Map ID', type: 'text' }],
+      instructions: [
+        'Go to Google Cloud Console (console.cloud.google.com)',
+        'Create a new project or select an existing one',
+        'Enable Maps JavaScript API, Places API, and Distance Matrix API',
+        'Go to APIs & Services > Credentials and create an API Key',
+        'To get a Map ID: Go to Map Management, click "Create Map ID", select "JavaScript", and copy the ID',
+        'Add billing details to your Google Cloud account'
+      ]
     },
     { 
       name: 'OPENSTREETMAP', 
       label: 'OpenStreetMap (OSRM)', 
       icon: 'https://upload.wikimedia.org/wikipedia/commons/b/b0/Openstreetmap_logo.svg', 
       description: 'Free, open-source mapping with basic routing capabilities. Recommended for development, testing, or deployments without Google Maps access.',
-      fields: [{ key: 'routingApiUrl', label: 'Routing API URL', type: 'text', placeholder: 'https://router.project-osrm.org' }] 
+      fields: [{ key: 'routingApiUrl', label: 'Routing API URL', type: 'text', placeholder: 'https://router.project-osrm.org' }],
+      instructions: [
+        'OpenStreetMap is free and does not require an API key for basic usage',
+        'The default public OSRM routing URL is https://router.project-osrm.org',
+        'For high-volume production, you should host your own OSRM server',
+        'No billing account or registration is required to get started'
+      ]
     },
   ];
 
@@ -156,7 +181,7 @@ export default function MapsConfigAdmin() {
 
               <div className={styles.cardActions}>
                 <button 
-                  onClick={() => setEditing(cfg || { providerName: prov.name, isActive: false })}
+                  onClick={() => setEditing(cfg ? { ...cfg, isDemo: cfg.apiKey?.includes('Dummy') || false } : { providerName: prov.name, isActive: false, isDemo: true, apiKey: 'AIzaSyDummyKeyForDevelopment1234567890' })}
                   className={`${styles.btn} ${styles.editBtn}`}
                 >
                   {cfg ? 'Edit Configuration' : 'Setup Now'}
@@ -184,6 +209,41 @@ export default function MapsConfigAdmin() {
               <div>
                 <h3 className={styles.modalTitle}>Configure {PROVIDERS.find(p => p.name === editing.providerName)?.label}</h3>
                 <p className={styles.modalSubtitle}>Enter your API credentials below.</p>
+              </div>
+            </div>
+
+            {PROVIDERS.find(p => p.name === editing.providerName)?.instructions && (
+              <details className={styles.instructionsBox}>
+                <summary className={styles.instructionsSummary}>How to setup</summary>
+                <ol>
+                  {PROVIDERS.find(p => p.name === editing.providerName)?.instructions?.map((inst, idx) => (
+                    <li key={idx}>{inst}</li>
+                  ))}
+                </ol>
+              </details>
+            )}
+
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Configuration Mode</label>
+              <div className={styles.radioGroup}>
+                <label className={styles.radioLabel}>
+                  <input 
+                    type="radio" 
+                    name="configMode" 
+                    checked={editing.isDemo === true} 
+                    onChange={() => setEditing((p: any) => ({ ...p, isDemo: true, apiKey: 'AIzaSyDummyKeyForDevelopment1234567890', mapId: 'dummy-map-id' }))} 
+                  />
+                  <span>Demo / Mock</span>
+                </label>
+                <label className={styles.radioLabel}>
+                  <input 
+                    type="radio" 
+                    name="configMode" 
+                    checked={!editing.isDemo} 
+                    onChange={() => setEditing((p: any) => ({ ...p, isDemo: false, apiKey: p.apiKey?.includes('Dummy') ? '' : p.apiKey, mapId: p.mapId === 'dummy-map-id' ? '' : p.mapId }))} 
+                  />
+                  <span>Real</span>
+                </label>
               </div>
             </div>
 

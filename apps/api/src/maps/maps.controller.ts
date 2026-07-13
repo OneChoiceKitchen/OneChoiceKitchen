@@ -22,21 +22,21 @@ export class MapsController {
 
   @Post('config')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('SUPER_ADMIN')
+  @Roles('SUPER_ADMIN', 'ADMIN')
   upsertConfig(@Body() body: any) {
     return this.mapsService.upsertConfig(body);
   }
 
   @Post('test')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('SUPER_ADMIN')
+  @Roles('SUPER_ADMIN', 'ADMIN')
   testConfig(@Body() body: any) {
     return this.mapsService.testConfig(body);
   }
 
   @Patch('config/:id/activate')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('SUPER_ADMIN')
+  @Roles('SUPER_ADMIN', 'ADMIN')
   setActiveProvider(@Param('id') id: string) {
     return this.mapsService.setActiveProvider(id);
   }

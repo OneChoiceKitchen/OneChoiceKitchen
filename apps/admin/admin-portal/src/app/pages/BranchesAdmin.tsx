@@ -1,10 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { ToggleLeft, ToggleRight, Trash2, Edit2, PlusCircle, CheckCircle, XCircle, MapPin, Phone, Mail, Clock, Store, UploadCloud, Info, Settings, Download, QrCode, Search, Filter, Eye, MoreVertical, Image, Share2 } from 'lucide-react';
+import { ToggleLeft, ToggleRight, Trash2, Edit2, PlusCircle, CheckCircle, XCircle, MapPin, Phone, Mail, Clock, Store, UploadCloud, Info, Settings, Download, QrCode, Search, Filter, Eye, MoreVertical, Image, Share2, FileText } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import styles from './BranchesAdmin.module.css';
 import { useConfirm } from '@org/ui-design-system';
 import { MOCK_BRANCHES, MOCK_RESTAURANTS } from './mockData';
+import AdminLocationMap from '../components/AdminLocationMap';
+
+const renderFilePreview = (url: string | undefined | null, title: string) => {
+  if (!url) return null;
+  const isPdf = url.toLowerCase().includes('.pdf') || url.startsWith('data:application/pdf');
+  return (
+    <div style={{ marginTop: '1rem', padding: '0.75rem', border: '1px solid var(--bdr)', borderRadius: 'var(--r-md)', background: 'var(--surf2)' }}>
+      <p style={{ fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.5rem', color: 'var(--text2)' }}>{title}</p>
+      {isPdf ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--brand-blue)' }}>
+          <FileText size={20} />
+          <a href={url} target="_blank" rel="noreferrer" style={{ fontSize: '0.875rem', textDecoration: 'none', color: 'inherit' }}>View Document</a>
+        </div>
+      ) : (
+        <img src={url} alt={title} style={{ maxWidth: '100%', maxHeight: '150px', objectFit: 'contain', borderRadius: 'var(--r-sm)', border: '1px solid var(--bdr)', background: '#fff' }} />
+      )}
+    </div>
+  );
+};
 
 interface Restaurant {
   id: string;
@@ -230,22 +249,63 @@ export default function BranchesAdmin() {
       // SVG download — embed overlay as <image> element if needed
       const svgClone = svgEl.cloneNode(true) as SVGElement;
       svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      svgClone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
       const overlayUrl = qrCenterOverlay === 'logo' ? branch.brandLogoUrl
                         : qrCenterOverlay === 'favicon' ? branch.faviconUrl : null;
       if (overlayUrl) {
-        const SIZE = parseInt(svgClone.getAttribute('width') || '220');
-        const OV = 44;
-        const OX = (SIZE - OV) / 2;
-        const OY = (SIZE - OV) / 2;
+        let base64Url = overlayUrl;
+        try {
+          const res = await fetch(overlayUrl);
+          const blob = await res.blob();
+          base64Url = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+        } catch (e) {
+          console.warn('Failed to fetch image as base64', e);
+        }
+
+        let logicalSize = 220;
+        const widthAttr = parseFloat(svgClone.getAttribute('width') || '220');
+        const viewBox = svgClone.getAttribute('viewBox');
+        if (viewBox) {
+          const parts = viewBox.split(' ').filter(Boolean).map(Number);
+          if (parts.length === 4 && !isNaN(parts[2])) {
+            logicalSize = parts[2];
+          }
+        } else {
+          logicalSize = widthAttr;
+        }
+        
+        // Original target was 44px overlay on a 220px QR code (20%)
+        const ratio = 44 / 220; 
+        const paddingRatio = 3 / 220; // 3px padding
+        const radiusRatio = 8 / 220;  // 8px border radius
+
+        const OV = logicalSize * ratio;
+        const pad = logicalSize * paddingRatio;
+        const OX = (logicalSize - OV) / 2;
+        const OY = (logicalSize - OV) / 2;
+        const rx = logicalSize * radiusRatio;
+
         const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        rect.setAttribute('x', String(OX - 3)); rect.setAttribute('y', String(OY - 3));
-        rect.setAttribute('width', String(OV + 6)); rect.setAttribute('height', String(OV + 6));
-        rect.setAttribute('rx', '8'); rect.setAttribute('fill', '#ffffff');
+        rect.setAttribute('x', String(OX - pad)); 
+        rect.setAttribute('y', String(OY - pad));
+        rect.setAttribute('width', String(OV + pad * 2)); 
+        rect.setAttribute('height', String(OV + pad * 2));
+        rect.setAttribute('rx', String(rx)); 
+        rect.setAttribute('fill', '#ffffff');
         svgClone.appendChild(rect);
-        const img = document.createElementNS('http://www.w3.org/2000/svg', 'image');
-        img.setAttribute('href', overlayUrl); img.setAttribute('x', String(OX));
-        img.setAttribute('y', String(OY)); img.setAttribute('width', String(OV)); img.setAttribute('height', String(OV));
-        svgClone.appendChild(img);
+
+        const imgNode = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+        imgNode.setAttributeNS('http://www.w3.org/1999/xlink', 'href', base64Url);
+        imgNode.setAttribute('href', base64Url);
+        imgNode.setAttribute('x', String(OX));
+        imgNode.setAttribute('y', String(OY)); 
+        imgNode.setAttribute('width', String(OV)); 
+        imgNode.setAttribute('height', String(OV));
+        svgClone.appendChild(imgNode);
       }
       const blob = new Blob([new XMLSerializer().serializeToString(svgClone)], { type: 'image/svg+xml' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${fileName}.svg`; a.click();
@@ -1077,17 +1137,17 @@ export default function BranchesAdmin() {
         </div>
       )}
 
-      {/* ── Manage Tables Modal ── */}
+      {/* 🟢 Manage Tables Modal 🟢 */}
       {tablesModalBranch && (
-        <div className={styles.modalOverlay} onClick={() => setTablesModalBranch(null)}>
-          <div className={styles.modal} style={{ maxWidth: '640px' }} onClick={e => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>
+        <div className="modal-overlay" onClick={() => setTablesModalBranch(null)}>
+          <div className="modal modal-md" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Settings size={22} color="#2563EB" /> Manage Tables — {tablesModalBranch.name}
               </h3>
-              <button className={styles.closeBtn} onClick={() => setTablesModalBranch(null)}><XCircle size={24} /></button>
+              <button className="modal-close" onClick={() => setTablesModalBranch(null)}><XCircle size={24} /></button>
             </div>
-            <div className={styles.modalBody} style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div className="modal-body" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               {/* Add Table Form */}
               <div style={{ background: 'var(--bg)', padding: '1rem', borderRadius: 'var(--r-md)', border: '1px solid var(--bdr)' }}>
                 <h4 style={{ margin: '0 0 0.75rem', fontSize: '0.875rem', fontWeight: 700, color: 'var(--text)' }}>Add New Table</h4>
@@ -1149,7 +1209,7 @@ export default function BranchesAdmin() {
                 </table>
               )}
             </div>
-            <div className={styles.modalFooter}>
+            <div className="modal-footer">
               <button className="btn btn-secondary" onClick={() => setTablesModalBranch(null)}>Close</button>
             </div>
           </div>
@@ -1158,15 +1218,14 @@ export default function BranchesAdmin() {
 
       {/* Advanced Modal for Form */}
       {showForm && (
-        <div className={styles.modalOverlay} onClick={() => setShowForm(false)}>
-          {/* ... existing modal logic stays mostly same, but I'm placing the new modal below this one */}
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>
+        <div className="modal-overlay" onClick={() => setShowForm(false)}>
+          <div className="modal modal-xl" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 {editId ? <Edit2 size={24} color="#2563EB" /> : <PlusCircle size={24} color="#2563EB" />}
                 {editId ? 'Edit Branch details' : 'Add a new branch'}
               </h3>
-              <button className={styles.closeBtn} onClick={() => setShowForm(false)}>
+              <button className="modal-close" onClick={() => setShowForm(false)}>
                 <XCircle size={24} />
               </button>
             </div>
@@ -1197,7 +1256,7 @@ export default function BranchesAdmin() {
               </div>
 
               <div className={styles.mainContent}>
-                <form id="branchForm" onSubmit={handleSubmit} className={styles.modalBody}>
+                <form id="branchForm" onSubmit={handleSubmit} className="modal-body" style={{ overflowY: 'auto', flex: 1 }}>
                   {activeTab === 'basic' && (
                     <>
                       <div className={styles.sectionHeader}>
@@ -1407,20 +1466,14 @@ export default function BranchesAdmin() {
 
                         <div className={styles.formGroupFull}>
                           <label className={styles.label}>Pick Location on Map</label>
-                          <div className={styles.mapContainer} onClick={(e) => {
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            const x = e.clientX - rect.left;
-                            const y = e.clientY - rect.top;
-                            const newLng = 85.144 + (x - rect.width/2) * 0.0001;
-                            const newLat = 25.611 - (y - rect.height/2) * 0.0001;
-                            setForm({...form, lat: parseFloat(newLat.toFixed(6)), lng: parseFloat(newLng.toFixed(6))});
-                          }}>
-                            <div className={styles.mapOverlayText}>Click anywhere to drop the pin</div>
-                            <MapPin size={40} className={styles.mapPin} />
-                          </div>
-                          <small style={{ color: '#64748b', marginTop: '0.5rem', display: 'block' }}>Map visualization placeholder - Coordinates will be updated automatically on click.</small>
+                          <AdminLocationMap 
+                            lat={form.lat || null} 
+                            lng={form.lng || null} 
+                            onChange={(lat, lng) => setForm({...form, lat: parseFloat(lat.toFixed(6)), lng: parseFloat(lng.toFixed(6))})} 
+                          />
                         </div>
                       </div>
+
                     </>
                   )}
 
@@ -1551,7 +1604,7 @@ export default function BranchesAdmin() {
                               <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>PNG, JPG, PDF up to 5MB</div>
                             </label>
                             
-                            {((...args: any[]) => null as any)(form.qrCodeUrl, 'QR Code / Menu')}
+                            {renderFilePreview(form.qrCodeUrl, 'QR Code / Menu')}
                           </div>
                         )}
                       </div>
@@ -1598,7 +1651,7 @@ export default function BranchesAdmin() {
                               <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>PNG, JPG up to 5MB</div>
                             </label>
                             
-                            {((...args: any[]) => null as any)(form.brandLogoUrl, 'Brand Logo Preview')}
+                            {renderFilePreview(form.brandLogoUrl, 'Brand Logo Preview')}
                           </div>
 
                           <div className={styles.formGroupFull} style={{ margin: 0 }}>
@@ -1625,7 +1678,7 @@ export default function BranchesAdmin() {
                               <div style={{ fontWeight: 600, color: '#334155', fontSize: '0.9rem' }}>Click to upload Favicon (.ico, .png)</div>
                             </label>
                             
-                            {((...args: any[]) => null as any)(form.faviconUrl, 'Favicon')}
+                            {renderFilePreview(form.faviconUrl, 'Favicon')}
                           </div>
                         </div>
                       </div>
@@ -1680,7 +1733,7 @@ export default function BranchesAdmin() {
                           </div>
                           {form.fssaiDocUrl && (
                             <div style={{ marginTop: '-1rem' }}>
-                              {((...args: any[]) => null as any)(form.fssaiDocUrl, 'FSSAI Document Preview')}
+                              {renderFilePreview(form.fssaiDocUrl, 'FSSAI Document Preview')}
                             </div>
                           )}
 
@@ -1716,7 +1769,7 @@ export default function BranchesAdmin() {
                           </div>
                           {form.gstDocUrl && (
                             <div style={{ marginTop: '-1rem' }}>
-                              {((...args: any[]) => null as any)(form.gstDocUrl, 'GST Document Preview')}
+                              {renderFilePreview(form.gstDocUrl, 'GST Document Preview')}
                             </div>
                           )}
 
@@ -1752,7 +1805,7 @@ export default function BranchesAdmin() {
                           </div>
                           {form.panDocUrl && (
                             <div style={{ marginTop: '-1rem' }}>
-                              {((...args: any[]) => null as any)(form.panDocUrl, 'PAN Document Preview')}
+                              {renderFilePreview(form.panDocUrl, 'PAN Document Preview')}
                             </div>
                           )}
                         </div>
@@ -1840,11 +1893,11 @@ export default function BranchesAdmin() {
                   )}
                 </form>
 
-                <div className={styles.modalFooter}>
-                  <button type="button" className={styles.cancelBtn} onClick={() => setShowForm(false)} disabled={isSubmitting}>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)} disabled={isSubmitting}>
                     Cancel
                   </button>
-                  <button type="submit" form="branchForm" className={styles.saveBtn} disabled={isSubmitting}>
+                  <button type="submit" form="branchForm" className="btn btn-primary" disabled={isSubmitting}>
                     {isSubmitting ? (
                       <span style={{ display: 'flex', alignItems: 'center' }}>
                         <span className={styles.spinner}></span> Saving...
@@ -1860,8 +1913,8 @@ export default function BranchesAdmin() {
         </div>
       )}
       {deleteConfirmParentId && (
-        <div className={styles.modalOverlay} onClick={() => setDeleteConfirmParentId(null)} style={{ zIndex: 10000 }}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()} style={{ maxWidth: '400px', padding: '1.5rem', textAlign: 'center' }}>
+        <div className="modal-overlay" onClick={() => setDeleteConfirmParentId(null)} style={{ zIndex: 10000 }}>
+          <div className="modal modal-sm" onClick={e => e.stopPropagation()} style={{ padding: '1.5rem', textAlign: 'center' }}>
             <Trash2 size={48} color="#DC2626" style={{ margin: '0 auto 1rem' }} />
             <h3 style={{ fontSize: '1.25rem', color: '#1e293b', marginBottom: '0.5rem', fontWeight: 600 }}>Delete Parent Restaurant</h3>
             <p style={{ color: '#64748b', fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>

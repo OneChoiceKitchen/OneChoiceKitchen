@@ -251,6 +251,30 @@
   font-weight: 600;
 }
 
+.radioGroup {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0.5rem 0;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  color: #334155;
+  cursor: pointer;
+  user-select: none;
+}
+
+.radioLabel input[type="radio"] {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: #3b82f6;
+  cursor: pointer;
+  margin: 0;
+}
+
 .input {
   width: 100%;
   padding: 0.75rem 1rem;
@@ -279,6 +303,44 @@
 .testResult.testing { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
 .testResult.success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
 .testResult.error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+
+.instructionsBox {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.instructionsBox[open] {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+}
+
+.instructionsSummary {
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  outline: none;
+  font-size: 0.95rem;
+  user-select: none;
+}
+
+.instructionsSummary:hover {
+  color: #2563eb;
+}
+
+.instructionsBox ol {
+  margin: 0.75rem 0 0 0;
+  padding-left: 1.25rem;
+  color: #475569;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.instructionsBox li {
+  margin-bottom: 0.25rem;
+}
 
 .testBtnWrapper {
   display: flex;

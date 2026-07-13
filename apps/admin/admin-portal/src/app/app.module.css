@@ -193,6 +193,7 @@ body { background: var(--bg); color: var(--text); overflow: hidden; font-size: 1
   transition: all var(--t); user-select: none;
 }
 .hBtn:hover { background: var(--brand-blue-lt); color: var(--blue); }
+[data-theme="dark"] .hBtn:hover { color: var(--text); }
 
 /* Notification badge Ã¢â‚¬â€ red circle on top-right, clearly visible */
 .badge {
@@ -289,6 +290,7 @@ body { background: var(--bg); color: var(--text); overflow: hidden; font-size: 1
 .quickPanelTitle { padding: 0.625rem 1rem 0.375rem; font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text3); }
 .quickItem { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; font-size: 0.9rem; color: var(--text); cursor: pointer; transition: background var(--t); }
 .quickItem:hover { background: var(--bg); color: var(--blue); }
+[data-theme="dark"] .quickItem:hover { color: var(--text); }
 .quickItemIco { font-size: 1rem; width: 20px; text-align: center; }
 
 /* User profile */
@@ -349,6 +351,8 @@ body { background: var(--bg); color: var(--text); overflow: hidden; font-size: 1
 }
 .uItem:hover { background: var(--brand-blue-lt); color: var(--blue); }
 .uItem:hover .uItemIco { color: var(--blue); }
+[data-theme="dark"] .uItem:hover { color: var(--text); }
+[data-theme="dark"] .uItem:hover .uItemIco { color: var(--text); }
 .uItemToggle {
   display: flex; align-items: center; justify-content: space-between;
   padding: 0.45rem 1rem;
@@ -361,6 +365,8 @@ body { background: var(--bg); color: var(--text); overflow: hidden; font-size: 1
 .uLogout { color: #E31E24; font-weight: 600; }
 .uLogout:hover { background: #FEF1F1 !important; color: #B5171C; }
 .uLogout .uItemIco { color: #E31E24; }
+[data-theme="dark"] .uLogout:hover { background: var(--brand-red-lt) !important; color: #fca5a5; }
+[data-theme="dark"] .uLogout:hover .uItemIco { color: #fca5a5; }
 
 /* Toggle switch */
 .toggle { width: 32px; height: 18px; background: #cbd5e1; border-radius: 999px; position: relative; cursor: pointer; transition: background var(--t); flex-shrink: 0; }

@@ -30,7 +30,8 @@
       ".prisma/*": [
         "node_modules/.prisma/*",
         "node_modules/.pnpm/@prisma+client@7.8.0_prisma_740c3c6bd3867f866ac3f0580ec9b5f6/node_modules/.prisma/*"
-      ]
+      ],
+      "@org/frontend-platform": ["./libs/frontend-platform/src/index.ts"]
     }
   }
 }

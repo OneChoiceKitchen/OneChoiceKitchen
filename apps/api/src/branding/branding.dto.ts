@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyNullable } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class BrandingColorsDto {
   @ApiProperty({ example: '#2563EB' })
@@ -18,10 +18,10 @@ export class BrandingResponseDto {
   @ApiProperty({ example: 'One Choice Kitchen' })
   siteName!: string;
 
-  @ApiPropertyNullable({ type: String, example: '/branding/logo.svg' })
+  @ApiProperty({ type: String, nullable: true, example: '/branding/logo.svg' })
   logoUrl!: string | null;
 
-  @ApiPropertyNullable({ type: String, example: '/branding/favicon.ico' })
+  @ApiProperty({ type: String, nullable: true, example: '/branding/favicon.ico' })
   faviconUrl!: string | null;
 
   @ApiProperty({ type: BrandingColorsDto })

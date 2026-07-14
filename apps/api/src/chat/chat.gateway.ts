@@ -24,6 +24,7 @@ interface AuthenticatedSocket extends Socket {
   userRole?: string;
   userName?: string;
   userContext?: UserContext;
+  conversationIds?: string[];
 }
 
 @WebSocketGateway({
@@ -126,12 +127,16 @@ export class ChatGateway
         userContext.tenantId,
         userContext.isSuperAdmin,
       );
+      client.conversationIds = conversations;
       for (const convId of conversations) {
         await client.join([`conv:${convId}`, `room_${convId}`]);
       }
 
-      // Broadcast online status
-      this.server.emit('userOnline', { userId: user.id, userName: user.name });
+      if (conversations.length > 0) {
+        this.server
+          .to(conversations.map((conversationId) => `conv:${conversationId}`))
+          .emit('userOnline', { userId: user.id, userName: user.name });
+      }
       this.logger.log(`Connected: ${user.name} (${user.id}) via socket ${client.id}`);
     } catch (err) {
       this.logger.error('Connection error:', (err as Error).message);
@@ -147,7 +152,11 @@ export class ChatGateway
       sockets.delete(client.id);
       if (sockets.size === 0) {
         this.onlineUsers.delete(client.userId);
-        this.server.emit('userOffline', { userId: client.userId });
+        if (client.conversationIds?.length) {
+          this.server
+            .to(client.conversationIds.map((conversationId) => `conv:${conversationId}`))
+            .emit('userOffline', { userId: client.userId });
+        }
       }
     }
     this.logger.log(`Disconnected: ${client.userId} socket ${client.id}`);
@@ -174,6 +183,9 @@ export class ChatGateway
       return;
     }
     await client.join([`conv:${data.conversationId}`, `room_${data.conversationId}`]);
+    client.conversationIds = [
+      ...new Set([...(client.conversationIds ?? []), data.conversationId]),
+    ];
     client.emit('joinedConversation', { conversationId: data.conversationId });
   }
 
@@ -184,6 +196,9 @@ export class ChatGateway
   ) {
     client.leave(`conv:${data.conversationId}`);
     client.leave(`room_${data.conversationId}`);
+    client.conversationIds = client.conversationIds?.filter(
+      (conversationId) => conversationId !== data.conversationId,
+    );
   }
 
   @SubscribeMessage('sendMessage')
@@ -217,6 +232,7 @@ export class ChatGateway
       const message = await this.chatService.sendMessage({
         ...data,
         senderId: client.userId,
+        accessScope: this.accessScope(client),
       });
 
       // Check priority and send notification if urgent
@@ -254,11 +270,21 @@ export class ChatGateway
   }
 
   @SubscribeMessage('typing')
-  handleTyping(
+  async handleTyping(
     @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { conversationId: string; isTyping: boolean },
   ) {
     if (!client.userId) return;
+    const canAccess = await this.chatService.canAccessConversation(
+      client.userId,
+      data.conversationId,
+      client.userContext?.tenantId,
+      client.userContext?.isSuperAdmin,
+    );
+    if (!canAccess) {
+      client.emit('error', { message: 'Access denied to this conversation' });
+      return;
+    }
     client.to(`conv:${data.conversationId}`).emit('userTyping', {
       userId: client.userId,
       userName: client.userName,
@@ -270,10 +296,15 @@ export class ChatGateway
   @SubscribeMessage('markRead')
   async handleMarkRead(
     @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() data: { conversationId: string },
+    @MessageBody() data: { conversationId: string; lastReadMessageId?: string },
   ) {
     if (!client.userId) return;
-    await this.chatService.markConversationRead(data.conversationId, client.userId);
+    await this.chatService.markConversationRead(
+      data.conversationId,
+      client.userId,
+      data.lastReadMessageId,
+      this.accessScope(client),
+    );
     client.to(`conv:${data.conversationId}`).emit('messagesRead', {
       conversationId: data.conversationId,
       userId: client.userId,
@@ -287,8 +318,14 @@ export class ChatGateway
     @MessageBody() data: { messageId: string; emoji: string; conversationId: string },
   ) {
     if (!client.userId) return;
-    const updated = await this.chatService.toggleReaction(data.messageId, client.userId, data.emoji);
-    this.server.to(`conv:${data.conversationId}`).emit('reactionUpdated', {
+    const conversationId = await this.chatService.getMessageConversationId(data.messageId);
+    const updated = await this.chatService.toggleReaction(
+      data.messageId,
+      client.userId,
+      data.emoji,
+      this.accessScope(client),
+    );
+    this.server.to(`conv:${conversationId}`).emit('reactionUpdated', {
       messageId: data.messageId,
       reactions: updated,
     });
@@ -300,8 +337,12 @@ export class ChatGateway
     @MessageBody() data: { messageId: string; conversationId: string },
   ) {
     if (!client.userId) return;
-    await this.chatService.deleteMessage(data.messageId, client.userId);
-    this.server.to(`conv:${data.conversationId}`).emit('messageDeleted', {
+    const updated = await this.chatService.deleteMessage(
+      data.messageId,
+      client.userId,
+      this.accessScope(client),
+    );
+    this.server.to(`conv:${updated.conversationId}`).emit('messageDeleted', {
       messageId: data.messageId,
     });
   }
@@ -312,8 +353,13 @@ export class ChatGateway
     @MessageBody() data: { messageId: string; content: string; conversationId: string },
   ) {
     if (!client.userId) return;
-    const updated = await this.chatService.editMessage(data.messageId, client.userId, data.content);
-    this.server.to(`conv:${data.conversationId}`).emit('messageEdited', updated);
+    const updated = await this.chatService.editMessage(
+      data.messageId,
+      client.userId,
+      data.content,
+      this.accessScope(client),
+    );
+    this.server.to(`conv:${updated.conversationId}`).emit('messageEdited', updated);
   }
 
   // Called externally to notify users (e.g. support request approved)
@@ -339,5 +385,12 @@ export class ChatGateway
     if (role === 'RIDER') return PortalCode.RIDER;
     if (role === 'CUSTOMER') return PortalCode.WEB;
     return PortalCode.ADMIN;
+  }
+
+  private accessScope(client: AuthenticatedSocket) {
+    return {
+      tenantId: client.userContext?.tenantId,
+      isSuperAdmin: client.userContext?.isSuperAdmin,
+    };
   }
 }

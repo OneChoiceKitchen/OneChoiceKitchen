@@ -1,21 +1,35 @@
 import {
   Controller, Get, Post, Patch, Delete,
   Body, Param, Query, Req,
-  HttpCode, HttpStatus, StreamableFile, Res,
+  ForbiddenException, HttpCode, HttpStatus, StreamableFile, Res, UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { PortalCode } from '@prisma/client';
+import { JwtAuthGuard } from '../app/auth/jwt-auth.guard';
+import { Portals } from '../app/auth/portal.decorator';
+import { PortalGuard } from '../app/auth/portal.guard';
+import { TenantGuard } from '../app/auth/tenant.guard';
+import { UserContextGuard } from '../app/auth/user-context.guard';
 import { ChatService } from './chat.service';
 import type { Response } from 'express';
 
-// Simple auth guard using request headers
 function extractUser(req: any) {
-  // In production this would use AuthGuard from the existing auth module
-  // For now, we read user from the custom header set by auth middleware
-  return { id: req.user?.id || req.headers['x-user-id'], role: req.user?.role?.name || req.headers['x-user-role'] };
+  return {
+    id: req.userContext?.userId ?? req.user?.userId,
+    role: req.userContext?.roleNames?.[0] ?? req.user?.role,
+    tenantId: req.userContext?.tenantId ?? null,
+    isSuperAdmin: req.userContext?.isSuperAdmin ?? false,
+  };
+}
+
+function accessScope(user: ReturnType<typeof extractUser>) {
+  return { tenantId: user.tenantId, isSuperAdmin: user.isSuperAdmin };
 }
 
 @ApiTags('chat')
 @ApiBearerAuth()
+@Portals(PortalCode.ADMIN, PortalCode.PARTNER, PortalCode.RIDER)
+@UseGuards(JwtAuthGuard, UserContextGuard, PortalGuard, TenantGuard)
 @Controller('api/chat')
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
@@ -52,7 +66,11 @@ export class ChatController {
   @ApiOperation({ summary: 'Get my conversations with unread counts' })
   async getConversations(@Req() req: any) {
     const user = extractUser(req);
-    return this.chatService.getUserConversations(user.id);
+    return this.chatService.getUserConversations(
+      user.id,
+      user.tenantId,
+      user.isSuperAdmin,
+    );
   }
 
   @Post('conversations')
@@ -62,7 +80,7 @@ export class ChatController {
     @Req() req: any,
   ) {
     const user = extractUser(req);
-    return this.chatService.createConversation(body, user.id);
+    return this.chatService.createConversation(body, user.id, user.tenantId);
   }
 
   @Get('conversations/:id')
@@ -70,8 +88,13 @@ export class ChatController {
   async getConversation(@Param('id') id: string, @Req() req: any) {
     const user = extractUser(req);
     const conv = await this.chatService.getConversation(id);
-    const hasAccess = await this.chatService.canAccessConversation(user.id, id);
-    if (!hasAccess) return { error: 'Access denied' };
+    const hasAccess = await this.chatService.canAccessConversation(
+      user.id,
+      id,
+      user.tenantId,
+      user.isSuperAdmin,
+    );
+    if (!hasAccess) throw new ForbiddenException('Access denied');
     return conv;
   }
 
@@ -86,7 +109,13 @@ export class ChatController {
     @Req() req?: any,
   ) {
     const user = extractUser(req);
-    return this.chatService.getMessages(id, user.id, cursor, +limit);
+    return this.chatService.getMessages(
+      id,
+      user.id,
+      cursor,
+      +limit,
+      accessScope(user),
+    );
   }
 
   @Post('conversations/:id/messages')
@@ -97,21 +126,26 @@ export class ChatController {
     @Req() req: any,
   ) {
     const user = extractUser(req);
-    return this.chatService.sendMessage({ conversationId, senderId: user.id, ...body });
+    return this.chatService.sendMessage({
+      ...body,
+      conversationId,
+      senderId: user.id,
+      accessScope: accessScope(user),
+    });
   }
 
   @Get('conversations/:id/messages/search')
   @ApiOperation({ summary: 'Search within conversation' })
   async searchMessages(@Param('id') id: string, @Query('q') q: string, @Req() req: any) {
     const user = extractUser(req);
-    return this.chatService.searchMessages(id, user.id, q || '');
+    return this.chatService.searchMessages(id, user.id, q || '', accessScope(user));
   }
 
   @Get('conversations/:id/pinned')
   @ApiOperation({ summary: 'Get pinned messages' })
   async getPinnedMessages(@Param('id') id: string, @Req() req: any) {
     const user = extractUser(req);
-    return this.chatService.getPinnedMessages(id, user.id);
+    return this.chatService.getPinnedMessages(id, user.id, accessScope(user));
   }
 
   @Patch('conversations/:id/priority')
@@ -122,7 +156,12 @@ export class ChatController {
     @Req() req: any,
   ) {
     const user = extractUser(req);
-    return this.chatService.setConversationPriority(id, body.priority, user.id);
+    return this.chatService.setConversationPriority(
+      id,
+      body.priority,
+      user.id,
+      accessScope(user),
+    );
   }
 
   @Post('conversations/:id/archive')
@@ -130,7 +169,7 @@ export class ChatController {
   @ApiOperation({ summary: 'Archive conversation' })
   async archiveConversation(@Param('id') id: string, @Req() req: any) {
     const user = extractUser(req);
-    return this.chatService.archiveConversation(id, user.id);
+    return this.chatService.archiveConversation(id, user.id, accessScope(user));
   }
 
   @Post('conversations/:id/lock')
@@ -138,14 +177,19 @@ export class ChatController {
   @ApiOperation({ summary: 'Lock conversation (admin only)' })
   async lockConversation(@Param('id') id: string, @Req() req: any) {
     const user = extractUser(req);
-    return this.chatService.lockConversation(id, user.id);
+    return this.chatService.lockConversation(id, user.id, accessScope(user));
   }
 
   @Post('conversations/:id/participants')
   @ApiOperation({ summary: 'Add participant to group' })
   async addParticipant(@Param('id') id: string, @Body() body: { userId: string }, @Req() req: any) {
     const user = extractUser(req);
-    return this.chatService.addParticipant(id, body.userId, user.id);
+    return this.chatService.addParticipant(
+      id,
+      body.userId,
+      user.id,
+      accessScope(user),
+    );
   }
 
   @Delete('conversations/:id/participants/:userId')
@@ -156,7 +200,12 @@ export class ChatController {
     @Req() req: any,
   ) {
     const user = extractUser(req);
-    return this.chatService.removeParticipant(id, userId, user.id);
+    return this.chatService.removeParticipant(
+      id,
+      userId,
+      user.id,
+      accessScope(user),
+    );
   }
 
   // ── Messages ─────────────────────────────────────────────────────────────
@@ -165,14 +214,14 @@ export class ChatController {
   @ApiOperation({ summary: 'Edit message' })
   async editMessage(@Param('id') id: string, @Body() body: { content: string }, @Req() req: any) {
     const user = extractUser(req);
-    return this.chatService.editMessage(id, user.id, body.content);
+    return this.chatService.editMessage(id, user.id, body.content, accessScope(user));
   }
 
   @Delete('messages/:id')
   @ApiOperation({ summary: 'Delete message (soft)' })
   async deleteMessage(@Param('id') id: string, @Req() req: any) {
     const user = extractUser(req);
-    return this.chatService.deleteMessage(id, user.id);
+    return this.chatService.deleteMessage(id, user.id, accessScope(user));
   }
 
   @Post('messages/:id/pin')
@@ -180,7 +229,7 @@ export class ChatController {
   @ApiOperation({ summary: 'Pin message' })
   async pinMessage(@Param('id') id: string, @Req() req: any) {
     const user = extractUser(req);
-    return this.chatService.pinMessage(id, user.id);
+    return this.chatService.pinMessage(id, user.id, accessScope(user));
   }
 
   @Post('messages/:id/star')
@@ -188,7 +237,7 @@ export class ChatController {
   @ApiOperation({ summary: 'Star / unstar message' })
   async starMessage(@Param('id') id: string, @Req() req: any) {
     const user = extractUser(req);
-    return this.chatService.starMessage(id, user.id);
+    return this.chatService.starMessage(id, user.id, accessScope(user));
   }
 
   @Post('messages/:id/react')
@@ -196,14 +245,14 @@ export class ChatController {
   @ApiOperation({ summary: 'Toggle reaction on message' })
   async reactToMessage(@Param('id') id: string, @Body() body: { emoji: string }, @Req() req: any) {
     const user = extractUser(req);
-    return this.chatService.toggleReaction(id, user.id, body.emoji);
+    return this.chatService.toggleReaction(id, user.id, body.emoji, accessScope(user));
   }
 
   @Get('starred')
   @ApiOperation({ summary: 'Get my starred messages' })
   async getStarredMessages(@Req() req: any) {
     const user = extractUser(req);
-    return this.chatService.getStarredMessages(user.id);
+    return this.chatService.getStarredMessages(user.id, accessScope(user));
   }
 
   // ── Admin ────────────────────────────────────────────────────────────────
@@ -217,11 +266,15 @@ export class ChatController {
     @Req() req?: any,
   ) {
     const user = extractUser(req);
-    return this.chatService.getAllConversations(user.id, {
-      type,
-      priority,
-      isArchived: isArchived === 'true' ? true : isArchived === 'false' ? false : undefined,
-    });
+    return this.chatService.getAllConversations(
+      user.id,
+      {
+        type,
+        priority,
+        isArchived: isArchived === 'true' ? true : isArchived === 'false' ? false : undefined,
+      },
+      accessScope(user),
+    );
   }
 
   @Get('admin/export/:conversationId')
@@ -232,7 +285,11 @@ export class ChatController {
     @Req() req: any,
   ) {
     const user = extractUser(req);
-    const messages = await this.chatService.exportConversation(conversationId, user.id);
+    const messages = await this.chatService.exportConversation(
+      conversationId,
+      user.id,
+      accessScope(user),
+    );
     const json = JSON.stringify(messages, null, 2);
     const buffer = Buffer.from(json, 'utf8');
     res.setHeader('Content-Disposition', `attachment; filename="chat-${conversationId}.json"`);

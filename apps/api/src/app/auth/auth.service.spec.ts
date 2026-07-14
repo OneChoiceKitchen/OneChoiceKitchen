@@ -23,7 +23,12 @@ describe('AuthService', () => {
             },
             role: {
               findUnique: jest.fn(),
-            }
+            },
+            failedLoginAttempt: {
+              create: jest.fn(),
+              count: jest.fn(),
+              deleteMany: jest.fn(),
+            },
           },
         },
         {
@@ -53,15 +58,41 @@ describe('AuthService', () => {
   describe('login', () => {
     it('should return access token for valid credentials (hardcoded mock)', async () => {
       jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(null);
-      
+
       const result = await service.login('customer@test.com', 'test123');
       expect(result).toEqual({ access_token: 'test_token' });
     });
 
     it('should throw UnauthorizedException if user not found and not mock', async () => {
       jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(null);
-      
-      await expect(service.login('unknown@test.com', 'pass')).rejects.toThrow(UnauthorizedException);
+
+      await expect(service.login('unknown@test.com', 'pass')).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+
+    it('should allow admin demo login when cat_customers is not migrated locally', async () => {
+      jest
+        .spyOn(prismaService.user, 'findUnique')
+        .mockRejectedValue(
+          new Error('SQLITE_ERROR: no such table: main.cat_customers'),
+        );
+
+      const result = await service.login('admin@test.com', 'test123');
+
+      expect(result).toEqual({ access_token: 'test_token' });
+    });
+
+    it('should reject non-demo credentials when cat_customers is not migrated locally', async () => {
+      jest
+        .spyOn(prismaService.user, 'findUnique')
+        .mockRejectedValue(
+          new Error('SQLITE_ERROR: no such table: main.cat_customers'),
+        );
+
+      await expect(service.login('unknown@test.com', 'pass')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 });

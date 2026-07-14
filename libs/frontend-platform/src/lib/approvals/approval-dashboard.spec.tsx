@@ -78,9 +78,12 @@ describe('ApprovalDashboard', () => {
     fireEvent.click(screen.getAllByRole('button', { name: /approve/i })[0]);
 
     await waitFor(() => {
-      expect(client.post).toHaveBeenCalledWith('/approval-cases/case-1/advance', {
-        action: 'APPROVE',
-      });
+      expect(client.post).toHaveBeenCalledWith(
+        '/approval-cases/case-1/advance',
+        {
+          action: 'APPROVE',
+        },
+      );
     });
     expect(screen.queryByText('partner-100')).toBeNull();
   });
@@ -100,7 +103,9 @@ describe('ApprovalDashboard', () => {
     expect(
       await screen.findByText('Unable to load pending approval cases.'),
     ).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'SLA Approval Dashboard' })).toBeTruthy();
+    expect(
+      screen.getByRole('heading', { name: 'SLA Approval Dashboard' }),
+    ).toBeTruthy();
   });
 
   it('computes escalation-first SLA tone', () => {

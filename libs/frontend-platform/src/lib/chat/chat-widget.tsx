@@ -4,7 +4,10 @@ import { MessageCircle, Send, X } from 'lucide-react';
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
 
-import { useChatWebSocket, type UseChatWebSocketOptions } from './use-chat-websocket';
+import {
+  useChatWebSocket,
+  type UseChatWebSocketOptions,
+} from './use-chat-websocket';
 
 export interface ChatWidgetProps extends UseChatWebSocketOptions {
   title?: string;
@@ -83,13 +86,26 @@ const floatingButtonStyle: CSSProperties = {
   zIndex: 50,
 };
 
-function MessageBubble({ message }: { message: { content: string; senderName?: string | null; pending?: boolean; failed?: boolean } }) {
+function MessageBubble({
+  message,
+}: {
+  message: {
+    content: string;
+    senderName?: string | null;
+    pending?: boolean;
+    failed?: boolean;
+  };
+}) {
   return (
     <article
-      aria-label={message.senderName ? `Message from ${message.senderName}` : 'Message'}
+      aria-label={
+        message.senderName ? `Message from ${message.senderName}` : 'Message'
+      }
       style={{
         alignSelf: message.senderName ? 'flex-start' : 'flex-end',
-        background: message.failed ? 'var(--brand-red-lt)' : 'var(--brand-blue-lt)',
+        background: message.failed
+          ? 'var(--brand-red-lt)'
+          : 'var(--brand-blue-lt)',
         border: '1px solid var(--bdr)',
         borderRadius: 'var(--r-md)',
         maxWidth: '85%',
@@ -113,7 +129,10 @@ export function ChatWidget({
   const [isOpen, setIsOpen] = useState(variant === 'inline');
   const [draft, setDraft] = useState('');
   const { messages, isConnected, isLoadingHistory, error, sendMessage } =
-    useChatWebSocket({ ...hookOptions, enabled: isOpen && hookOptions.enabled !== false });
+    useChatWebSocket({
+      ...hookOptions,
+      enabled: isOpen && hookOptions.enabled !== false,
+    });
 
   const handleSend = async () => {
     const nextMessage = draft.trim();
@@ -124,7 +143,11 @@ export function ChatWidget({
 
   if (!isOpen && variant === 'floating') {
     return (
-      <button type="button" onClick={() => setIsOpen(true)} style={floatingButtonStyle}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(true)}
+        style={floatingButtonStyle}
+      >
         <MessageCircle size={18} aria-hidden="true" /> Open Chat
       </button>
     );
@@ -145,7 +168,11 @@ export function ChatWidget({
             type="button"
             aria-label="Close chat"
             onClick={() => setIsOpen(false)}
-            style={{ ...buttonStyle, background: 'transparent', color: 'var(--surf)' }}
+            style={{
+              ...buttonStyle,
+              background: 'transparent',
+              color: 'var(--surf)',
+            }}
           >
             <X size={18} aria-hidden="true" /> Close
           </button>
@@ -153,10 +180,14 @@ export function ChatWidget({
       </div>
 
       {error ? <div role="alert">{error}</div> : null}
-      {isLoadingHistory ? <div role="status">Loading chat history...</div> : null}
+      {isLoadingHistory ? (
+        <div role="status">Loading chat history...</div>
+      ) : null}
 
       <div role="log" aria-live="polite" style={messagesStyle}>
-        {!isLoadingHistory && messages.length === 0 ? <p>No messages yet.</p> : null}
+        {!isLoadingHistory && messages.length === 0 ? (
+          <p>No messages yet.</p>
+        ) : null}
         {messages.map((message) => (
           <MessageBubble key={message.id} message={message} />
         ))}
@@ -189,7 +220,12 @@ export function ChatWidget({
         <button
           type="submit"
           disabled={!draft.trim()}
-          style={{ ...buttonStyle, alignSelf: 'end', background: 'var(--brand-blue)', color: 'var(--surf)' }}
+          style={{
+            ...buttonStyle,
+            alignSelf: 'end',
+            background: 'var(--brand-blue)',
+            color: 'var(--surf)',
+          }}
         >
           <Send size={16} aria-hidden="true" /> Send Message
         </button>

@@ -74,15 +74,20 @@ function mergeEndpoints(
   return { ...DEFAULT_ENDPOINTS, ...overrides };
 }
 
-function normalizeCases(data: ApprovalCaseRecord[] | { items?: ApprovalCaseRecord[] }) {
-  return Array.isArray(data) ? data : data.items ?? [];
+function normalizeCases(
+  data: ApprovalCaseRecord[] | { items?: ApprovalCaseRecord[] },
+) {
+  return Array.isArray(data) ? data : (data.items ?? []);
 }
 
 export function useApprovalCases({
   client = apiClient,
   endpoints,
 }: UseApprovalCasesOptions = {}): UseApprovalCasesResult {
-  const resolvedEndpoints = useMemo(() => mergeEndpoints(endpoints), [endpoints]);
+  const resolvedEndpoints = useMemo(
+    () => mergeEndpoints(endpoints),
+    [endpoints],
+  );
   const [cases, setCases] = useState<ApprovalCaseRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -92,9 +97,9 @@ export function useApprovalCases({
     setIsLoading(true);
     setError(null);
     try {
-      const response = await client.get<ApprovalCaseRecord[] | { items?: ApprovalCaseRecord[] }>(
-        resolvedEndpoints.list,
-      );
+      const response = await client.get<
+        ApprovalCaseRecord[] | { items?: ApprovalCaseRecord[] }
+      >(resolvedEndpoints.list);
       setCases(normalizeCases(response.data));
     } catch {
       setError('Unable to load pending approval cases.');
@@ -236,7 +241,11 @@ export function ApprovalDashboard({
           <h2 id="approval-dashboard-title">SLA Approval Dashboard</h2>
           <p>Review onboarding and subscription requests waiting for action.</p>
         </div>
-        <button type="button" onClick={() => void refresh()} style={buttonBaseStyle}>
+        <button
+          type="button"
+          onClick={() => void refresh()}
+          style={buttonBaseStyle}
+        >
           <RefreshCw size={16} aria-hidden="true" /> Refresh
         </button>
       </div>
@@ -269,7 +278,9 @@ export function ApprovalDashboard({
                   <tr key={approvalCase.id} style={slaStyle(tone)}>
                     <td style={cellStyle}>{formatToken(approvalCase.type)}</td>
                     <td style={cellStyle}>{approvalCase.referenceId}</td>
-                    <td style={cellStyle}>{formatToken(approvalCase.currentStage)}</td>
+                    <td style={cellStyle}>
+                      {formatToken(approvalCase.currentStage)}
+                    </td>
                     <td style={cellStyle}>{formatDate(approvalCase.dueAt)}</td>
                     <td style={cellStyle}>{statusLabel(tone)}</td>
                     <td style={cellStyle}>
@@ -277,7 +288,9 @@ export function ApprovalDashboard({
                         <button
                           type="button"
                           disabled={isActing}
-                          onClick={() => void advanceCase(approvalCase.id, 'APPROVE')}
+                          onClick={() =>
+                            void advanceCase(approvalCase.id, 'APPROVE')
+                          }
                           style={{
                             ...buttonBaseStyle,
                             background: 'var(--brand-blue)',
@@ -289,7 +302,9 @@ export function ApprovalDashboard({
                         <button
                           type="button"
                           disabled={isActing}
-                          onClick={() => void advanceCase(approvalCase.id, 'REJECT')}
+                          onClick={() =>
+                            void advanceCase(approvalCase.id, 'REJECT')
+                          }
                           style={{
                             ...buttonBaseStyle,
                             background: 'var(--brand-red-lt)',

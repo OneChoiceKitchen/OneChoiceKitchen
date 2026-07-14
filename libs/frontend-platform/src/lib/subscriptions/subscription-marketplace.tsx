@@ -59,17 +59,20 @@ const DEFAULT_ENDPOINTS: MarketplaceEndpoints = {
   subscriptionApproval: '/approval-cases/subscription',
 };
 
-function normalizeModules(data: ModuleCatalogItem[] | { items?: ModuleCatalogItem[] }) {
-  const modules = Array.isArray(data) ? data : data.items ?? [];
+function normalizeModules(
+  data: ModuleCatalogItem[] | { items?: ModuleCatalogItem[] },
+) {
+  const modules = Array.isArray(data) ? data : (data.items ?? []);
   return [...modules].sort(
-    (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name),
+    (a, b) =>
+      (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name),
   );
 }
 
 function normalizeEntitlements(
   data: TenantEntitlementSummary[] | { items?: TenantEntitlementSummary[] },
 ) {
-  return Array.isArray(data) ? data : data.items ?? [];
+  return Array.isArray(data) ? data : (data.items ?? []);
 }
 
 function entitlementKey(module: ModuleCatalogItem): string[] {
@@ -80,7 +83,9 @@ function isLocked(level: EntitlementLevel): boolean {
   return level === 'PREVIEW';
 }
 
-async function defaultCheckout(module: ModuleCatalogItem): Promise<CheckoutResult> {
+async function defaultCheckout(
+  module: ModuleCatalogItem,
+): Promise<CheckoutResult> {
   return { paymentReference: `stub-checkout-${module.id}` };
 }
 
@@ -144,10 +149,14 @@ export function SubscriptionMarketplace({
     [endpoints],
   );
   const [modules, setModules] = useState<ModuleCatalogItem[]>([]);
-  const [entitlements, setEntitlements] = useState<Record<string, EntitlementLevel>>({});
+  const [entitlements, setEntitlements] = useState<
+    Record<string, EntitlementLevel>
+  >({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [subscribingModuleId, setSubscribingModuleId] = useState<string | null>(null);
+  const [subscribingModuleId, setSubscribingModuleId] = useState<string | null>(
+    null,
+  );
   const [notice, setNotice] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
@@ -158,16 +167,17 @@ export function SubscriptionMarketplace({
         client.get<ModuleCatalogItem[] | { items?: ModuleCatalogItem[] }>(
           resolvedEndpoints.modules,
         ),
-        client.get<TenantEntitlementSummary[] | { items?: TenantEntitlementSummary[] }>(
-          resolvedEndpoints.entitlements,
-        ),
+        client.get<
+          TenantEntitlementSummary[] | { items?: TenantEntitlementSummary[] }
+        >(resolvedEndpoints.entitlements),
       ]);
       const nextModules = normalizeModules(modulesResponse.data);
-      const nextEntitlements = normalizeEntitlements(entitlementsResponse.data).reduce<
-        Record<string, EntitlementLevel>
-      >((acc, entitlement) => {
+      const nextEntitlements = normalizeEntitlements(
+        entitlementsResponse.data,
+      ).reduce<Record<string, EntitlementLevel>>((acc, entitlement) => {
         acc[entitlement.moduleId] = entitlement.accessLevel;
-        if (entitlement.moduleCode) acc[entitlement.moduleCode] = entitlement.accessLevel;
+        if (entitlement.moduleCode)
+          acc[entitlement.moduleCode] = entitlement.accessLevel;
         return acc;
       }, {});
 
@@ -219,20 +229,35 @@ export function SubscriptionMarketplace({
   );
 
   return (
-    <section aria-labelledby="subscription-marketplace-title" style={shellStyle}>
-      <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+    <section
+      aria-labelledby="subscription-marketplace-title"
+      style={shellStyle}
+    >
+      <div
+        style={{
+          alignItems: 'center',
+          display: 'flex',
+          justifyContent: 'space-between',
+        }}
+      >
         <div>
           <h2 id="subscription-marketplace-title">Subscription Marketplace</h2>
           <p>Review available platform modules and request access upgrades.</p>
         </div>
-        <button type="button" onClick={() => void refresh()} style={secondaryButtonStyle}>
+        <button
+          type="button"
+          onClick={() => void refresh()}
+          style={secondaryButtonStyle}
+        >
           <RefreshCw size={16} aria-hidden="true" /> Refresh
         </button>
       </div>
 
       {error ? <div role="alert">{error}</div> : null}
       {notice ? <div role="status">{notice}</div> : null}
-      {isLoading ? <div role="status">Loading subscription marketplace...</div> : null}
+      {isLoading ? (
+        <div role="status">Loading subscription marketplace...</div>
+      ) : null}
 
       {!isLoading && modules.length === 0 ? (
         <div role="status">No modules are available.</div>
@@ -240,14 +265,27 @@ export function SubscriptionMarketplace({
 
       <div style={gridStyle}>
         {modules.map((module) => {
-          const accessLevel = entitlements[module.code] ?? entitlements[module.id] ?? 'PREVIEW';
+          const accessLevel =
+            entitlements[module.code] ?? entitlements[module.id] ?? 'PREVIEW';
           const locked = isLocked(accessLevel);
           return (
-            <article key={module.id} aria-label={`${module.name} module`} style={cardStyle}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-3)' }}>
+            <article
+              key={module.id}
+              aria-label={`${module.name} module`}
+              style={cardStyle}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  gap: 'var(--sp-3)',
+                }}
+              >
                 <div>
                   <h3>{module.name}</h3>
-                  <p>{module.description ?? 'Enterprise hospitality module.'}</p>
+                  <p>
+                    {module.description ?? 'Enterprise hospitality module.'}
+                  </p>
                 </div>
                 {locked ? <Lock size={20} aria-label="Preview access" /> : null}
               </div>

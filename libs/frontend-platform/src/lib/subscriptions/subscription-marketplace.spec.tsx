@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 
 import { authStore } from '../auth/auth-store';
 import type {
@@ -36,12 +42,17 @@ function createClient(options?: {
 }): MarketplaceClient & { get: jest.Mock; post: jest.Mock } {
   const modules = options?.modules ?? MODULES;
   const entitlements = options?.entitlements ?? ENTITLEMENTS;
-  return {
-    get: jest.fn((url: string) => {
-      if (url.includes('module')) return Promise.resolve({ data: modules });
-      return Promise.resolve({ data: entitlements });
+  const client = {
+    get: jest.fn(async (url: string) => ({
+      data: url.includes('module') ? modules : entitlements,
+    })),
+    post: jest.fn().mockResolvedValue({
+      data: { id: 'approval-1', status: 'PENDING' },
     }),
-    post: jest.fn().mockResolvedValue({ data: { id: 'approval-1', status: 'PENDING' } }),
+  };
+  return client as unknown as MarketplaceClient & {
+    get: jest.Mock;
+    post: jest.Mock;
   };
 }
 
@@ -52,19 +63,30 @@ describe('SubscriptionMarketplace', () => {
     render(<SubscriptionMarketplace client={createClient()} />);
 
     expect(await screen.findByLabelText('CRM module')).toBeTruthy();
-    expect(screen.getByLabelText('HRMS module')).toBeTruthy();
+    const hrmsModule = screen.getByLabelText('HRMS module');
+    expect(hrmsModule).toBeTruthy();
     expect(screen.getByText('Included in your subscription.')).toBeTruthy();
-    expect(screen.getByRole('button', { name: /subscribe/i })).toBeTruthy();
-    expect(screen.getByRole('note', { name: 'HRMS subscription required' })).toBeTruthy();
+    expect(
+      within(hrmsModule).getByRole('button', { name: /^subscribe$/i }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole('note', { name: 'HRMS subscription required' }),
+    ).toBeTruthy();
   });
 
   it('runs checkout and creates a subscription approval case', async () => {
     const client = createClient();
-    const onCheckout = jest.fn().mockResolvedValue({ paymentReference: 'payment-1' });
+    const onCheckout = jest
+      .fn()
+      .mockResolvedValue({ paymentReference: 'payment-1' });
     render(<SubscriptionMarketplace client={client} onCheckout={onCheckout} />);
 
     await screen.findByLabelText('HRMS module');
-    fireEvent.click(screen.getByRole('button', { name: /subscribe/i }));
+    fireEvent.click(
+      within(screen.getByLabelText('HRMS module')).getByRole('button', {
+        name: /^subscribe$/i,
+      }),
+    );
 
     await waitFor(() => {
       expect(onCheckout).toHaveBeenCalledWith(
@@ -92,7 +114,9 @@ describe('SubscriptionMarketplace', () => {
 
   it('shows empty and error states', async () => {
     const emptyClient = createClient({ modules: [], entitlements: [] });
-    const { unmount } = render(<SubscriptionMarketplace client={emptyClient} />);
+    const { unmount } = render(
+      <SubscriptionMarketplace client={emptyClient} />,
+    );
 
     expect(await screen.findByText('No modules are available.')).toBeTruthy();
     unmount();

@@ -1,9 +1,20 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 
 import { authStore } from '../auth/auth-store';
 import type { UserContextResponse } from '../auth/user-context.types';
 import { ChatWidget } from './chat-widget';
-import type { ChatMessage, ChatRestClient, ChatSocket, ChatSocketAck } from './use-chat-websocket';
+import type {
+  ChatMessage,
+  ChatRestClient,
+  ChatSocket,
+  ChatSocketAck,
+} from './use-chat-websocket';
 
 const USER_CONTEXT: UserContextResponse = {
   userId: 'user-1',
@@ -35,12 +46,18 @@ class FakeSocket implements ChatSocket {
     }
     this.handlers.set(
       event,
-      (this.handlers.get(event) ?? []).filter((handler) => handler !== listener),
+      (this.handlers.get(event) ?? []).filter(
+        (handler) => handler !== listener,
+      ),
     );
     return this;
   }
 
-  emit(event: string, payload?: unknown, acknowledgement?: (ack: ChatSocketAck) => void): ChatSocket {
+  emit(
+    event: string,
+    payload?: unknown,
+    acknowledgement?: (ack: ChatSocketAck) => void,
+  ): ChatSocket {
     this.emitted.push({ event, payload });
     if (event === 'sendMessage') {
       acknowledgement?.({ success: true, messageId: 'message-server-1' });
@@ -79,10 +96,15 @@ function createRestClient(messages: ChatMessage[] = []): ChatRestClient & {
 
 describe('ChatWidget', () => {
   beforeEach(() => {
-    authStore.setSession({ accessToken: 'jwt-token', userContext: USER_CONTEXT });
+    authStore.setSession({
+      accessToken: 'jwt-token',
+      userContext: USER_CONTEXT,
+    });
   });
 
-  afterEach(() => authStore.clearSession());
+  afterEach(() => {
+    act(() => authStore.clearSession());
+  });
 
   it('opens floating chat and authenticates the socket with portal context', async () => {
     const socket = new FakeSocket();

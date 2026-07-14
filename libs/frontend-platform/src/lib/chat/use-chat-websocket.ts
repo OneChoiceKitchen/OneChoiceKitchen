@@ -44,7 +44,9 @@ export interface ChatSocketFactoryOptions {
   };
 }
 
-export type ChatSocketFactory = (options: ChatSocketFactoryOptions) => ChatSocket;
+export type ChatSocketFactory = (
+  options: ChatSocketFactoryOptions,
+) => ChatSocket;
 
 export interface ChatRestClient {
   get<T>(url: string): Promise<{ data: T }>;
@@ -68,7 +70,10 @@ export interface UseChatWebSocketResult {
   sendMessage: (content: string) => Promise<void>;
 }
 
-function defaultSocketFactory({ url, auth }: ChatSocketFactoryOptions): ChatSocket {
+function defaultSocketFactory({
+  url,
+  auth,
+}: ChatSocketFactoryOptions): ChatSocket {
   return io(url, {
     auth,
     transports: ['websocket', 'polling'],
@@ -80,7 +85,7 @@ function messageEndpoint(conversationId: string): string {
 }
 
 function normalizeMessages(data: ChatMessage[] | { items?: ChatMessage[] }) {
-  return Array.isArray(data) ? data : data.items ?? [];
+  return Array.isArray(data) ? data : (data.items ?? []);
 }
 
 function isChatMessage(value: unknown): value is ChatMessage {
@@ -94,7 +99,9 @@ function isChatMessage(value: unknown): value is ChatMessage {
 }
 
 function upsertMessage(messages: ChatMessage[], nextMessage: ChatMessage) {
-  const existingIndex = messages.findIndex((message) => message.id === nextMessage.id);
+  const existingIndex = messages.findIndex(
+    (message) => message.id === nextMessage.id,
+  );
   if (existingIndex >= 0) {
     return messages.map((message, index) =>
       index === existingIndex ? { ...message, ...nextMessage } : message,
@@ -131,7 +138,9 @@ export function useChatWebSocket({
     let cancelled = false;
     setIsLoadingHistory(true);
     void restClient
-      .get<ChatMessage[] | { items?: ChatMessage[] }>(messageEndpoint(conversationId))
+      .get<ChatMessage[] | { items?: ChatMessage[] }>(
+        messageEndpoint(conversationId),
+      )
       .then((response) => {
         if (!cancelled) setMessages(normalizeMessages(response.data));
       })
@@ -172,7 +181,8 @@ export function useChatWebSocket({
     };
     const handleDisconnect = () => setIsConnected(false);
     const handleNewMessage = (payload?: unknown) => {
-      if (!isChatMessage(payload) || payload.conversationId !== conversationId) return;
+      if (!isChatMessage(payload) || payload.conversationId !== conversationId)
+        return;
       setMessages((current) => upsertMessage(current, payload));
     };
     const handleError = () => setError('Chat connection error.');
@@ -193,7 +203,14 @@ export function useChatWebSocket({
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [authState.accessToken, authState.userContext, conversationId, enabled, socketFactory, socketUrl]);
+  }, [
+    authState.accessToken,
+    authState.userContext,
+    conversationId,
+    enabled,
+    socketFactory,
+    socketUrl,
+  ]);
 
   const sendMessage = useCallback(
     async (content: string) => {
@@ -226,7 +243,11 @@ export function useChatWebSocket({
               setMessages((current) =>
                 current.map((message) =>
                   message.id === optimisticId
-                    ? { ...message, id: ack.messageId ?? optimisticId, pending: false }
+                    ? {
+                        ...message,
+                        id: ack.messageId ?? optimisticId,
+                        pending: false,
+                      }
                     : message,
                 ),
               );
@@ -247,13 +268,18 @@ export function useChatWebSocket({
       }
 
       try {
-        const response = await restClient.post<ChatMessage>(messageEndpoint(conversationId), {
-          content: trimmed,
-          type: 'TEXT',
-        });
+        const response = await restClient.post<ChatMessage>(
+          messageEndpoint(conversationId),
+          {
+            content: trimmed,
+            type: 'TEXT',
+          },
+        );
         setMessages((current) =>
           current.map((message) =>
-            message.id === optimisticId ? { ...response.data, pending: false } : message,
+            message.id === optimisticId
+              ? { ...response.data, pending: false }
+              : message,
           ),
         );
       } catch {

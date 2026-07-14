@@ -51,6 +51,9 @@ import { HallBookingsModule } from '../hall-bookings/hall-bookings.module';
 import { EventCategoriesModule } from '../event-categories/event-categories.module';
 import { ChatModule } from '../chat/chat.module';
 import { PartnerPermissionsModule } from '../partner-permissions/partner-permissions.module';
+import { SecurityContextModule } from './auth/security-context.module';
+import { ApprovalWorkflowModule } from '../approval-workflow/approval-workflow.module';
+import { BrandingModule } from '../branding/branding.module';
 
 @Module({
   imports: [
@@ -99,6 +102,9 @@ import { PartnerPermissionsModule } from '../partner-permissions/partner-permiss
     HallBookingsModule,
     ChatModule,
     PartnerPermissionsModule,
+    SecurityContextModule,
+    ApprovalWorkflowModule,
+    BrandingModule,
     ScheduleModule.forRoot()
   ],
   controllers: [AppController, SeoController, MenuController],

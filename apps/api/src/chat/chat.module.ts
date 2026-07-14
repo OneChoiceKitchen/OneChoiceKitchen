@@ -7,17 +7,20 @@ import { AiChatService } from './ai-chat.service';
 import { AiChatController } from './ai-chat.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { getJwtSecret } from '../config/jwt.config';
+import { ChatEventsService } from './chat-events.service';
+import { SecurityContextModule } from '../app/auth/security-context.module';
 
 @Module({
   imports: [
     PrismaModule,
+    SecurityContextModule,
     JwtModule.register({
       secret: getJwtSecret(),
       signOptions: { expiresIn: '1d' },
     }),
   ],
-  providers: [ChatGateway, ChatService, AiChatService],
+  providers: [ChatEventsService, ChatGateway, ChatService, AiChatService],
   controllers: [ChatController, AiChatController],
-  exports: [ChatService, AiChatService],
+  exports: [ChatService, AiChatService, ChatEventsService],
 })
 export class ChatModule {}

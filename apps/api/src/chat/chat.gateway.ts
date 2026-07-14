@@ -7,14 +7,23 @@ import {
   MessageBody,
   ConnectedSocket,
 } from '@nestjs/websockets';
+import { Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { PortalCode } from '@prisma/client';
+import type { Subscription } from 'rxjs';
 import { Server, Socket } from 'socket.io';
+import { UserContextResolverService } from '../app/auth/user-context-resolver.service';
+import type { UserContext } from '../app/auth/user-context.types';
+import {
+  ChatEventsService,
+  type ChatMessageCreatedEvent,
+} from './chat-events.service';
 import { ChatService } from './chat.service';
-import { Logger } from '@nestjs/common';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
   userRole?: string;
   userName?: string;
+  userContext?: UserContext;
 }
 
 @WebSocketGateway({
@@ -34,18 +43,36 @@ interface AuthenticatedSocket extends Socket {
   namespace: '/chat',
   transports: ['websocket', 'polling'],
 })
-export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class ChatGateway
+  implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit, OnModuleDestroy
+{
   @WebSocketServer()
   server!: Server;
 
   private readonly logger = new Logger(ChatGateway.name);
   private readonly onlineUsers = new Map<string, Set<string>>(); // userId -> Set<socketId>
+  private messageSubscription?: Subscription;
 
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly chatEvents: ChatEventsService,
+    private readonly userContextResolver: UserContextResolverService,
+  ) {}
+
+  onModuleInit(): void {
+    this.messageSubscription = this.chatEvents.messageCreated$.subscribe((event) =>
+      this.handleNewMessage(event),
+    );
+  }
+
+  onModuleDestroy(): void {
+    this.messageSubscription?.unsubscribe();
+  }
 
   async handleConnection(client: AuthenticatedSocket) {
     try {
-      // Extract token from handshake
+      // Socket JWT authentication and Portal/Tenant validation must happen here,
+      // before the socket is allowed to join any conversation room.
       const token =
         client.handshake.auth?.token ||
         client.handshake.headers?.authorization?.replace('Bearer ', '');
@@ -61,9 +88,31 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         return;
       }
 
+      const requestedPortal =
+        this.handshakeString(client.handshake.auth?.portalCode) ??
+        this.handshakeString(client.handshake.headers['x-portal-code']) ??
+        this.defaultPortalForRole(user.role?.name);
+      const requestedTenantId =
+        this.handshakeString(client.handshake.auth?.tenantId) ??
+        this.handshakeString(client.handshake.headers['x-tenant-id']);
+      const userContext = await this.userContextResolver.resolve(
+        {
+          userId: user.id,
+          email: user.email,
+          role: user.role?.name,
+          restaurantId: user.restaurantId,
+        },
+        {
+          expectedPortals: [PortalCode.ADMIN, PortalCode.PARTNER, PortalCode.RIDER],
+          requestedPortal,
+          requestedTenantId,
+        },
+      );
+
       client.userId = user.id;
       client.userRole = user.role?.name || 'CUSTOMER';
       client.userName = user.name;
+      client.userContext = userContext;
 
       // Track online status
       if (!this.onlineUsers.has(user.id)) {
@@ -72,9 +121,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.onlineUsers.get(user.id)!.add(client.id);
 
       // Auto-join all conversations the user is part of
-      const conversations = await this.chatService.getUserConversationIds(user.id);
+      const conversations = await this.chatService.getUserConversationIds(
+        user.id,
+        userContext.tenantId,
+        userContext.isSuperAdmin,
+      );
       for (const convId of conversations) {
-        client.join(`conv:${convId}`);
+        await client.join([`conv:${convId}`, `room_${convId}`]);
       }
 
       // Broadcast online status
@@ -113,12 +166,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const canAccess = await this.chatService.canAccessConversation(
       client.userId,
       data.conversationId,
+      client.userContext?.tenantId,
+      client.userContext?.isSuperAdmin,
     );
     if (!canAccess) {
       client.emit('error', { message: 'Access denied to this conversation' });
       return;
     }
-    client.join(`conv:${data.conversationId}`);
+    await client.join([`conv:${data.conversationId}`, `room_${data.conversationId}`]);
     client.emit('joinedConversation', { conversationId: data.conversationId });
   }
 
@@ -128,6 +183,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() data: { conversationId: string },
   ) {
     client.leave(`conv:${data.conversationId}`);
+    client.leave(`room_${data.conversationId}`);
   }
 
   @SubscribeMessage('sendMessage')
@@ -147,16 +203,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     if (!client.userId) return;
     try {
+      const canAccess = await this.chatService.canAccessConversation(
+        client.userId,
+        data.conversationId,
+        client.userContext?.tenantId,
+        client.userContext?.isSuperAdmin,
+      );
+      if (!canAccess) {
+        client.emit('error', { message: 'Access denied to this conversation' });
+        return { success: false, error: 'Access denied to this conversation' };
+      }
+
       const message = await this.chatService.sendMessage({
         ...data,
         senderId: client.userId,
-      });
-
-      // Broadcast to all room participants
-      this.server.to(`conv:${data.conversationId}`).emit('newMessage', {
-        ...message,
-        senderName: client.userName,
-        isOnline: this.isOnline(client.userId),
       });
 
       // Check priority and send notification if urgent
@@ -175,6 +235,22 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.emit('error', { message: error.message ?? 'An error occurred' });
       return { success: false, error: error.message };
     }
+  }
+
+  handleNewMessage(event: ChatMessageCreatedEvent): void {
+    if (!this.server) return;
+
+    const message = event.message as {
+      sender?: { id?: string; name?: string } | null;
+      [key: string]: unknown;
+    };
+    this.server
+      .to([`conv:${event.conversationId}`, `room_${event.conversationId}`])
+      .emit('newMessage', {
+        ...message,
+        senderName: message.sender?.name,
+        isOnline: message.sender?.id ? this.isOnline(message.sender.id) : false,
+      });
   }
 
   @SubscribeMessage('typing')
@@ -252,5 +328,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   getOnlineUsers(): string[] {
     return [...this.onlineUsers.keys()];
+  }
+
+  private handshakeString(value: unknown): string | undefined {
+    return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+  }
+
+  private defaultPortalForRole(role?: string): PortalCode {
+    if (role === 'PARTNER') return PortalCode.PARTNER;
+    if (role === 'RIDER') return PortalCode.RIDER;
+    if (role === 'CUSTOMER') return PortalCode.WEB;
+    return PortalCode.ADMIN;
   }
 }

@@ -1,6 +1,54 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import {
+  ConversationStatus,
+  ConversationType,
+  MembershipStatus,
+  ParticipantRole,
+  PortalCode,
+  type Prisma,
+} from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { ChatEventsService } from './chat-events.service';
+
+interface LegacyCreateConversationDto {
+  type: 'DIRECT' | 'GROUP';
+  participantIds: string[];
+  name?: string;
+  description?: string;
+}
+
+interface SendMessageDto {
+  conversationId: string;
+  senderId: string;
+  content: string;
+  type?: string;
+  replyToId?: string;
+  fileUrl?: string;
+  fileName?: string;
+  fileSize?: number;
+  fileMime?: string;
+}
+
+type SentChatMessage = Prisma.ChatMessageGetPayload<{
+  include: {
+    sender: { select: { id: true; name: true; profilePhoto: true } };
+    replyTo: {
+      select: {
+        id: true;
+        content: true;
+        sender: { select: { name: true } };
+      };
+    };
+  };
+}>;
 
 // RBAC permission matrix for internal chat
 const CHAT_PERMISSIONS: Record<string, string[]> = {
@@ -21,6 +69,7 @@ export class ChatService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly chatEvents: ChatEventsService,
   ) {}
 
   // ── Auth ──────────────────────────────────────────────────────────────────
@@ -32,7 +81,7 @@ export class ChatService {
         where: { id: decoded.sub || decoded.userId || decoded.id },
         include: { role: true },
       });
-      return user;
+      return user?.isActive && !user.isLocked ? user : null;
     } catch {
       return null;
     }
@@ -133,10 +182,33 @@ export class ChatService {
 
   // ── Conversations ─────────────────────────────────────────────────────────
 
+  async createConversation(dto: LegacyCreateConversationDto, creatorId: string): Promise<unknown>;
   async createConversation(
-    dto: { type: 'DIRECT' | 'GROUP'; participantIds: string[]; name?: string; description?: string },
-    creatorId: string,
-  ) {
+    type: ConversationType,
+    tenantId: string | null,
+    participantUserIds: string[],
+  ): Promise<unknown>;
+  async createConversation(
+    dtoOrType: LegacyCreateConversationDto | ConversationType,
+    creatorIdOrTenantId: string | null,
+    participantUserIds?: string[],
+  ): Promise<unknown> {
+    if (typeof dtoOrType === 'string') {
+      return this.createTenantConversation(
+        dtoOrType,
+        creatorIdOrTenantId,
+        participantUserIds ?? [],
+      );
+    }
+
+    if (!creatorIdOrTenantId) {
+      throw new BadRequestException('Conversation creator is required');
+    }
+
+    return this.createLegacyConversation(dtoOrType, creatorIdOrTenantId);
+  }
+
+  private async createLegacyConversation(dto: LegacyCreateConversationDto, creatorId: string) {
     const creator = await this.prisma.user.findUnique({
       where: { id: creatorId },
       include: { role: true },
@@ -166,6 +238,8 @@ export class ChatService {
     const conversation = await this.prisma.chatConversation.create({
       data: {
         type: dto.type,
+        conversationType: ConversationType.INTERNAL,
+        title: dto.name,
         name: dto.name,
         description: dto.description,
         createdById: creatorId,
@@ -173,6 +247,8 @@ export class ChatService {
           create: allParticipants.map((uid) => ({
             userId: uid,
             role: uid === creatorId ? 'ADMIN' : 'MEMBER',
+            participantRole:
+              uid === creatorId ? ParticipantRole.OWNER : ParticipantRole.MEMBER,
           })),
         },
       },
@@ -183,6 +259,143 @@ export class ChatService {
     });
 
     return conversation;
+  }
+
+  private async createTenantConversation(
+    type: ConversationType,
+    tenantId: string | null,
+    participantUserIds: string[],
+  ) {
+    const requestedParticipantIds = [
+      ...new Set(participantUserIds.filter((userId) => Boolean(userId))),
+    ];
+    if (requestedParticipantIds.length === 0) {
+      throw new BadRequestException('At least one participant is required');
+    }
+    if (type === ConversationType.INTERNAL && !tenantId) {
+      throw new BadRequestException('Tenant is required for internal conversations');
+    }
+
+    const activeUsers = await this.prisma.user.findMany({
+      where: { id: { in: requestedParticipantIds }, isActive: true },
+      select: { id: true },
+    });
+    if (activeUsers.length !== requestedParticipantIds.length) {
+      throw new BadRequestException('Every participant must be an active user');
+    }
+
+    let supportAdminId: string | null = null;
+    const allParticipantIds = [...requestedParticipantIds];
+    if (type === ConversationType.SUPPORT) {
+      supportAdminId = await this.resolveSupportAdmin(allParticipantIds);
+      if (!allParticipantIds.includes(supportAdminId)) {
+        allParticipantIds.push(supportAdminId);
+      }
+    }
+
+    await this.assertTenantParticipantAccess(tenantId, allParticipantIds);
+
+    const creatorId = requestedParticipantIds[0];
+    const legacyType =
+      type === ConversationType.SUPPORT
+        ? 'SUPPORT_SESSION'
+        : type === ConversationType.INTERNAL
+          ? allParticipantIds.length === 2
+            ? 'DIRECT'
+            : 'GROUP'
+          : 'AI';
+
+    return this.prisma.chatConversation.create({
+      data: {
+        tenantId,
+        conversationType: type,
+        status: ConversationStatus.ACTIVE,
+        type: legacyType,
+        createdById: creatorId,
+        participants: {
+          create: allParticipantIds.map((userId) => {
+            const participantRole =
+              userId === supportAdminId
+                ? ParticipantRole.ADMIN_SUPPORT
+                : userId === creatorId
+                  ? ParticipantRole.OWNER
+                  : ParticipantRole.MEMBER;
+
+            return {
+              userId,
+              participantRole,
+              role:
+                participantRole === ParticipantRole.MEMBER ? 'MEMBER' : 'ADMIN',
+            };
+          }),
+        },
+      },
+      include: {
+        participants: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profilePhoto: true,
+                role: { select: { name: true } },
+              },
+            },
+          },
+        },
+        messages: { take: 1, orderBy: { createdAt: 'desc' } },
+      },
+    });
+  }
+
+  private async resolveSupportAdmin(participantUserIds: string[]): Promise<string> {
+    const existingAdmin = await this.prisma.userPortalMembership.findFirst({
+      where: {
+        userId: { in: participantUserIds },
+        portal: PortalCode.ADMIN,
+        status: MembershipStatus.ACTIVE,
+      },
+      select: { userId: true },
+    });
+    if (existingAdmin) return existingAdmin.userId;
+
+    const routedAdmin = await this.prisma.userPortalMembership.findFirst({
+      where: {
+        portal: PortalCode.ADMIN,
+        status: MembershipStatus.ACTIVE,
+        user: { isActive: true },
+      },
+      orderBy: { createdAt: 'asc' },
+      select: { userId: true },
+    });
+    if (!routedAdmin) {
+      throw new ServiceUnavailableException(
+        'No active Admin Portal support user is currently available',
+      );
+    }
+
+    return routedAdmin.userId;
+  }
+
+  private async assertTenantParticipantAccess(
+    tenantId: string | null,
+    participantUserIds: string[],
+  ): Promise<void> {
+    if (!tenantId) return;
+
+    const memberships = await this.prisma.userPortalMembership.findMany({
+      where: {
+        userId: { in: participantUserIds },
+        status: MembershipStatus.ACTIVE,
+        OR: [{ tenantId }, { portal: PortalCode.ADMIN }],
+      },
+      select: { userId: true },
+    });
+    const allowedUserIds = new Set(memberships.map((membership) => membership.userId));
+    const invalidUserId = participantUserIds.find((userId) => !allowedUserIds.has(userId));
+    if (invalidUserId) {
+      throw new ForbiddenException('All participants must belong to the selected tenant');
+    }
   }
 
   private async findDirectConversation(userId1: string, userId2: string) {
@@ -240,9 +453,22 @@ export class ChatService {
     );
   }
 
-  async getUserConversationIds(userId: string): Promise<string[]> {
+  async getUserConversationIds(
+    userId: string,
+    tenantId?: string | null,
+    isSuperAdmin = false,
+  ): Promise<string[]> {
     const participants = await this.prisma.chatParticipant.findMany({
-      where: { userId },
+      where: {
+        userId,
+        ...(!isSuperAdmin && tenantId
+          ? {
+              conversation: {
+                OR: [{ tenantId }, { tenantId: null }],
+              },
+            }
+          : {}),
+      },
       select: { conversationId: true },
     });
     return participants.map((p) => p.conversationId);
@@ -261,11 +487,19 @@ export class ChatService {
     });
   }
 
-  async canAccessConversation(userId: string, conversationId: string): Promise<boolean> {
+  async canAccessConversation(
+    userId: string,
+    conversationId: string,
+    tenantId?: string | null,
+    isSuperAdmin = false,
+  ): Promise<boolean> {
     const participant = await this.prisma.chatParticipant.findUnique({
       where: { conversationId_userId: { conversationId, userId } },
+      include: { conversation: { select: { tenantId: true } } },
     });
-    return !!participant;
+    if (!participant) return false;
+    if (isSuperAdmin || !participant.conversation.tenantId) return true;
+    return participant.conversation.tenantId === tenantId;
   }
 
   async setConversationPriority(conversationId: string, priority: string, userId: string) {
@@ -303,47 +537,108 @@ export class ChatService {
 
   // ── Messages ──────────────────────────────────────────────────────────────
 
-  async sendMessage(dto: {
-    conversationId: string;
-    senderId: string;
-    content: string;
-    type?: string;
-    replyToId?: string;
-    fileUrl?: string;
-    fileName?: string;
-    fileSize?: number;
-    fileMime?: string;
-  }) {
-    const conversation = await this.prisma.chatConversation.findUnique({
-      where: { id: dto.conversationId },
-    });
-    if (!conversation) throw new NotFoundException('Conversation not found');
-    if (conversation.isLocked) throw new ForbiddenException('Conversation is locked');
+  async sendMessage(dto: SendMessageDto): Promise<SentChatMessage>;
+  async sendMessage(
+    conversationId: string,
+    senderId: string,
+    content: string,
+  ): Promise<SentChatMessage>;
+  async sendMessage(
+    dtoOrConversationId: SendMessageDto | string,
+    senderId?: string,
+    content?: string,
+  ): Promise<SentChatMessage> {
+    const dto: SendMessageDto =
+      typeof dtoOrConversationId === 'string'
+        ? {
+            conversationId: dtoOrConversationId,
+            senderId: senderId ?? '',
+            content: content ?? '',
+          }
+        : dtoOrConversationId;
 
-    const message = await this.prisma.chatMessage.create({
-      data: {
-        conversationId: dto.conversationId,
-        senderId: dto.senderId,
-        content: dto.content,
-        type: dto.type || 'TEXT',
-        replyToId: dto.replyToId,
-        fileUrl: dto.fileUrl,
-        fileName: dto.fileName,
-        fileSize: dto.fileSize,
-        fileMime: dto.fileMime,
-      },
-      include: {
-        sender: { select: { id: true, name: true, profilePhoto: true } },
-        replyTo: {
-          select: { id: true, content: true, sender: { select: { name: true } } },
+    if (!dto.senderId) {
+      throw new BadRequestException('Message sender is required');
+    }
+    const normalizedContent = dto.content?.trim() ?? '';
+    if (!normalizedContent && !dto.fileUrl) {
+      throw new BadRequestException('Message content or an attachment is required');
+    }
+
+    const message = await this.prisma.$transaction(async (transaction) => {
+      const participant = await transaction.chatParticipant.findUnique({
+        where: {
+          conversationId_userId: {
+            conversationId: dto.conversationId,
+            userId: dto.senderId,
+          },
         },
-      },
+        include: {
+          conversation: true,
+          user: {
+            select: {
+              portalMemberships: {
+                where: { status: MembershipStatus.ACTIVE },
+                select: { tenantId: true, portal: true },
+              },
+            },
+          },
+        },
+      });
+      if (!participant) {
+        throw new ForbiddenException('Sender is not a participant in this conversation');
+      }
+
+      const conversation = participant.conversation;
+      if (conversation.status === ConversationStatus.CLOSED) {
+        throw new ConflictException('Conversation is closed');
+      }
+      if (conversation.isLocked) {
+        throw new ForbiddenException('Conversation is locked');
+      }
+      if (conversation.tenantId) {
+        const hasTenantAccess = participant.user.portalMemberships.some(
+          (membership) =>
+            membership.tenantId === conversation.tenantId ||
+            (participant.participantRole === ParticipantRole.ADMIN_SUPPORT &&
+              membership.portal === PortalCode.ADMIN),
+        );
+        if (!hasTenantAccess) {
+          throw new ForbiddenException('Sender does not have access to this tenant');
+        }
+      }
+
+      const createdMessage = await transaction.chatMessage.create({
+        data: {
+          conversationId: dto.conversationId,
+          senderId: dto.senderId,
+          content: normalizedContent,
+          type: dto.type || 'TEXT',
+          replyToId: dto.replyToId,
+          fileUrl: dto.fileUrl,
+          fileName: dto.fileName,
+          fileSize: dto.fileSize,
+          fileMime: dto.fileMime,
+        },
+        include: {
+          sender: { select: { id: true, name: true, profilePhoto: true } },
+          replyTo: {
+            select: { id: true, content: true, sender: { select: { name: true } } },
+          },
+        },
+      });
+
+      await transaction.chatConversation.update({
+        where: { id: dto.conversationId },
+        data: { updatedAt: new Date() },
+      });
+
+      return createdMessage;
     });
 
-    // Update conversation updatedAt
-    await this.prisma.chatConversation.update({
-      where: { id: dto.conversationId },
-      data: { updatedAt: new Date() },
+    this.chatEvents.publishMessageCreated({
+      conversationId: dto.conversationId,
+      message,
     });
 
     return message;

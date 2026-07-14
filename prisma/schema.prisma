@@ -6,67 +6,171 @@ datasource db {
   provider = "sqlite"
 }
 
+enum PortalCode {
+  ADMIN
+  PARTNER
+  RIDER
+  WEB
+}
+
+enum RoleScope {
+  PLATFORM
+  TENANT
+}
+
+enum TenantStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+}
+
+enum MembershipStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  REVOKED
+}
+
+enum EntitlementLevel {
+  PREVIEW
+  READ
+  WRITE
+  MANAGE
+}
+
+enum TenantSubscriptionStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  EXPIRED
+  CANCELLED
+}
+
+enum BillingInterval {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+  ONE_TIME
+}
+
+enum ApprovalType {
+  ONBOARDING
+  SUBSCRIPTION
+}
+
+enum ApprovalStage {
+  PENDING_MANAGER
+  PENDING_ACCOUNTS
+  PENDING_ADMIN
+  APPROVED
+  REJECTED
+}
+
+enum ApprovalCaseStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ApprovalAction {
+  APPROVE
+  REJECT
+}
+
+enum EscalationLevel {
+  NONE
+  ESCALATED_PARTNER_ADMIN
+  ESCALATED_ADMIN
+  ESCALATED_SUPER_ADMIN
+}
+
+enum ConversationType {
+  INTERNAL
+  SUPPORT
+  AI
+}
+
+enum ConversationStatus {
+  ACTIVE
+  CLOSED
+}
+
+enum ParticipantRole {
+  OWNER
+  MEMBER
+  ADMIN_SUPPORT
+  AI_BOT
+}
+
 model User {
-  id                 String                     @id @default(uuid())
-  email              String                     @unique
-  password           String?
-  name               String
-  mobile             String?                    @unique
-  googleId           String?                    @unique
-  facebookId         String?                    @unique
-  mfaEnabled         Boolean                    @default(false)
-  mfaSecret          String?
-  mfaType            String?
-  emailVerified      Boolean                    @default(false)
-  mobileVerified     Boolean                    @default(false)
-  whatsappVerified   Boolean                    @default(false)
-  profilePhoto       String?
-  deactivatedAt      DateTime?
-  notificationPrefs  String                     @default("{\"email\":true,\"sms\":true,\"whatsapp\":true,\"push\":true}")
-  isLocked           Boolean                    @default(false)
-  lockoutUntil       DateTime?
-  otpCode            String?
-  otpExpiry          DateTime?
-  roleId             String?
-  role               Role?                      @relation(fields: [roleId], references: [id])
-  restaurantId       String?
-  restaurant         Restaurant?                @relation(fields: [restaurantId], references: [id])
-  isActive           Boolean                    @default(true)
-  loyaltyPoints      Int                        @default(0)
-  referralCode       String                     @unique @default(uuid())
-  createdAt          DateTime                   @default(now())
-  updatedAt          DateTime                   @updatedAt
-  addresses          Address[]
-  subscriptions      CustomerSubscription[]
-  pointHistory       PointHistory[]
-  referredBy         Referral?                  @relation("ReferredBy")
-  referralsMade      Referral[]                 @relation("ReferralsMade")
-  reviews            Review[]
-  rewardRedemptions  RewardRedemption[]
-  supportTickets     SupportTicket[]
-  auditLogs          AuditLog[]
-  requestedApprovals ApprovalRequest[]          @relation("RequestedApprovals")
-  approvedApprovals  ApprovalRequest[]          @relation("ApprovedApprovals")
-  orders             Order[]
-  sessions           Session[]
-  loginHistory       LoginHistory[]
-  failedLogins       FailedLoginAttempt[]
-  walletTransactions WalletTransaction[]
-  favorites          Favorite[]
-  reservations       TableReservation[]
-  waitlist           Waitlist[]
-  employeeMealSubs   EmployeeMealSubscription[]
-  refunds            Refund[]
-  assignedTasks      Task[]                     @relation("TaskAssignee")
-  reportedTasks      Task[]                     @relation("TaskReporter")
-  taskComments       TaskComment[]
-  taskAttachments    TaskAttachment[]
-  taskHistories      TaskHistory[]
-  hallBookings       HallBooking[]
-  chatParticipants   ChatParticipant[]
-  starredMessages    ChatStarredMessage[]
-  aiChatSessions     AiChatSession[]
-  sentMessages       ChatMessage[]
+  id                   String                     @id @default(uuid())
+  email                String                     @unique
+  password             String?
+  name                 String
+  mobile               String?                    @unique
+  googleId             String?                    @unique
+  facebookId           String?                    @unique
+  mfaEnabled           Boolean                    @default(false)
+  mfaSecret            String?
+  mfaType              String?
+  emailVerified        Boolean                    @default(false)
+  mobileVerified       Boolean                    @default(false)
+  whatsappVerified     Boolean                    @default(false)
+  profilePhoto         String?
+  deactivatedAt        DateTime?
+  notificationPrefs    String                     @default("{\"email\":true,\"sms\":true,\"whatsapp\":true,\"push\":true}")
+  isLocked             Boolean                    @default(false)
+  lockoutUntil         DateTime?
+  otpCode              String?
+  otpExpiry            DateTime?
+  roleId               String?
+  role                 Role?                      @relation(fields: [roleId], references: [id])
+  restaurantId         String?
+  restaurant           Restaurant?                @relation(fields: [restaurantId], references: [id])
+  isActive             Boolean                    @default(true)
+  loyaltyPoints        Int                        @default(0)
+  referralCode         String                     @unique @default(uuid())
+  createdAt            DateTime                   @default(now())
+  updatedAt            DateTime                   @updatedAt
+  addresses            Address[]
+  subscriptions        CustomerSubscription[]
+  pointHistory         PointHistory[]
+  referredBy           Referral?                  @relation("ReferredBy")
+  referralsMade        Referral[]                 @relation("ReferralsMade")
+  reviews              Review[]
+  rewardRedemptions    RewardRedemption[]
+  supportTickets       SupportTicket[]
+  auditLogs            AuditLog[]
+  requestedApprovals   ApprovalRequest[]          @relation("RequestedApprovals")
+  approvedApprovals    ApprovalRequest[]          @relation("ApprovedApprovals")
+  orders               Order[]
+  sessions             Session[]
+  loginHistory         LoginHistory[]
+  failedLogins         FailedLoginAttempt[]
+  walletTransactions   WalletTransaction[]
+  favorites            Favorite[]
+  reservations         TableReservation[]
+  waitlist             Waitlist[]
+  employeeMealSubs     EmployeeMealSubscription[]
+  refunds              Refund[]
+  assignedTasks        Task[]                     @relation("TaskAssignee")
+  reportedTasks        Task[]                     @relation("TaskReporter")
+  taskComments         TaskComment[]
+  taskAttachments      TaskAttachment[]
+  taskHistories        TaskHistory[]
+  hallBookings         HallBooking[]
+  chatParticipants     ChatParticipant[]
+  starredMessages      ChatStarredMessage[]
+  aiChatSessions       AiChatSession[]
+  sentMessages         ChatMessage[]
+  ownedTenants         Tenant[]                   @relation("TenantOwner")
+  portalMemberships    UserPortalMembership[]
+  employeeProfile      Employee?
+  subjectApprovalCases ApprovalCase[]             @relation("ApprovalCaseSubject")
+  approvalDecisions    ApprovalDecision[]         @relation("ApprovalDecisionApprover")
+
+  @@map("cat_customers")
 }
 
 model Restaurant {
@@ -112,16 +216,30 @@ model Restaurant {
   halls                Hall[]
   foodPackages         FoodPackage[]
   addonPackages        AddonPackage[]
+  tenantId             String?
+  tenant               Tenant?                @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
 }
 
 model Role {
-  id          String           @id @default(uuid())
-  name        String           @unique
+  id          String               @id @default(uuid())
+  name        String               @unique
   description String?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
   users       User[]
   permissions RolePermission[]
+  tenantId    String?
+  portal      PortalCode?
+  scope       RoleScope            @default(PLATFORM)
+  tenant      Tenant?              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assignments UserRoleAssignment[]
+
+  @@unique([tenantId, portal, name])
+  @@index([tenantId])
+  @@index([portal, scope])
+  @@map("cat_roles")
 }
 
 model Permission {
@@ -130,6 +248,12 @@ model Permission {
   description String?
   createdAt   DateTime         @default(now())
   roles       RolePermission[]
+  module      String?
+  resource    String?
+  action      String?
+
+  @@index([module, resource, action])
+  @@map("cat_permissions")
 }
 
 model RolePermission {
@@ -139,6 +263,223 @@ model RolePermission {
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
   @@id([roleId, permissionId])
+}
+
+model Tenant {
+  id                  String                 @id @default(uuid())
+  code                String                 @unique
+  legalName           String
+  displayName         String
+  businessType        String
+  status              TenantStatus           @default(PENDING)
+  ownerUserId         String?
+  owner               User?                  @relation("TenantOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
+  branches            TenantBranch[]
+  restaurants         Restaurant[]
+  employees           Employee[]
+  memberships         UserPortalMembership[]
+  roles               Role[]
+  roleAssignments     UserRoleAssignment[]
+  moduleSubscriptions TenantSubscription[]
+  moduleEntitlements  TenantEntitlement[]
+  approvalCases       ApprovalCase[]
+  conversations       ChatConversation[]
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+
+  @@index([ownerUserId])
+  @@index([status])
+  @@map("cat_tenants")
+}
+
+model TenantBranch {
+  id        String   @id @default(uuid())
+  tenantId  String
+  code      String
+  name      String
+  isActive  Boolean  @default(true)
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([tenantId, isActive])
+  @@map("cat_tenant_branches")
+}
+
+model UserPortalMembership {
+  id        String               @id @default(uuid())
+  userId    String
+  portal    PortalCode
+  tenantId  String?
+  scopeKey  String
+  status    MembershipStatus     @default(ACTIVE)
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant    Tenant?              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  roles     UserRoleAssignment[]
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  @@unique([userId, portal, scopeKey])
+  @@index([userId, portal, status])
+  @@index([tenantId])
+  @@index([tenantId, portal, status])
+  @@map("cat_user_portal_memberships")
+}
+
+model UserRoleAssignment {
+  id           String               @id @default(uuid())
+  membershipId String
+  roleId       String
+  tenantId     String?
+  membership   UserPortalMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  role         Role                 @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  tenant       Tenant?              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  @@unique([membershipId, roleId])
+  @@index([roleId])
+  @@index([tenantId])
+  @@map("cat_user_role_assignments")
+}
+
+model ModuleCatalog {
+  id            String                   @id @default(uuid())
+  code          String                   @unique
+  name          String
+  description   String?
+  icon          String?
+  displayOrder  Int                      @default(0)
+  isActive      Boolean                  @default(true)
+  plans         ModuleSubscriptionPlan[]
+  subscriptions TenantSubscription[]
+  entitlements  TenantEntitlement[]
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+
+  @@index([isActive, displayOrder])
+  @@map("cat_module_catalog")
+}
+
+// Named ModuleSubscriptionPlan because SubscriptionPlan already powers
+// customer meal subscriptions. The physical SaaS table remains cat_subscription_plans.
+model ModuleSubscriptionPlan {
+  id                 String               @id @default(uuid())
+  moduleId           String
+  code               String
+  name               String
+  description        String?
+  tier               String
+  price              Decimal              @default(0)
+  currency           String               @default("INR")
+  billingInterval    BillingInterval
+  intervalCount      Int                  @default(1)
+  defaultAccessLevel EntitlementLevel     @default(READ)
+  isActive           Boolean              @default(true)
+  module             ModuleCatalog        @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  subscriptions      TenantSubscription[]
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  @@unique([moduleId, code])
+  @@index([moduleId, isActive])
+  @@map("cat_subscription_plans")
+}
+
+model TenantSubscription {
+  id               String                   @id @default(uuid())
+  tenantId         String
+  moduleId         String
+  planId           String
+  status           TenantSubscriptionStatus @default(PENDING)
+  startsAt         DateTime?
+  endsAt           DateTime?
+  autoRenew        Boolean                  @default(false)
+  paymentReference String?
+  approvedById     String?
+  approvedAt       DateTime?
+  cancelledAt      DateTime?
+  tenant           Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  module           ModuleCatalog            @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  plan             ModuleSubscriptionPlan   @relation(fields: [planId], references: [id], onDelete: Restrict)
+  entitlements     TenantEntitlement[]
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+
+  @@index([tenantId])
+  @@index([moduleId])
+  @@index([planId])
+  @@index([tenantId, moduleId, status, startsAt, endsAt])
+  @@map("cat_tenant_subscriptions")
+}
+
+model TenantEntitlement {
+  id             String              @id @default(uuid())
+  tenantId       String
+  moduleId       String
+  subscriptionId String?
+  accessLevel    EntitlementLevel    @default(PREVIEW)
+  isActive       Boolean             @default(true)
+  validFrom      DateTime?
+  validUntil     DateTime?
+  tenant         Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  module         ModuleCatalog       @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  subscription   TenantSubscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@unique([tenantId, moduleId])
+  @@index([tenantId])
+  @@index([moduleId])
+  @@index([subscriptionId])
+  @@index([tenantId, moduleId, accessLevel, isActive])
+  @@map("cat_tenant_entitlements")
+}
+
+model ApprovalCase {
+  id               String             @id @default(uuid())
+  type             ApprovalType
+  referenceId      String
+  activeKey        String?            @unique
+  tenantId         String?
+  userId           String?
+  currentStage     ApprovalStage
+  status           ApprovalCaseStatus @default(PENDING)
+  dueAt            DateTime
+  escalationLevel  EscalationLevel    @default(NONE)
+  nextEscalationAt DateTime?
+  version          Int                @default(0)
+  completedAt      DateTime?
+  tenant           Tenant?            @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  subjectUser      User?              @relation("ApprovalCaseSubject", fields: [userId], references: [id], onDelete: SetNull)
+  decisions        ApprovalDecision[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@index([type, referenceId])
+  @@index([status, nextEscalationAt])
+  @@index([tenantId, status, createdAt])
+  @@index([userId, status, createdAt])
+  @@map("cat_approval_cases")
+}
+
+model ApprovalDecision {
+  id             String         @id @default(uuid())
+  approvalCaseId String
+  approverUserId String?
+  action         ApprovalAction
+  fromStage      ApprovalStage
+  toStage        ApprovalStage
+  notes          String?
+  approvalCase   ApprovalCase   @relation(fields: [approvalCaseId], references: [id], onDelete: Restrict)
+  approver       User?          @relation("ApprovalDecisionApprover", fields: [approverUserId], references: [id], onDelete: SetNull)
+  createdAt      DateTime       @default(now())
+
+  @@index([approvalCaseId, createdAt])
+  @@index([approverUserId, createdAt])
+  @@map("cat_approval_decisions")
 }
 
 model AuditLog {
@@ -419,15 +760,22 @@ model Employee {
   status       String    @default("ACTIVE") // ACTIVE, SUSPENDED, TERMINATED
   baseSalary   Float     @default(0.0)
   joiningDate  DateTime?
+  tenantId     String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
+  user        User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  tenant      Tenant?            @relation(fields: [tenantId], references: [id], onDelete: SetNull)
   shifts      Shift[]
   attendances Attendance[]
   leaveReqs   LeaveRequest[]
   leaveBals   LeaveBalance[]
   payrolls    Payroll[]
   documents   EmployeeDocument[]
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@map("cat_hrms")
 }
 
 model Shift {
@@ -733,6 +1081,10 @@ model SystemSettings {
   tagline               String   @default("Online Home-Style Food, Tiffin & Meal Services")
   logoUrl               String?
   faviconUrl            String?
+  primaryColor          String   @default("#2563EB")
+  secondaryColor        String   @default("#DC2626")
+  backgroundColor       String   @default("#f3f4f8")
+  textColor             String   @default("#0f172a")
   contactEmail          String?
   contactPhone          String?
   facebookUrl           String?
@@ -1583,60 +1935,83 @@ model HallBookingAddon {
 
 // ─── CHAT MODULE ─────────────────────────────────────────────────────────────
 
+// The Prisma model name is retained for compatibility with the existing API.
+// Its physical table is the generalized Phase 5 cat_conversations table.
 model ChatConversation {
-  id           String            @id @default(uuid())
-  type         String            // DIRECT | GROUP | SUPPORT_SESSION
-  name         String?           // Group name (for GROUP type)
-  description  String?
-  avatarUrl    String?
-  priority     String            @default("NORMAL") // NORMAL | HIGH | URGENT | CRITICAL
-  isLocked     Boolean           @default(false)
-  isArchived   Boolean           @default(false)
-  createdById  String
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
-  participants ChatParticipant[]
-  messages     ChatMessage[]
+  id               String             @id @default(uuid())
+  tenantId         String?
+  conversationType ConversationType?
+  title            String?
+  status           ConversationStatus @default(ACTIVE)
+  type             String // Legacy: DIRECT | GROUP | SUPPORT_SESSION
+  name             String? // Group name (for GROUP type)
+  description      String?
+  avatarUrl        String?
+  priority         String             @default("NORMAL") // NORMAL | HIGH | URGENT | CRITICAL
+  isLocked         Boolean            @default(false)
+  isArchived       Boolean            @default(false)
+  createdById      String
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  tenant           Tenant?            @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  participants     ChatParticipant[]
+  messages         ChatMessage[]
+
+  @@index([tenantId])
+  @@index([tenantId, conversationType, status])
+  @@index([status, updatedAt])
+  @@map("cat_conversations")
 }
 
 model ChatParticipant {
-  id             String           @id @default(uuid())
-  conversationId String
-  userId         String
-  role           String           @default("MEMBER") // MEMBER | ADMIN
-  joinedAt       DateTime         @default(now())
-  lastReadAt     DateTime?
-  isMuted        Boolean          @default(false)
-  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  user           User             @relation(fields: [userId], references: [id])
+  id                String           @id @default(uuid())
+  conversationId    String
+  userId            String
+  role              String           @default("MEMBER") // Legacy: MEMBER | ADMIN
+  participantRole   ParticipantRole?
+  joinedAt          DateTime         @default(now())
+  lastReadAt        DateTime?
+  lastReadMessageId String?
+  isMuted           Boolean          @default(false)
+  conversation      ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user              User             @relation(fields: [userId], references: [id])
+  lastReadMessage   ChatMessage?     @relation("ParticipantLastReadMessage", fields: [lastReadMessageId], references: [id], onDelete: SetNull)
 
   @@unique([conversationId, userId])
+  @@index([userId])
+  @@index([lastReadMessageId])
+  @@map("cat_chat_participants")
 }
 
 model ChatMessage {
-  id             String           @id @default(uuid())
+  id             String               @id @default(uuid())
   conversationId String
-  senderId       String
+  senderId       String?
   content        String
-  type           String           @default("TEXT") // TEXT | IMAGE | FILE | VOICE | SYSTEM
+  type           String               @default("TEXT") // TEXT | IMAGE | FILE | VOICE | SYSTEM
   fileUrl        String?
   fileName       String?
   fileSize       Int?
   fileMime       String?
   replyToId      String?
-  isEdited       Boolean          @default(false)
-  isDeleted      Boolean          @default(false)
-  isPinned       Boolean          @default(false)
-  reactions      String           @default("{}") // JSON: { "👍": ["userId1"] }
+  isEdited       Boolean              @default(false)
+  isDeleted      Boolean              @default(false)
+  isPinned       Boolean              @default(false)
+  reactions      String               @default("{}") // JSON: { "👍": ["userId1"] }
   deliveredAt    DateTime?
   readAt         DateTime?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender         User             @relation(fields: [senderId], references: [id])
-  replyTo        ChatMessage?     @relation("ReplyTo", fields: [replyToId], references: [id])
-  replies        ChatMessage[]    @relation("ReplyTo")
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  conversation   ChatConversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User?                @relation(fields: [senderId], references: [id], onDelete: SetNull)
+  replyTo        ChatMessage?         @relation("ReplyTo", fields: [replyToId], references: [id])
+  replies        ChatMessage[]        @relation("ReplyTo")
   starredBy      ChatStarredMessage[]
+  lastReadBy     ChatParticipant[]    @relation("ParticipantLastReadMessage")
+
+  @@index([conversationId, createdAt])
+  @@index([senderId, createdAt])
+  @@map("cat_chat_messages")
 }
 
 model ChatStarredMessage {
@@ -1651,31 +2026,31 @@ model ChatStarredMessage {
 }
 
 model AiChatSession {
-  id           String         @id @default(uuid())
-  userId       String?        // null for anonymous sessions
-  sessionToken String         @unique @default(uuid())
-  status       String         @default("ACTIVE") // ACTIVE | ESCALATED | CLOSED | ARCHIVED
-  channel      String         @default("WEB")    // WEB | MOBILE | WHATSAPP
-  language     String         @default("en")
-  metadata     String?        // JSON: browser, device, location
+  id           String               @id @default(uuid())
+  userId       String? // null for anonymous sessions
+  sessionToken String               @unique @default(uuid())
+  status       String               @default("ACTIVE") // ACTIVE | ESCALATED | CLOSED | ARCHIVED
+  channel      String               @default("WEB") // WEB | MOBILE | WHATSAPP
+  language     String               @default("en")
+  metadata     String? // JSON: browser, device, location
   ticketId     String?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
   messages     AiChatMessage[]
   supportReq   HumanSupportRequest?
-  user         User?          @relation(fields: [userId], references: [id])
+  user         User?                @relation(fields: [userId], references: [id])
 }
 
 model AiChatMessage {
-  id          String        @id @default(uuid())
-  sessionId   String
-  role        String        // USER | ASSISTANT | SYSTEM
-  content     String
-  intent      String?       // detected intent
-  confidence  Float?        // AI confidence score 0-1
-  metadata    String?       // JSON: quick replies, attachments
-  createdAt   DateTime      @default(now())
-  session     AiChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  id         String        @id @default(uuid())
+  sessionId  String
+  role       String // USER | ASSISTANT | SYSTEM
+  content    String
+  intent     String? // detected intent
+  confidence Float? // AI confidence score 0-1
+  metadata   String? // JSON: quick replies, attachments
+  createdAt  DateTime      @default(now())
+  session    AiChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }
 
 model HumanSupportRequest {
@@ -1687,7 +2062,7 @@ model HumanSupportRequest {
   reason         String?
   customerNote   String?
   adminNote      String?
-  conversationId String?       // internal chat conversation created after approval
+  conversationId String? // internal chat conversation created after approval
   resolvedAt     DateTime?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
@@ -1696,30 +2071,30 @@ model HumanSupportRequest {
 
 // Admin-configurable AI provider settings
 model AiProviderConfig {
-  id          String   @id @default(uuid())
-  provider    String   @unique // OPENAI | GEMINI | ANTHROPIC | AZURE_OPENAI | CUSTOM
+  id          String    @id @default(uuid())
+  provider    String    @unique // OPENAI | GEMINI | ANTHROPIC | AZURE_OPENAI | CUSTOM
   displayName String
-  apiKey      String?           // encrypted in production
-  apiEndpoint String?           // custom endpoint
-  model       String?           // e.g. gpt-4o, gemini-1.5-pro
-  isActive    Boolean  @default(false)
-  isPrimary   Boolean  @default(false)
-  settings    String   @default("{}") // JSON: temperature, maxTokens, systemPrompt, etc.
-  usageCount  Int      @default(0)
+  apiKey      String? // encrypted in production
+  apiEndpoint String? // custom endpoint
+  model       String? // e.g. gpt-4o, gemini-1.5-pro
+  isActive    Boolean   @default(false)
+  isPrimary   Boolean   @default(false)
+  settings    String    @default("{}") // JSON: temperature, maxTokens, systemPrompt, etc.
+  usageCount  Int       @default(0)
   lastUsedAt  DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 // Chatbot FAQ / Knowledge Base entries
 model ChatbotKnowledge {
   id         String   @id @default(uuid())
-  category   String   // ORDERING | DELIVERY | PAYMENT | REFUND | SUBSCRIPTION | GENERAL
+  category   String // ORDERING | DELIVERY | PAYMENT | REFUND | SUBSCRIPTION | GENERAL
   question   String
   answer     String
   keywords   String   @default("[]") // JSON array of trigger keywords
   isActive   Boolean  @default(true)
-  priority   Int      @default(0)    // higher = matched first
+  priority   Int      @default(0) // higher = matched first
   usageCount Int      @default(0)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -1747,10 +2122,10 @@ model ChatCannedResponse {
 model PartnerFeaturePermission {
   id          String   @id @default(uuid())
   partnerId   String
-  module      String   // module group ID
-  feature     String   // granular feature ID
+  module      String // module group ID
+  feature     String // granular feature ID
   isEnabled   Boolean  @default(false)
-  grantedById String?  // Admin user ID who granted
+  grantedById String? // Admin user ID who granted
   grantedAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -1762,17 +2137,17 @@ model PartnerFeaturePermission {
 // Partners cannot directly delete data — they submit a request.
 // Admin approves or rejects via the Partner Permissions admin page.
 model PartnerDeleteRequest {
-  id           String   @id @default(uuid())
-  partnerId    String   // the partner requesting the delete
-  module       String   // which module the entity belongs to
-  entity       String   // model/table name e.g. 'Offer', 'Coupon', 'MenuItem'
-  entityId     String   // the ID of the record to delete
-  reason       String?  // optional reason provided by partner
-  status       String   @default("PENDING") // PENDING | APPROVED | REJECTED
-  reviewedById String?  // admin who approved/rejected
+  id           String    @id @default(uuid())
+  partnerId    String // the partner requesting the delete
+  module       String // which module the entity belongs to
+  entity       String // model/table name e.g. 'Offer', 'Coupon', 'MenuItem'
+  entityId     String // the ID of the record to delete
+  reason       String? // optional reason provided by partner
+  status       String    @default("PENDING") // PENDING | APPROVED | REJECTED
+  reviewedById String? // admin who approved/rejected
   reviewedAt   DateTime?
-  requestedAt  DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  requestedAt  DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   @@index([partnerId])
   @@index([status])

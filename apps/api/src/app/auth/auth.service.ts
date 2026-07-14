@@ -294,6 +294,8 @@ export class AuthService {
   }
 
   private isMissingUserTableError(error: unknown): boolean {
+    if (process.env.NODE_ENV === 'production') return false;
+
     const message =
       error instanceof Error
         ? error.message

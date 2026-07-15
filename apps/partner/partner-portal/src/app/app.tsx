@@ -25,9 +25,12 @@ import { DownloadPage } from './DownloadPage';
 import BillingDashboard from './pages/BillingDashboard';
 import KitchenBoard from './pages/KitchenBoard';
 import PromotionsManager from './pages/PromotionsManager';
+import { WebhooksManager } from './pages/WebhooksManager';
+import { WebhookAuditLog } from './pages/WebhookAuditLog';
+import { EventBookingManager } from './pages/events/EventBookingManager';
 
 export function MainApp({ onLogout }: { onLogout: () => void }) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'staff' | 'tenant_users' | 'analytics' | 'inventory' | 'page' | 'menu' | 'tiffin' | 'earnings' | 'kiosk' | 'branches' | 'compliance' | 'reservations' | 'venues' | 'packages' | 'hall_bookings' | 'chat' | 'orders' | 'downloads' | 'billing' | 'kds' | 'promotions'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'staff' | 'tenant_users' | 'analytics' | 'inventory' | 'page' | 'menu' | 'tiffin' | 'earnings' | 'kiosk' | 'branches' | 'compliance' | 'reservations' | 'venues' | 'packages' | 'hall_bookings' | 'chat' | 'orders' | 'downloads' | 'billing' | 'kds' | 'promotions' | 'webhooks' | 'events'>('dashboard');
   const [pageSlug, setPageSlug] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -415,6 +418,12 @@ export function MainApp({ onLogout }: { onLogout: () => void }) {
             <button className={`${styles.tab} ${activeTab === 'downloads' ? styles.activeTab : ''}`} onClick={() => setActiveTab('downloads')}>
               <span>📲</span> Download Apps
             </button>
+            <button className={`${styles.tab} ${activeTab === 'webhooks' ? styles.activeTab : ''}`} onClick={() => setActiveTab('webhooks')}>
+              <span>🔗</span> Webhooks
+            </button>
+            <button className={`${styles.tab} ${activeTab === 'events' ? styles.activeTab : ''}`} onClick={() => setActiveTab('events')}>
+              <span>📅</span> Event Engine
+            </button>
           </div>
           <button className={styles.logoutBtn} onClick={onLogout}>
             Sign Out
@@ -536,7 +545,6 @@ export function MainApp({ onLogout }: { onLogout: () => void }) {
           </div>
         )}
         {activeTab === 'page' && <StaticPageViewer slug={pageSlug} onBack={() => setActiveTab('dashboard')} />}
-        {/* Download Apps */}
         {activeTab === 'downloads' && (
           <div style={{ padding: '1.5rem 0' }}>
             <DownloadPage />
@@ -545,6 +553,17 @@ export function MainApp({ onLogout }: { onLogout: () => void }) {
         {activeTab === 'billing' && (
           <div style={{ padding: '1.5rem 0' }}>
             <BillingDashboard />
+          </div>
+        )}
+        {activeTab === 'webhooks' && (
+          <div style={{ padding: '1.5rem 0' }}>
+            <WebhooksManager />
+            <WebhookAuditLog />
+          </div>
+        )}
+        {activeTab === 'events' && (
+          <div style={{ padding: '1.5rem 0' }}>
+            <EventBookingManager />
           </div>
         )}
 

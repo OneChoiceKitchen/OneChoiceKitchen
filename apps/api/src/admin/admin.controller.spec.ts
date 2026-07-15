@@ -2,6 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 
+import { JwtAuthGuard } from '../app/auth/jwt-auth.guard';
+import { UserContextGuard } from '../app/auth/user-context.guard';
+import { PortalGuard } from '../app/auth/portal.guard';
+import { TenantGuard } from '../app/auth/tenant.guard';
+import { EntitlementGuard } from '../feature-access/entitlement.guard';
+
 const mockAdminService = {
   getTenants: jest.fn(),
   updateTenantStatus: jest.fn(),
@@ -17,7 +23,13 @@ describe('AdminController', () => {
       providers: [
         { provide: AdminService, useValue: mockAdminService },
       ],
-    }).compile();
+    })
+    .overrideGuard(JwtAuthGuard).useValue({ canActivate: () => true })
+    .overrideGuard(UserContextGuard).useValue({ canActivate: () => true })
+    .overrideGuard(PortalGuard).useValue({ canActivate: () => true })
+    .overrideGuard(TenantGuard).useValue({ canActivate: () => true })
+    .overrideGuard(EntitlementGuard).useValue({ canActivate: () => true })
+    .compile();
 
     controller = module.get<AdminController>(AdminController);
   });

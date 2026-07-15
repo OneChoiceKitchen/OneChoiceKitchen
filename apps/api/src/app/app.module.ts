@@ -61,6 +61,8 @@ import { BillingModule } from '../billing/billing.module';
 import { KitchenModule } from '../kitchen/kitchen.module';
 import { AdminModule } from '../admin/admin.module';
 import { PromotionsModule } from '../promotions/promotions.module';
+import { WebhooksModule } from '../webhooks/webhooks.module';
+import { BookingsModule } from '../bookings/bookings.module';
 
 @Module({
   imports: [
@@ -119,6 +121,8 @@ import { PromotionsModule } from '../promotions/promotions.module';
     KitchenModule,
     AdminModule,
     PromotionsModule,
+    WebhooksModule,
+    BookingsModule,
     ScheduleModule.forRoot()
   ],
   controllers: [AppController, SeoController, MenuController],

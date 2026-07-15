@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ApiClient } from '@libs/api-client';
-import { useAuthStore } from '@libs/auth';
+import axios from 'axios';
 
 interface Promotion {
   id: string;
@@ -20,7 +19,7 @@ export default function PromotionsManager() {
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const { token } = useAuthStore();
+  const token = localStorage.getItem('partner_token');
 
   const [formData, setFormData] = useState({
     code: '',
@@ -34,7 +33,7 @@ export default function PromotionsManager() {
 
   const fetchPromotions = async () => {
     try {
-      const response = await ApiClient.get('/promotions', {
+      const response = await axios.get('/api/promotions', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPromotions(response.data);
@@ -59,7 +58,7 @@ export default function PromotionsManager() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await ApiClient.post('/promotions', {
+      await axios.post('/api/promotions', {
         code: formData.code,
         discountType: formData.discountType,
         discountValue: Number(formData.discountValue),

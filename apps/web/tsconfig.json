@@ -40,6 +40,9 @@
   "references": [
     {
       "path": "../../libs/ui-design-system"
+    },
+    {
+      "path": "./tsconfig.spec.json"
     }
   ]
 }

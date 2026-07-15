@@ -1,8 +1,8 @@
 import { Controller, Get, Put, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { SecurePortal } from '../auth/decorators/secure-portal.decorator';
+import { SecurePortal } from '../app/auth/secure-portal.decorator';
 import { PortalCode, TenantStatus } from '@prisma/client';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { Roles } from '../app/auth/roles.decorator';
 
 @Controller('admin')
 @SecurePortal(PortalCode.ADMIN, true)

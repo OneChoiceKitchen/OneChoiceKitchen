@@ -4,6 +4,7 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrdersGateway } from './orders.gateway';
 import { PromotionsService } from '../promotions/promotions.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 import { ItemType } from '@prisma/client';
 
 @Injectable()
@@ -12,6 +13,7 @@ export class OrdersService {
     private prisma: PrismaService,
     private ordersGateway: OrdersGateway,
     private promotionsService: PromotionsService,
+    private webhooksService: WebhooksService,
   ) {}
 
   async checkout(createOrderDto: CreateOrderDto, userId: string) {
@@ -111,6 +113,24 @@ export class OrdersService {
 
     for (const order of createdOrders) {
       this.ordersGateway.notifyNewOrder(order);
+      
+      // Dispatch webhook asynchronously
+      const firstItem = order.items && order.items.length > 0 ? order.items[0] : null;
+      if (firstItem) {
+        this.prisma.menuItem.findUnique({ where: { id: firstItem.menuItemId } })
+          .then(menuItem => {
+            if (menuItem && menuItem.tenantId) {
+              this.webhooksService.dispatch('ORDER_CREATED', menuItem.tenantId, {
+                orderId: order.id,
+                totalAmount: order.totalAmount,
+                discountAmount: order.discountAmount,
+                status: order.status,
+                createdAt: order.createdAt
+              });
+            }
+          })
+          .catch(err => console.error('Failed to dispatch webhook for order', err));
+      }
     }
 
     return createdOrders;

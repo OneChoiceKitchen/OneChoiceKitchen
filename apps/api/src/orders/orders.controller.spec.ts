@@ -3,6 +3,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { OrdersController } from './orders.controller';
 import { OrdersService } from './orders.service';
 import { OrdersGateway } from './orders.gateway';
+import { PromotionsService } from '../promotions/promotions.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 describe('OrdersController', () => {
   let controller: OrdersController;
@@ -12,8 +14,24 @@ describe('OrdersController', () => {
       controllers: [OrdersController],
       providers: [
         OrdersService,
-        { provide: PrismaService, useValue: {} },
-        { provide: OrdersGateway, useValue: {} },
+        {
+          provide: PrismaService,
+          useValue: {
+            order: { findMany: jest.fn(), create: jest.fn(), findUnique: jest.fn(), update: jest.fn(), delete: jest.fn() },
+          },
+        },
+        {
+          provide: OrdersGateway,
+          useValue: { notifyNewOrder: jest.fn(), notifyOrderStatusChange: jest.fn() },
+        },
+        {
+          provide: PromotionsService,
+          useValue: { validate: jest.fn(), create: jest.fn() },
+        },
+        {
+          provide: WebhooksService,
+          useValue: { dispatch: jest.fn() },
+        },
       ],
     }).compile();
 

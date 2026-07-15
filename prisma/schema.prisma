@@ -103,6 +103,19 @@ enum ParticipantRole {
   AI_BOT
 }
 
+enum ServiceType {
+  HALL
+  PHOTOGRAPHY
+  DECORATION
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
 model User {
   id                   String                     @id @default(uuid())
   email                String                     @unique
@@ -169,6 +182,7 @@ model User {
   employeeProfile      Employee?
   subjectApprovalCases ApprovalCase[]             @relation("ApprovalCaseSubject")
   approvalDecisions    ApprovalDecision[]         @relation("ApprovalDecisionApprover")
+  bookings             Booking[]
 
   @@map("cat_customers")
 }
@@ -286,6 +300,8 @@ model Tenant {
   conversations       ChatConversation[]
   invoices            Invoice[]
   promotions          Promotion[]
+  webhooks            Webhook[]
+  bookings            Booking[]
   createdAt           DateTime               @default(now())
   updatedAt           DateTime               @updatedAt
 
@@ -2260,3 +2276,56 @@ model MenuInventoryMapping {
   @@index([inventoryItemId])
   @@map("cat_menu_inventory_mappings")
 }
+
+model Webhook {
+  id           String       @id @default(uuid())
+  tenantId     String
+  eventTrigger String
+  targetUrl    String
+  isActive     Boolean      @default(true)
+  secretKey    String       @default(uuid())
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  tenant       Tenant       @relation(fields: [tenantId], references: [id])
+  logs         WebhookLog[]
+
+  @@index([tenantId])
+  @@index([eventTrigger])
+  @@map("cat_webhooks")
+}
+
+model WebhookLog {
+  id             String   @id @default(uuid())
+  webhookId      String
+  payload        String   // JSON string
+  responseStatus Int?
+  isSuccessful   Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  webhook        Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@index([webhookId])
+  @@index([isSuccessful])
+  @@map("cat_webhook_logs")
+}
+
+model Booking {
+  id                  String        @id @default(uuid())
+  tenantId            String
+  customerId          String
+  serviceType         ServiceType
+  eventStartDate      DateTime
+  eventEndDate        DateTime
+  status              BookingStatus @default(PENDING)
+  specialRequirements String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([customerId])
+  @@index([tenantId, serviceType, eventStartDate, eventEndDate])
+  @@map("cat_bookings")
+}
+

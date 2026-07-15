@@ -2,6 +2,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import { OrdersService } from './orders.service';
 import { OrdersGateway } from './orders.gateway';
+import { PromotionsService } from '../promotions/promotions.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 import { BadRequestException } from '@nestjs/common';
 import { ItemType } from '@prisma/client';
 
@@ -24,6 +26,16 @@ describe('OrdersService', () => {
           },
         },
         { provide: OrdersGateway, useValue: { notifyNewOrder: jest.fn() } },
+        {
+          provide: PromotionsService,
+          useValue: {
+            validate: jest.fn().mockResolvedValue({ valid: true, discountAmount: 0 }),
+          },
+        },
+        {
+          provide: WebhooksService,
+          useValue: { dispatch: jest.fn() },
+        },
       ],
     }).compile();
 

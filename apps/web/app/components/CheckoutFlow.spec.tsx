@@ -2,12 +2,14 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import CheckoutFlow from './CheckoutFlow';
 
+const mockToast = {
+  success: jest.fn(),
+  error: jest.fn(),
+};
+
 // Mock useToast from design system
 jest.mock('@org/ui-design-system', () => ({
-  useToast: () => ({
-    success: jest.fn(),
-    error: jest.fn(),
-  }),
+  useToast: () => mockToast,
 }));
 
 global.fetch = jest.fn();
@@ -23,6 +25,8 @@ describe('CheckoutFlow', () => {
 
   beforeEach(() => {
     (global.fetch as jest.Mock).mockClear();
+    mockToast.success.mockClear();
+    mockToast.error.mockClear();
   });
 
   it('renders correctly', () => {

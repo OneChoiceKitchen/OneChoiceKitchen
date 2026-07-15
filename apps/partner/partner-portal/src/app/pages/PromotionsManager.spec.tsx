@@ -1,18 +1,9 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import PromotionsManager from './PromotionsManager';
-import { ApiClient } from '@libs/api-client';
+import axios from 'axios';
 
-jest.mock('@libs/api-client', () => ({
-  ApiClient: {
-    get: jest.fn(),
-    post: jest.fn(),
-  },
-}));
-
-jest.mock('@libs/auth', () => ({
-  useAuthStore: () => ({ token: 'test-token' }),
-}));
+jest.mock('axios');
 
 describe('PromotionsManager', () => {
   beforeEach(() => {
@@ -20,7 +11,7 @@ describe('PromotionsManager', () => {
   });
 
   it('renders loading state initially', () => {
-    (ApiClient.get as jest.Mock).mockReturnValue(new Promise(() => {})); // pending promise
+    (axios.get as jest.Mock).mockReturnValue(new Promise(() => {})); // pending promise
     render(<PromotionsManager />);
     expect(screen.getByText('Loading campaigns...')).toBeInTheDocument();
   });
@@ -38,7 +29,7 @@ describe('PromotionsManager', () => {
         isActive: true,
       },
     ];
-    (ApiClient.get as jest.Mock).mockResolvedValue({ data: mockPromos });
+    (axios.get as jest.Mock).mockResolvedValue({ data: mockPromos });
 
     render(<PromotionsManager />);
 
@@ -51,7 +42,7 @@ describe('PromotionsManager', () => {
   });
 
   it('opens modal to create promotion', async () => {
-    (ApiClient.get as jest.Mock).mockResolvedValue({ data: [] });
+    (axios.get as jest.Mock).mockResolvedValue({ data: [] });
     render(<PromotionsManager />);
 
     await waitFor(() => {
@@ -63,8 +54,8 @@ describe('PromotionsManager', () => {
   });
 
   it('submits new promotion', async () => {
-    (ApiClient.get as jest.Mock).mockResolvedValue({ data: [] });
-    (ApiClient.post as jest.Mock).mockResolvedValue({ data: { success: true } });
+    (axios.get as jest.Mock).mockResolvedValue({ data: [] });
+    (axios.post as jest.Mock).mockResolvedValue({ data: { success: true } });
 
     render(<PromotionsManager />);
 
@@ -89,8 +80,8 @@ describe('PromotionsManager', () => {
     fireEvent.click(screen.getByText('Create'));
 
     await waitFor(() => {
-      expect(ApiClient.post).toHaveBeenCalledWith(
-        '/promotions',
+      expect(axios.post).toHaveBeenCalledWith(
+        '/api/promotions',
         expect.objectContaining({
           code: 'NEWPROMO',
           discountValue: 15,

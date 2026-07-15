@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../app/auth/jwt-auth.guard';
 import { RolesGuard } from '../app/auth/roles.guard';
@@ -21,8 +22,16 @@ export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Roles('CUSTOMER', 'SUPER_ADMIN', 'RESTAURANT_ADMIN', 'PARTNER')
+  @Post('checkout')
+  checkout(@Request() req, @Body() createOrderDto: CreateOrderDto) {
+    // using req.user?.id or fall back to a mock user for now if missing
+    const userId = req.user?.id || 'mock-user-id';
+    return this.ordersService.checkout(createOrderDto, userId);
+  }
+
+  @Roles('CUSTOMER', 'SUPER_ADMIN', 'RESTAURANT_ADMIN', 'PARTNER')
   @Post()
-  create(@Body() createOrderDto: CreateOrderDto) {
+  create(@Body() createOrderDto: any) {
     return this.ordersService.create(createOrderDto);
   }
 

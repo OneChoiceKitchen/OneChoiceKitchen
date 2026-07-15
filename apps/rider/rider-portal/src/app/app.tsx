@@ -10,6 +10,7 @@ import EarningsRider from './EarningsRider';
 import HRMSRider from './HRMSRider';
 import InternalChatPanel from './InternalChatPanel';
 import { DownloadPage } from './DownloadPage';
+import { Dashboard } from './components/Dashboard';
 
 export function MainApp({ onLogout }: { onLogout: () => void }) {
   const [activeTab, setActiveTab] = useState<'deliveries' | 'staff' | 'howItWorks' | 'earnings' | 'chat' | 'page' | 'downloads'>('deliveries');
@@ -359,98 +360,7 @@ export function MainApp({ onLogout }: { onLogout: () => void }) {
             {/* Show Portal Cards only in Dashboard / Deliveries view */}
             <PortalCards portalName="rider" onCardClick={handleCardClick} />
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
-              
-              {/* My Active Deliveries Section */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <h2 style={{ fontSize: '1.25rem', color: '#0f172a', margin: '0 0 0.5rem 0' }}>My Active Deliveries ({myActiveDeliveries.length})</h2>
-                
-                {myActiveDeliveries.length > 0 ? (
-                  myActiveDeliveries.map(ord => (
-                    <div key={ord.id} style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', border: '2px solid #2563EB', boxShadow: '0 10px 25px rgba(0,84,166,0.1)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                        <span style={{ fontWeight: 'bold', color: '#2563EB' }}>Order #{ord.id}</span>
-                        <span style={{ background: '#dcfce7', color: '#166534', padding: '0.25rem 0.5rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 600 }}>{ord.status}</span>
-                      </div>
-                      
-                      <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px', marginBottom: '1rem' }}>
-                        <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold' }}>📍 Deliver To: {ord.customer}</p>
-                        <p style={{ margin: 0, color: '#475569', fontSize: '0.9rem' }}>{ord.address}</p>
-                      </div>
-
-                      <div style={{ background: '#e0f2fe', borderRadius: '12px', height: '200px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', marginBottom: '1rem', color: '#0369a1', border: '1px solid #bae6fd', position: 'relative', overflow: 'hidden' }}>
-                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'url("https://www.transparenttextures.com/patterns/cubes.png")' }}></div>
-                        <div style={{ position: 'relative', zIndex: 1, background: 'white', padding: '0.75rem', borderRadius: '50%', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', marginBottom: '0.5rem' }}>🛵</div>
-                        <span style={{ position: 'relative', zIndex: 1, fontWeight: 'bold' }}>Mock Map Tracking</span>
-                        <span style={{ position: 'relative', zIndex: 1, fontSize: '0.8rem', opacity: 0.8 }}>Distance: 2.4 km • ETA: 12 mins</span>
-                      </div>
-
-                      {ord.paymentMethod === 'COD' && (
-                        <div style={{ background: '#fef3c7', border: '1px solid #fde68a', borderRadius: '12px', padding: '1rem', marginBottom: '1rem', color: '#78350f' }}>
-                          <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold', fontSize: '0.9rem' }}>💵 Cash On Delivery: ₹{ord.total}</p>
-                          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>
-                            <input type="checkbox" id={`cod-${ord.id}`} />
-                            Confirm Cash is collected
-                          </label>
-                        </div>
-                      )}
-
-                      <button 
-                        onClick={() => handleDeliverOrder(ord.id)}
-                        style={{ width: '100%', background: '#16a34a', color: 'white', border: 'none', padding: '1rem', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '1rem' }}
-                      >
-                        ✓ Mark as Delivered
-                      </button>
-                    </div>
-                  ))
-                ) : (
-                  <div style={{ background: 'white', padding: '2rem', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'center', color: '#64748b' }}>
-                    You have no active deliveries. Claim an order below.
-                  </div>
-                )}
-              </div>
-
-              {/* Available Orders Section */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <h2 style={{ fontSize: '1.25rem', color: '#0f172a', margin: '0 0 0.5rem 0' }}>Available for Pickup ({claimableDeliveries.length})</h2>
-                
-                {riderStatus !== 'ACTIVE' && riderStatus !== 'APPROVED' ? (
-                  <div style={{ background: '#fef2f2', padding: '2rem', borderRadius: '16px', border: '1px solid #fecaca', textAlign: 'center' }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔒</div>
-                    <h3 style={{ color: '#991b1b', margin: '0 0 0.5rem 0', fontWeight: 800 }}>Account Not Active</h3>
-                    <p style={{ color: '#b91c1c', fontSize: '0.95rem' }}>
-                      Your rider account status is currently <strong>{riderStatus}</strong>. You cannot accept new deliveries until an Admin approves and activates your account.
-                    </p>
-                  </div>
-                ) : claimableDeliveries.length > 0 ? (
-                  claimableDeliveries.map(ord => (
-                    <div key={ord.id} style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                        <span style={{ fontWeight: 'bold', color: '#0f172a' }}>Order #{ord.id}</span>
-                        <span style={{ color: '#0f172a', fontWeight: 'bold' }}>₹{ord.total}</span>
-                      </div>
-                      <p style={{ margin: '0 0 1rem 0', color: '#64748b', fontSize: '0.9rem' }}>{ord.address}</p>
-                      
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0.75rem 0', cursor: 'pointer', fontSize: '0.85rem', color: '#475569' }}>
-                        <input type="checkbox" id={`verify-${ord.id}`} />
-                        Verify items (matches receipt)
-                      </label>
-                      <button 
-                        onClick={() => handleClaimOrder(ord.id)}
-                        style={{ width: '100%', background: '#0f172a', color: 'white', border: 'none', padding: '0.75rem', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
-                      >
-                        Pick Up Order
-                      </button>
-                    </div>
-                  ))
-                ) : (
-                  <div style={{ background: 'white', padding: '2rem', borderRadius: '16px', border: '1px dashed #cbd5e1', textAlign: 'center', color: '#64748b' }}>
-                    No orders currently waiting for pickup.
-                  </div>
-                )}
-              </div>
-
-            </div>
+            <Dashboard />
           </>
         )}
 

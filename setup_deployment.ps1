@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     OneChoiceKitchen - Production Deployment Script v3.0
     Handles Docker, Vercel, VPS/bare-metal, and shared-hosting deployments.
@@ -455,23 +455,39 @@ function Invoke-Deploy {
         else { yel "$d NOT SET ($var) - some features may not work" }
     }
 
+    function Update-Pnpm {
+        if (-not (Get-Command pnpm -ErrorAction SilentlyContinue)) {
+            red "pnpm NOT FOUND - install it and retry"; exit 1 
+        }
+        dim 'Checking for pnpm updates...'
+        $currentPnpm = pnpm --version
+        $latestPnpm = npm show pnpm version 2>$null
+        if ($latestPnpm -and $currentPnpm.Trim() -ne $latestPnpm.Trim()) {
+            yel "pnpm update available ($($currentPnpm.Trim()) -> $($latestPnpm.Trim())) -- updating..."
+            npm install -g pnpm@latest 2>&1 | Out-Null
+            grn "pnpm updated to $(pnpm --version)"
+        } else {
+            grn "pnpm $currentPnpm (up to date)"
+        }
+    }
+
     switch ($Target) {
         'docker' {
             Assert-Tool 'docker'       'Docker Engine'
-            Assert-Tool 'pnpm'         'pnpm'
+            Update-Pnpm
             Assert-EnvVar 'DATABASE_URL' 'Database URL'
             Assert-EnvVar 'REDIS_URL'    'Redis URL'
             Assert-EnvVar 'JWT_SECRET'   'JWT Secret'
         }
         'vercel' {
             Assert-Tool 'vercel' 'Vercel CLI'
-            Assert-Tool 'pnpm'   'pnpm'
+            Update-Pnpm
             Assert-EnvVar 'VERCEL_TOKEN'  'Vercel Token'
             Assert-EnvVar 'DATABASE_URL'  'Database URL'
         }
         'vps' {
             Assert-Tool 'pm2'    'PM2 Process Manager'
-            Assert-Tool 'pnpm'   'pnpm'
+            Update-Pnpm
             Assert-EnvVar 'DATABASE_URL' 'Database URL'
             Assert-EnvVar 'REDIS_URL'    'Redis URL'
         }

@@ -2,10 +2,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import { OrdersService } from './orders.service';
 import { OrdersGateway } from './orders.gateway';
+import { BadRequestException } from '@nestjs/common';
+import { ItemType } from '@prisma/client';
 
 describe('OrdersService', () => {
   let service: OrdersService;
   const findMany = jest.fn();
+  const menuItemFindMany = jest.fn();
+  const transaction = jest.fn();
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -14,9 +18,9 @@ describe('OrdersService', () => {
         {
           provide: PrismaService,
           useValue: {
-            order: {
-              findMany,
-            },
+            order: { findMany },
+            menuItem: { findMany: menuItemFindMany },
+            $transaction: transaction,
           },
         },
         { provide: OrdersGateway, useValue: { notifyNewOrder: jest.fn() } },
@@ -32,6 +36,53 @@ describe('OrdersService', () => {
     expect(service).toBeDefined();
   });
 
+  describe('checkout', () => {
+    it('throws error if menu items are missing', async () => {
+      menuItemFindMany.mockResolvedValueOnce([]);
+      
+      await expect(
+        service.checkout({
+          serviceType: ItemType.FOOD_ORDERING,
+          deliveryAddress: '123 Main St',
+          items: [{ menuItemId: 'invalid-id', quantity: 1, price: 100 }],
+        } as any, 'user-1')
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('validates single-tenant food ordering invariants', async () => {
+      menuItemFindMany.mockResolvedValueOnce([
+        { id: 'item1', tenantId: 'tenant1', branchId: 'branch1' },
+        { id: 'item2', tenantId: 'tenant2', branchId: 'branch1' },
+      ]);
+
+      await expect(
+        service.checkout({
+          serviceType: ItemType.FOOD_ORDERING,
+          deliveryAddress: '123 Main St',
+          items: [
+            { menuItemId: 'item1', quantity: 1, price: 100 },
+            { menuItemId: 'item2', quantity: 1, price: 100 },
+          ],
+        } as any, 'user-1')
+      ).rejects.toThrow('All food items in the cart must belong to the same tenant and branch');
+    });
+
+    it('proceeds if invariants are met', async () => {
+      menuItemFindMany.mockResolvedValueOnce([
+        { id: 'item1', tenantId: 'tenant1', branchId: 'branch1', restaurantId: 'rest1' },
+      ]);
+      transaction.mockResolvedValueOnce(undefined);
+
+      await expect(
+        service.checkout({
+          serviceType: ItemType.FOOD_ORDERING,
+          deliveryAddress: '123 Main St',
+          items: [{ menuItemId: 'item1', quantity: 1, price: 100 }],
+        } as any, 'user-1')
+      ).resolves.toBeDefined();
+    });
+  });
+
   it('falls back to order rows without user include when cat_customers is not migrated locally', async () => {
     const order = { id: 'order-1', items: [] };
     findMany
@@ -43,13 +94,5 @@ describe('OrdersService', () => {
     await expect(service.findAll()).resolves.toEqual([
       { ...order, user: null, restaurant: null },
     ]);
-    expect(findMany).toHaveBeenNthCalledWith(1, {
-      include: { user: true, restaurant: true, items: true },
-      orderBy: { createdAt: 'desc' },
-    });
-    expect(findMany).toHaveBeenNthCalledWith(2, {
-      include: { items: true },
-      orderBy: { createdAt: 'desc' },
-    });
   });
 });

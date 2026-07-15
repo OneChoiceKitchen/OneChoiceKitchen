@@ -40,6 +40,7 @@
     "@swc/core": "1.15.8",
     "@swc/helpers": "0.5.18",
     "@swc/jest": "^0.2.39",
+    "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "15.0.6",
     "@types/bcrypt": "^6.0.0",
     "@types/better-sqlite3": "^7.6.13",

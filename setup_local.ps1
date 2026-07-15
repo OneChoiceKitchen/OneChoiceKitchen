@@ -279,7 +279,7 @@ function Invoke-Prerequisites {
     $nodeVer = node --version 2>&1
     grn "Node.js $nodeVer"
 
-    # 2. pnpm (auto-install if missing)
+    # 2. pnpm (auto-install or auto-update)
     if (-not (Get-Command pnpm -ErrorAction SilentlyContinue)) {
         yel 'pnpm not found -- installing globally...'
         npm install -g pnpm 2>&1 | Out-Null
@@ -288,8 +288,18 @@ function Invoke-Prerequisites {
             exit 1
         }
         grn 'pnpm installed'
+    } else {
+        dim 'Checking for pnpm updates...'
+        $currentPnpm = pnpm --version
+        $latestPnpm = npm show pnpm version 2>$null
+        if ($latestPnpm -and $currentPnpm.Trim() -ne $latestPnpm.Trim()) {
+            yel "pnpm update available ($($currentPnpm.Trim()) -> $($latestPnpm.Trim())) -- updating..."
+            npm install -g pnpm@latest 2>&1 | Out-Null
+            grn "pnpm updated to $(pnpm --version)"
+        } else {
+            grn "pnpm $currentPnpm (up to date)"
+        }
     }
-    grn "pnpm $(pnpm --version)"
 
     # 3. Always run pnpm install (idempotent - fast if lock unchanged, full if after deep clean)
     dim 'Ensuring all dependencies are installed (pnpm install)...'

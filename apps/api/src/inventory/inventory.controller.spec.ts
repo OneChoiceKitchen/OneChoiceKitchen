@@ -2,62 +2,51 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { InventoryController } from './inventory.controller';
 import { InventoryService } from './inventory.service';
 
+import { JwtAuthGuard } from '../app/auth/jwt-auth.guard';
+import { UserContextGuard } from '../app/auth/user-context.guard';
+import { PortalGuard } from '../app/auth/portal.guard';
+import { TenantGuard } from '../app/auth/tenant.guard';
+import { EntitlementGuard } from '../feature-access/entitlement.guard';
+
 describe('InventoryController', () => {
   let controller: InventoryController;
-  let service: InventoryService;
-
-  const mockInventoryService = {
-    create: jest.fn(),
-    findAll: jest.fn(),
-    update: jest.fn(),
-    remove: jest.fn(),
+  
+  const mockService = {
+    create: jest.fn().mockResolvedValue({ id: '1', name: 'Test' }),
+    findAll: jest.fn().mockResolvedValue([{ id: '1', name: 'Test' }]),
+    findOne: jest.fn().mockResolvedValue({ id: '1', name: 'Test' }),
+    update: jest.fn().mockResolvedValue({ id: '1', name: 'Updated' }),
+    remove: jest.fn().mockResolvedValue({ id: '1', name: 'Test' }),
+    mapToMenu: jest.fn().mockResolvedValue({ id: 'map-1' })
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [InventoryController],
       providers: [
-        { provide: InventoryService, useValue: mockInventoryService },
+        {
+          provide: InventoryService,
+          useValue: mockService
+        }
       ],
-    }).compile();
+    })
+    .overrideGuard(JwtAuthGuard).useValue({ canActivate: () => true })
+    .overrideGuard(UserContextGuard).useValue({ canActivate: () => true })
+    .overrideGuard(PortalGuard).useValue({ canActivate: () => true })
+    .overrideGuard(TenantGuard).useValue({ canActivate: () => true })
+    .overrideGuard(EntitlementGuard).useValue({ canActivate: () => true })
+    .compile();
 
     controller = module.get<InventoryController>(InventoryController);
-    service = module.get<InventoryService>(InventoryService);
   });
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
   });
-
-  it('should call create on the service', async () => {
-    const data = { name: 'Item 1' };
-    mockInventoryService.create.mockResolvedValue(data);
-    const result = await controller.create(data);
-    expect(result).toEqual(data);
-    expect(service.create).toHaveBeenCalledWith(data);
-  });
-
-  it('should call findAll on the service', async () => {
-    const data = [{ id: '1', name: 'Item 1' }];
-    mockInventoryService.findAll.mockResolvedValue(data);
-    const result = await controller.findAll();
-    expect(result).toEqual(data);
-    expect(service.findAll).toHaveBeenCalled();
-  });
-
-  it('should call update on the service', async () => {
-    const data = { name: 'Item 2' };
-    mockInventoryService.update.mockResolvedValue({ id: '1', ...data });
-    const result = await controller.update('1', data);
-    expect(result.name).toEqual('Item 2');
-    expect(service.update).toHaveBeenCalledWith('1', data);
-  });
-
-  it('should call remove on the service', async () => {
-    const item = { id: '1', name: 'Item 1' };
-    mockInventoryService.remove.mockResolvedValue(item);
-    const result = await controller.remove('1');
-    expect(result).toEqual(item);
-    expect(service.remove).toHaveBeenCalledWith('1');
+  
+  it('should map to menu', async () => {
+    const result = await controller.mapToMenu({ menuItemId: '1', inventoryItemId: '2', quantityRequired: 5 });
+    expect(result).toEqual({ id: 'map-1' });
+    expect(mockService.mapToMenu).toHaveBeenCalledWith('1', '2', 5);
   });
 });

@@ -6,17 +6,17 @@ import App from './app';
 describe('Partner Portal Critical Paths', () => {
   it('should render the login page initially', () => {
     render(<App />);
-    expect(screen.getByText(/Sign in to Partner Portal/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Email/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Password/i)).toBeInTheDocument();
+    expect(screen.getByText(/Access your Partner Portal dashboard/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/partner@test.com/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/••••••••/i)).toBeInTheDocument();
   });
 
   it('should allow switching to the registration form', () => {
     render(<App />);
-    const registerLink = screen.getByText(/Create an account/i);
+    const registerLink = screen.getByText(/Don't have an account\? Sign Up/i);
     fireEvent.click(registerLink);
-    expect(screen.getByText(/Register your Kitchen/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Restaurant Name/i)).toBeInTheDocument();
+    expect(screen.getByText(/Full Name/i)).toBeInTheDocument();
+    expect(screen.getByText(/Restaurant Name/i)).toBeInTheDocument();
   });
 
   it('should show validation errors on empty submit', async () => {
@@ -31,8 +31,8 @@ describe('Partner Portal Critical Paths', () => {
 
   it('should login and navigate to the dashboard', async () => {
     render(<App />);
-    const emailInput = screen.getByPlaceholderText(/Email/i);
-    const passwordInput = screen.getByPlaceholderText(/Password/i);
+    const emailInput = screen.getByPlaceholderText(/partner@test.com/i);
+    const passwordInput = screen.getByPlaceholderText(/••••••••/i);
     const submitButton = screen.getByRole('button', { name: /Sign In/i });
 
     // Assuming any non-empty input logs in for the current mocked logic (since there's a quick return if API fails, but wait, the logic uses axios which we might need to mock if it actually hits API).

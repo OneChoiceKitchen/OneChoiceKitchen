@@ -130,7 +130,7 @@ export class AdminNotificationsService {
           orderBy: { updatedAt: 'desc' },
           take: 10
         });
-        return items.filter(i => i.quantity <= i.threshold).map(i => ({
+        return items.filter(i => i.quantity != null && i.threshold != null && i.quantity <= i.threshold).map(i => ({
           id: i.id,
           type: 'INVENTORY',
           title: `Low Stock: ${i.name}`,

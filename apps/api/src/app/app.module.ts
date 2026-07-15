@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from '../prisma/prisma.module';
+import { MenuCategoriesModule } from '../menu-categories/menu-categories.module';
+import { MenuItemsModule } from '../menu-items/menu-items.module';
 import { MenuModule } from '../menu/menu.module';
 import { SubscriptionModule } from '../subscription/subscription.module';
 import { CronModule } from '../cron/cron.module';
@@ -54,6 +56,11 @@ import { PartnerPermissionsModule } from '../partner-permissions/partner-permiss
 import { SecurityContextModule } from './auth/security-context.module';
 import { ApprovalWorkflowModule } from '../approval-workflow/approval-workflow.module';
 import { BrandingModule } from '../branding/branding.module';
+import { LogisticsModule } from '../logistics/logistics.module';
+import { BillingModule } from '../billing/billing.module';
+import { KitchenModule } from '../kitchen/kitchen.module';
+import { AdminModule } from '../admin/admin.module';
+import { PromotionsModule } from '../promotions/promotions.module';
 
 @Module({
   imports: [
@@ -105,6 +112,13 @@ import { BrandingModule } from '../branding/branding.module';
     SecurityContextModule,
     ApprovalWorkflowModule,
     BrandingModule,
+    MenuCategoriesModule,
+    MenuItemsModule,
+    LogisticsModule,
+    BillingModule,
+    KitchenModule,
+    AdminModule,
+    PromotionsModule,
     ScheduleModule.forRoot()
   ],
   controllers: [AppController, SeoController, MenuController],

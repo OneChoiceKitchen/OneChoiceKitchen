@@ -1,0 +1,67 @@
+.sales-chart-container {
+  padding: 1.5rem;
+}
+
+.sales-chart-title {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.125rem;
+  color: #1e293b;
+}
+
+.sales-chart-wrapper {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 250px;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--bdr, #e2e8f0);
+}
+
+.sales-chart-bar-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  height: 100%;
+}
+
+.sales-chart-bar-track {
+  width: 100%;
+  max-width: 40px;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background-color: var(--brand-blue-lt, #eff6ff);
+  border-radius: 4px 4px 0 0;
+  overflow: hidden;
+}
+
+.sales-chart-bar-fill {
+  width: 100%;
+  background-color: var(--brand-blue, #2563eb);
+  transition: height 0.3s ease;
+  cursor: pointer;
+}
+
+.sales-chart-bar-fill:hover {
+  background-color: var(--brand-blue-dk, #1d4ed8);
+}
+
+.sales-chart-bar-label {
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.sales-chart-loading {
+  padding: 3rem;
+  text-align: center;
+  color: #64748b;
+  background: var(--surf, #ffffff);
+  border-radius: 8px;
+  border: 1px solid var(--bdr, #e2e8f0);
+}

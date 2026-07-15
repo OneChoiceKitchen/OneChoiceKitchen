@@ -9,6 +9,7 @@ import {
   Store, Gift, Briefcase, ShieldAlert, AlertCircle, CheckCircle,
   Truck, Settings, ChevronRight
 } from 'lucide-react';
+import { DashboardMetrics, SalesChart } from '@org/ui-design-system';
 
 const authHeaders = () => ({
   'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
@@ -45,6 +46,8 @@ function buildChartData(orders: any[]) {
 export default function DashboardAdmin() {
   const [orders, setOrders] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [kpiData, setKpiData] = useState({ totalOrders: 0, totalRevenue: 0, activeInventoryAlerts: 0 });
+  const [salesTrend, setSalesTrend] = useState<any[]>([]);
   
   // Extended Mock Metrics for all modules
   const [branchesCount, setBranchesCount] = useState(0);
@@ -68,9 +71,11 @@ export default function DashboardAdmin() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [ordersRes, usersRes] = await Promise.all([
+      const [ordersRes, usersRes, kpiRes, salesRes] = await Promise.all([
         fetch('/api/orders', { headers: authHeaders() }).catch(() => ({ ok: false, text: () => Promise.resolve('[]') })),
         fetch('/api/users', { headers: authHeaders() }).catch(() => ({ ok: false, text: () => Promise.resolve('[]') })),
+        fetch('/api/analytics/kpis', { headers: authHeaders() }).catch(() => ({ ok: false, json: () => Promise.resolve({}) })),
+        fetch('/api/analytics/sales-trend', { headers: authHeaders() }).catch(() => ({ ok: false, json: () => Promise.resolve({}) }))
       ]);
       const [ordersData, usersData, branchesRes] = await Promise.all([
         ordersRes.ok ? ordersRes.text().then((t: any) => t ? JSON.parse(t) : []) : [],
@@ -93,6 +98,19 @@ export default function DashboardAdmin() {
         { id: 'b2', name: 'Uptown Branch' },
         { id: 'b3', name: 'Suburban Branch' }
       ]);
+      
+      if (kpiRes && kpiRes.ok) {
+        const data = await kpiRes.json();
+        setKpiData({
+          totalOrders: data.totalOrders ?? 0,
+          totalRevenue: data.totalRevenue ?? 0,
+          activeInventoryAlerts: data.activeInventoryAlerts ?? 0
+        });
+      }
+      if (salesRes && salesRes.ok) {
+        const data = await salesRes.json();
+        setSalesTrend(data.trend || []);
+      }
 
       // Mock Data for new modules
       setBranchesCount(3);
@@ -402,9 +420,15 @@ export default function DashboardAdmin() {
       </div>
 
       {/* KPI Cards */}
+      <div style={{ marginBottom: '1.75rem' }}>
+        <DashboardMetrics 
+          totalOrders={kpiData.totalOrders} 
+          totalRevenue={kpiData.totalRevenue} 
+          activeInventoryAlerts={kpiData.activeInventoryAlerts} 
+          loading={loading} 
+        />
+      </div>
       <div className="dash-grid">
-        <StatCard title="Total Revenue" value={fmt(totalRevenue)} icon={DollarSign} trend="up" trendValue={`${todayOrders.length} orders today`} color="#10b981" />
-        <StatCard title="Total Orders" value={totalOrders} icon={ShoppingBag} trend="up" trendValue={`${activeOrders} active`} color="#2563EB" sub={`${completionRate}% completion rate`} />
         <StatCard title="Total Users" value={users.length} icon={Users} trend="up" trendValue={`${newUsers} new this week`} color="#8b5cf6" />
         <StatCard title="Active Branches" value={loading ? '—' : branchesCount} icon={Store} color="#f59e0b" sub="Across all restaurants" />
       </div>
@@ -461,27 +485,8 @@ export default function DashboardAdmin() {
       {/* Charts & Actions */}
       <div className="charts-grid">
         {/* Revenue & Orders Trend */}
-        <div className="apple-card" style={{ display: 'flex', flexDirection: 'column' }}>
-          <h3 style={{ margin: '0 0 1.5rem', color: '#0f172a', fontSize: '1.1rem', fontWeight: 700, letterSpacing: '-0.01em' }}>Revenue & Orders — Last 7 Days</h3>
-          <div style={{ height: '300px', width: '100%', minHeight: '300px', flex: 1 }}>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#2563EB" stopOpacity={0.25} />
-                    <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} dy={8} />
-                <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} dx={-4} />
-                <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} dx={4} />
-                <Tooltip contentStyle={{ borderRadius: '10px', border: 'none', boxShadow: '0 8px 20px rgba(0,0,0,0.12)', fontSize: '0.85rem' }} />
-                <Area yAxisId="left" type="monotone" dataKey="revenue" stroke="#2563EB" strokeWidth={2.5} fillOpacity={1} fill="url(#revGrad)" name="Revenue (₹)" />
-                <Area yAxisId="right" type="monotone" dataKey="orders" stroke="#f59e0b" strokeWidth={2.5} fill="none" name="Orders" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <SalesChart data={salesTrend} loading={loading} />
         </div>
 
         {/* Action Center (New Addition) */}

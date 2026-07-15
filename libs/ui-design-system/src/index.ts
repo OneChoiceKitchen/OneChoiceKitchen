@@ -7,3 +7,5 @@ export * from './lib/modal-provider/ModalProvider';
 export * from './lib/button/Button';
 export * from './lib/card/Card';
 export * from './lib/badge/Badge';
+export * from './lib/analytics/DashboardMetrics';
+export * from './lib/analytics/SalesChart';

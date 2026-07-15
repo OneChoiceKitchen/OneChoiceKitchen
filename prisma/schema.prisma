@@ -284,12 +284,29 @@ model Tenant {
   moduleEntitlements  TenantEntitlement[]
   approvalCases       ApprovalCase[]
   conversations       ChatConversation[]
+  invoices            Invoice[]
+  promotions          Promotion[]
   createdAt           DateTime               @default(now())
   updatedAt           DateTime               @updatedAt
 
   @@index([ownerUserId])
   @@index([status])
   @@map("cat_tenants")
+}
+
+model Invoice {
+  id          String   @id @default(uuid())
+  tenantId    String
+  amount      Float
+  status      String   @default("PENDING") // PAID, PENDING, OVERDUE
+  billingDate DateTime
+  pdfUrl      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("cat_invoices")
 }
 
 model TenantBranch {
@@ -727,16 +744,26 @@ model Coupon {
 }
 
 model InventoryItem {
-  id         String    @id @default(uuid())
-  name       String
-  sku        String    @unique
-  quantity   Int
-  threshold  Int       @default(10)
-  warehouse  String    @default("Main Kitchen")
-  supplierId String?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  supplier   Supplier? @relation(fields: [supplierId], references: [id])
+  id            String                 @id @default(uuid())
+  tenantId      String?
+  branchId      String?
+  name          String
+  sku           String                 @unique
+  quantity      Int?
+  threshold     Int?                   @default(10)
+  unitOfMeasure String                 @default("UNIT")
+  currentStock  Float                  @default(0)
+  reorderLevel  Float                  @default(0)
+  warehouse     String                 @default("Main Kitchen")
+  supplierId    String?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  supplier      Supplier?              @relation(fields: [supplierId], references: [id])
+  mappings      MenuInventoryMapping[]
+
+  @@index([tenantId])
+  @@index([branchId])
+  @@map("cat_inventory_items")
 }
 
 model Supplier {
@@ -776,6 +803,29 @@ model Employee {
   @@index([tenantId])
   @@index([tenantId, status])
   @@map("cat_hrms")
+}
+
+model Promotion {
+  id            String   @id @default(uuid())
+  tenantId      String
+  code          String
+  discountType  String   // PERCENTAGE, FLAT
+  discountValue Float
+  minOrderValue Float?
+  maxDiscount   Float?
+  validFrom     DateTime
+  validUntil    DateTime
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([code])
+  @@index([tenantId, isActive, validFrom, validUntil])
+  @@map("cat_promotions")
 }
 
 model Shift {
@@ -961,25 +1011,31 @@ model DeliverySetting {
 }
 
 model MenuItem {
-  id           String    @id @default(uuid())
-  restaurantId String?
-  branchId     String?
-  name         String
-  description  String?
-  price        Float
-  image        String?
-  diet         String    @default("VEG")
-  category     String    @default("Main")
-  isAvailable  Boolean   @default(true)
-  prepTime     Int       @default(20)
-  isPopular    Boolean   @default(false)
-  rating       Float     @default(4.5)
-  reviewCount  Int       @default(0)
-  sortOrder    Int       @default(0)
-  isDeleted    Boolean   @default(false)
-  deletedAt    DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id                String            @id @default(uuid())
+  tenantId          String?
+  restaurantId      String?
+  branchId          String?
+  categoryId        String?
+  name              String
+  description       String?
+  price             Float
+  basePrice         Float?
+  image             String?
+  imageUrl          String?
+  diet              String            @default("VEG")
+  category          String            @default("Main")
+  itemType          ItemType          @default(FOOD_ORDERING)
+  dietaryPreference DietaryPreference @default(VEG)
+  isAvailable       Boolean           @default(true)
+  prepTime          Int               @default(20)
+  isPopular         Boolean           @default(false)
+  rating            Float             @default(4.5)
+  reviewCount       Int               @default(0)
+  sortOrder         Int               @default(0)
+  isDeleted         Boolean           @default(false)
+  deletedAt         DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
   // SEO Fields
   seoTitle       String?
@@ -994,11 +1050,17 @@ model MenuItem {
   twitterDescription String?
   youtubeUrl         String?
 
-  attributes       ProductAttribute[]
-  orderItems       OrderItem[]
-  restaurant       Restaurant?        @relation(fields: [restaurantId], references: [id])
-  branch           RestaurantBranch?  @relation(fields: [branchId], references: [id])
-  foodPackageItems FoodPackageItem[]
+  attributes        ProductAttribute[]
+  orderItems        OrderItem[]
+  restaurant        Restaurant?            @relation(fields: [restaurantId], references: [id])
+  branch            RestaurantBranch?      @relation(fields: [branchId], references: [id])
+  foodPackageItems  FoodPackageItem[]
+  menuCategory      MenuCategory?          @relation(fields: [categoryId], references: [id])
+  inventoryMappings MenuInventoryMapping[]
+
+  @@index([tenantId])
+  @@index([branchId])
+  @@map("cat_menu_items")
 }
 
 model PortalSlider {
@@ -1223,6 +1285,8 @@ model Order {
   totalAmount         Float
   deliveryFee         Float             @default(0)
   tax                 Float             @default(0)
+  promoCode           String?
+  discountAmount      Float?            @default(0)
   paymentMethod       String            @default("ONLINE")
   paymentStatus       String            @default("PENDING")
   deliveryAddress     String
@@ -2151,4 +2215,48 @@ model PartnerDeleteRequest {
 
   @@index([partnerId])
   @@index([status])
+}
+
+enum ItemType {
+  FOOD_ORDERING
+  DINE_IN
+  HALL_BOOKING
+  CAKE
+  DECORATION
+  PHOTOGRAPHY
+}
+
+enum DietaryPreference {
+  VEG
+  NON_VEG
+  VEGAN
+  GLUTEN_FREE
+}
+
+model MenuCategory {
+  id          String     @id @default(uuid())
+  tenantId    String
+  branchId    String?
+  name        String
+  description String?
+  isActive    Boolean    @default(true)
+  sortOrder   Int        @default(0)
+  items       MenuItem[]
+
+  @@index([tenantId])
+  @@index([branchId])
+  @@map("cat_menu_categories")
+}
+
+model MenuInventoryMapping {
+  id               String        @id @default(uuid())
+  menuItemId       String
+  inventoryItemId  String
+  quantityRequired Float
+  menuItem         MenuItem      @relation(fields: [menuItemId], references: [id])
+  inventoryItem    InventoryItem @relation(fields: [inventoryItemId], references: [id])
+
+  @@index([menuItemId])
+  @@index([inventoryItemId])
+  @@map("cat_menu_inventory_mappings")
 }

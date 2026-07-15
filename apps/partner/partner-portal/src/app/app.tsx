@@ -1,28 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Users, UserCog } from 'lucide-react';
 import styles from './app.module.css';
 import { GlobalMetadataInjector, useToast } from '@org/ui-design-system';
 import { BrandFooter } from '@org/ui-design-system';
 import PortalCards from './PortalCards';
 import AnalyticsAdmin from './AnalyticsAdmin';
-import InventoryAdmin from './InventoryAdmin';
+import InventoryManager from './pages/InventoryManager';
 import StaticPageViewer from './StaticPageViewer';
-import MenuBuilderAdmin from './MenuBuilderAdmin';
+import MenuManager from './pages/MenuManager';
 import TiffinManagementAdmin from './TiffinManagementAdmin';
 import EarningsPartner from './pages/EarningsPartner';
 import BranchesPartner from './pages/BranchesPartner';
 import CompliancePartner from './pages/CompliancePartner';
 import ReservationsPartner from './pages/ReservationsPartner';
 import StaffManagementAdmin from './StaffManagementAdmin';
+import { TenantUserManager } from './components/TenantUserManager';
 import ESSKioskAdmin from './ESSKioskAdmin';
 import VenuesPartner from './pages/VenuesPartner';
 import PackagesPartner from './pages/PackagesPartner';
 import BookingsPartner from './pages/BookingsPartner';
 import InternalChatPanel from './pages/InternalChatPanel';
 import { DownloadPage } from './DownloadPage';
+import BillingDashboard from './pages/BillingDashboard';
+import KitchenBoard from './pages/KitchenBoard';
+import PromotionsManager from './pages/PromotionsManager';
 
 export function MainApp({ onLogout }: { onLogout: () => void }) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'staff' | 'analytics' | 'inventory' | 'page' | 'menu' | 'tiffin' | 'earnings' | 'kiosk' | 'branches' | 'compliance' | 'reservations' | 'venues' | 'packages' | 'hall_bookings' | 'chat' | 'orders' | 'downloads'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'staff' | 'tenant_users' | 'analytics' | 'inventory' | 'page' | 'menu' | 'tiffin' | 'earnings' | 'kiosk' | 'branches' | 'compliance' | 'reservations' | 'venues' | 'packages' | 'hall_bookings' | 'chat' | 'orders' | 'downloads' | 'billing' | 'kds' | 'promotions'>('dashboard');
   const [pageSlug, setPageSlug] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -342,11 +347,17 @@ export function MainApp({ onLogout }: { onLogout: () => void }) {
             <button className={`${styles.tab} ${activeTab === 'orders' ? styles.activeTab : ''} ${!canModule('food_ordering') ? styles.lockedTab : ''}`} onClick={() => setActiveTab('orders')}>
               <span>{!canModule('food_ordering') ? '🔒' : '🥣'}</span> Live Orders
             </button>
+            <button className={`${styles.tab} ${activeTab === 'kds' ? styles.activeTab : ''} ${!canModule('food_ordering') ? styles.lockedTab : ''}`} onClick={() => setActiveTab('kds')}>
+              <span>{!canModule('food_ordering') ? '🔒' : '👨‍🍳'}</span> Kitchen Board
+            </button>
             <button className={`${styles.tab} ${activeTab === 'menu' ? styles.activeTab : ''} ${!canModule('food_ordering') ? styles.lockedTab : ''}`} onClick={() => setActiveTab('menu')}>
               <span>{!canModule('food_ordering') ? '🔒' : '📋'}</span> Menu Builder
             </button>
             <button className={`${styles.tab} ${activeTab === 'inventory' ? styles.activeTab : ''} ${!canModule('food_ordering') ? styles.lockedTab : ''}`} onClick={() => setActiveTab('inventory')}>
               <span>{!canModule('food_ordering') ? '🔒' : '📦'}</span> Inventory
+            </button>
+            <button className={`${styles.tab} ${activeTab === 'promotions' ? styles.activeTab : ''} ${!canModule('food_ordering') ? styles.lockedTab : ''}`} onClick={() => setActiveTab('promotions')}>
+              <span>{!canModule('food_ordering') ? '🔒' : '🏷️'}</span> Promotions
             </button>
 
             <button className={`${styles.tab} ${activeTab === 'reservations' ? styles.activeTab : ''} ${!canModule('dining') ? styles.lockedTab : ''}`} onClick={() => setActiveTab('reservations')}>
@@ -368,7 +379,12 @@ export function MainApp({ onLogout }: { onLogout: () => void }) {
             </button>
 
             <button className={`${styles.tab} ${activeTab === 'staff' ? styles.activeTab : ''} ${!canModule('hrms') ? styles.lockedTab : ''}`} onClick={() => setActiveTab('staff')}>
-              <span>{!canModule('hrms') ? '🔒' : '👨‍🍳'}</span> Staff Hub
+              <Users size={18} />
+              <span>Staff (HRMS)</span>
+            </button>
+            <button className={`${styles.tab} ${activeTab === 'tenant_users' ? styles.activeTab : ''} ${!canModule('users') ? styles.lockedTab : ''}`} onClick={() => setActiveTab('tenant_users')}>
+              <UserCog size={18} />
+              <span>Tenant Users</span>
             </button>
             <button className={`${styles.tab} ${activeTab === 'kiosk' ? styles.activeTab : ''} ${!canModule('hrms') ? styles.lockedTab : ''}`} onClick={() => setActiveTab('kiosk')}>
               <span>{!canModule('hrms') ? '🔒' : '📸'}</span> Staff Kiosk
@@ -380,6 +396,10 @@ export function MainApp({ onLogout }: { onLogout: () => void }) {
 
             <button className={`${styles.tab} ${activeTab === 'earnings' ? styles.activeTab : ''} ${!canModule('finance') ? styles.lockedTab : ''}`} onClick={() => setActiveTab('earnings')}>
               <span>{!canModule('finance') ? '🔒' : '💰'}</span> Earnings
+            </button>
+
+            <button className={`${styles.tab} ${activeTab === 'billing' ? styles.activeTab : ''}`} onClick={() => setActiveTab('billing')}>
+              <span>💳</span> Billing & Subscriptions
             </button>
 
             {/* Core features that don't require specific module subscriptions */}
@@ -426,8 +446,10 @@ export function MainApp({ onLogout }: { onLogout: () => void }) {
           );
 
           if (activeTab === 'orders' && !checkAccess('food_ordering')) return <LockedScreen moduleName="Food Ordering" />;
+          if (activeTab === 'kds' && !checkAccess('food_ordering')) return <LockedScreen moduleName="Food Ordering" />;
           if (activeTab === 'menu' && !checkAccess('food_ordering')) return <LockedScreen moduleName="Food Ordering" />;
           if (activeTab === 'inventory' && !checkAccess('food_ordering')) return <LockedScreen moduleName="Food Ordering" />;
+          if (activeTab === 'promotions' && !checkAccess('food_ordering')) return <LockedScreen moduleName="Food Ordering" />;
           if (activeTab === 'reservations' && !checkAccess('dining')) return <LockedScreen moduleName="Dining Management" />;
           if ((activeTab === 'venues' || activeTab === 'packages' || activeTab === 'hall_bookings') && !checkAccess('hall_party')) return <LockedScreen moduleName="Hall & Party Booking" />;
           if (activeTab === 'tiffin' && !checkAccess('tiffin')) return <LockedScreen moduleName="Tiffin Subscriptions" />;
@@ -474,15 +496,21 @@ export function MainApp({ onLogout }: { onLogout: () => void }) {
           </div>
         )}
 
+        {/* Render Kitchen Board Tab */}
+        {activeTab === 'kds' && canModule('food_ordering') && <KitchenBoard />}
+
         {/* Render Staff Tab */}
         {activeTab === 'staff' && canModule('hrms') && <StaffManagementAdmin />}
+        {activeTab === 'tenant_users' && canModule('users') && <TenantUserManager />}
 
         {/* Render Analytics Tab */}
         {activeTab === 'analytics' && canModule('analytics') && <AnalyticsAdmin />}
         {/* Render Inventory Tab */}
-        {activeTab === 'inventory' && canModule('food_ordering') && <InventoryAdmin />}
+        {activeTab === 'inventory' && canModule('food_ordering') && <InventoryManager />}
+        {/* Render Promotions Tab */}
+        {activeTab === 'promotions' && canModule('food_ordering') && <PromotionsManager />}
         {/* Render Menu Tab */}
-        {activeTab === 'menu' && canModule('food_ordering') && <MenuBuilderAdmin />}
+        {activeTab === 'menu' && canModule('food_ordering') && <MenuManager />}
         {/* Render Tiffin Tab */}
         {activeTab === 'tiffin' && canModule('tiffin') && <TiffinManagementAdmin />}
         {/* Render Earnings Tab */}
@@ -512,6 +540,11 @@ export function MainApp({ onLogout }: { onLogout: () => void }) {
         {activeTab === 'downloads' && (
           <div style={{ padding: '1.5rem 0' }}>
             <DownloadPage />
+          </div>
+        )}
+        {activeTab === 'billing' && (
+          <div style={{ padding: '1.5rem 0' }}>
+            <BillingDashboard />
           </div>
         )}
 

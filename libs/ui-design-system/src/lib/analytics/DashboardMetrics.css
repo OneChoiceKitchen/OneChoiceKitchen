@@ -1,0 +1,41 @@
+.dashboard-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.metric-card-content {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.metric-title {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.metric-value {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--brand-blue, #2563eb);
+}
+
+.alert-value {
+  color: var(--brand-red, #dc2626);
+}
+
+.dashboard-metrics-loading {
+  padding: 2rem;
+  text-align: center;
+  color: #64748b;
+  background: var(--surf, #ffffff);
+  border-radius: 8px;
+  border: 1px solid var(--bdr, #e2e8f0);
+}

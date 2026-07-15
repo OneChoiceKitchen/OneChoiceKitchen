@@ -28,6 +28,9 @@
   "references": [
     {
       "path": "../../../libs/ui-design-system/tsconfig.lib.json"
+    },
+    {
+      "path": "../../../libs/frontend-platform/tsconfig.lib.json"
     }
   ]
 }

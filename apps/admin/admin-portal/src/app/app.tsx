@@ -108,6 +108,9 @@ const ConfigDashboardAdmin    = React.lazy(() => import('./pages/ConfigDashboard
 const BranchDashboardAdmin    = React.lazy(() => import('./pages/BranchDashboardAdmin'));
 const MenuDashboardAdmin      = React.lazy(() => import('./pages/MenuDashboardAdmin'));
 const MessDashboardAdmin      = React.lazy(() => import('./pages/MessDashboardAdmin'));
+const GlobalUserManager       = React.lazy(() => import('./components/GlobalUserManager').then(m => ({ default: m.GlobalUserManager })));
+const TenantManagerAdmin      = React.lazy(() => import('./pages/TenantManager'));
+const GlobalAuditLogAdmin     = React.lazy(() => import('./pages/GlobalAuditLog'));
 
 // Other
 const MyProfileAdmin   = React.lazy(() => import('./pages/MyProfileAdmin'));
@@ -197,6 +200,7 @@ const ITEM_ICONS_SM: Record<string, React.ReactElement> = {
   tables:          <TableProperties  size={16} strokeWidth={2}/>,
   reservations:    <Calendar        size={16} strokeWidth={2}/>,
   waitlist:        <List            size={16} strokeWidth={2}/>,
+  global_users:    <Users           size={16} strokeWidth={2}/>,
   orders:          <ShoppingBag     size={16} strokeWidth={2}/>,
   refunds:         <Receipt         size={16} strokeWidth={2}/>,
   corporate:       <BriefcaseBusiness size={16} strokeWidth={2}/>,
@@ -224,6 +228,8 @@ const ITEM_ICONS_SM: Record<string, React.ReactElement> = {
   tasks:           <ClipboardList   size={16} strokeWidth={2}/>,
   compliance:      <ShieldCheck     size={16} strokeWidth={2}/>,
   audit_logs:      <History         size={16} strokeWidth={2}/>,
+  global_audit:    <History         size={16} strokeWidth={2}/>,
+  tenants:         <Building2       size={16} strokeWidth={2}/>,
   roles:           <KeyRound        size={16} strokeWidth={2}/>,
   settings:        <Cog             size={16} strokeWidth={2}/>,
   email_config:    <Mail            size={16} strokeWidth={2}/>,
@@ -351,6 +357,9 @@ export const WORKSPACE: WCat[] = [
       { id: 'tasks',               label: 'Tasks',               desc: 'Task management' },
       { id: 'compliance',          label: 'Compliance',          desc: 'Regulatory docs' },
       { id: 'audit_logs',          label: 'Audit Logs',          desc: 'Activity trail' },
+      { id: 'global_audit',        label: 'Global Audit',        desc: 'Global audit trail' },
+      { id: 'global_users',        label: 'Global Users',        desc: 'Global user management' },
+      { id: 'tenants',             label: 'Tenants',             desc: 'Manage partners' },
       { id: 'roles',               label: 'Roles & Permissions', desc: 'Access control' },
       { id: 'partner_permissions', label: 'Partner Permissions', desc: 'Module access' },
     ],
@@ -1237,6 +1246,8 @@ function renderModule(tab: string, nav: (id: string) => void) {
     case 'corporate':         return <CorporateAdmin />;
     case 'delivery_settings': return <DeliverySettingsAdmin />;
     // Customers
+    case 'orders':    return <OrdersAdmin />;
+    case 'global_users': return <GlobalUserManager />;
     case 'users':     return <UsersAdmin />;
     case 'reviews':   return <ReviewsAdmin />;
     case 'referrals': return <ReferralsAdmin />;
@@ -1270,6 +1281,8 @@ function renderModule(tab: string, nav: (id: string) => void) {
     case 'tasks':      return <TasksAdmin />;
     case 'compliance': return <ComplianceAdmin />;
     case 'audit_logs': return <AuditLogsAdmin />;
+    case 'global_audit': return <GlobalAuditLogAdmin />;
+    case 'tenants':    return <TenantManagerAdmin />;
     case 'roles':      return <RolesPermissionsAdmin />;
     case 'templates':  return <NotificationTemplatesAdmin />;
     // Settings
